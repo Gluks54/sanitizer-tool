@@ -38,8 +38,7 @@ public class Main {
         patchData.setPatches(patches);
         System.out.println(patchData);
 
-        new JSONPatchWorker().writePatchData(configFile, patchData);
-        // System.out.println(new JSONPatchWorker().readPatchData(configFile,
-        // PatchData.class));
+        // new JSONPatchWorker().writePatchData(configFile, patchData);
+        System.out.println(new JSONPatchWorker().readPatchData(configFile, PatchData.class));
     }
 }

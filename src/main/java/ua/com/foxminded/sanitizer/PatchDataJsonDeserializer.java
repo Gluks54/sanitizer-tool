@@ -1,6 +1,7 @@
 package ua.com.foxminded.sanitizer;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,18 +27,21 @@ public class PatchDataJsonDeserializer extends StdDeserializer<PatchData> {
     public PatchData deserialize(JsonParser p, DeserializationContext ctxt)
             throws IOException, JsonProcessingException {
         PatchData patchData = new PatchData();
-        Map<Integer, Delta> patches = new LinkedHashMap<Integer, Delta>();
-
-        // JsonNode node = p.getCodec().readTree(p);
         JsonNode node = p.readValueAsTree();
 
         String originalFileName = node.get("originalFileName").asText();
         String processedFileName = node.get("processedFileName").asText();
         int originalFileHashCode = (Integer) ((IntNode) node.get("originalFileHashCode")).numberValue();
         int processedFileHashCode = (Integer) ((IntNode) node.get("processedFileHashCode")).numberValue();
+        Map<Integer, Delta> patches = new LinkedHashMap<Integer, Delta>();
 
         if (node.isObject()) {
-            // System.out.println(node.toString());
+            Iterator<Map.Entry<String, JsonNode>> patchDataIter = node.fields();
+            while (patchDataIter.hasNext()) {
+                Map.Entry<String, JsonNode> patchDataEntryNode = patchDataIter.next();
+                JsonNode jsonNode = patchDataEntryNode.getValue();
+                System.out.println(jsonNode);
+            }
         }
 
         patchData.setOriginalFileHashCode(originalFileHashCode);
