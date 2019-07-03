@@ -3,20 +3,14 @@ package ua.com.foxminded.sanitizer;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 
-/**
- * Hello world!
- *
- */
 public class Main {
     public static void main(String[] args) throws DiffException, IOException {
         String originalFileName = "/mnt/500GB/BACKUP/SANITIZER/ShapeGlobal.java";
@@ -27,24 +21,10 @@ public class Main {
         File processedFile = new File(processedFileName);
         File configFile = new File(configFileName);
 
-        // build simple lists of the lines of the two testfiles
         List<String> original = Files.readAllLines(originalFile.toPath());
         List<String> revised = Files.readAllLines(processedFile.toPath());
 
-        // compute the patch: this is the diffutils part
         Patch<String> diff = DiffUtils.diff(original, revised);
-        // System.out.println(diff.toString());
-        // simple output the computed patch to console
-
-        // simple output the computed patch to console
-        /*
-         * for (AbstractDelta<String> delta : patch.getDeltas()) {
-         * System.out.println(delta); }
-         */
-
-        // List<AbstractDelta<String>> delta = diff.getDeltas();
-
-        // delta.forEach(System.out::println);
 
         PatchData patchData = new PatchData();
         patchData.setOriginalFileName(originalFileName);
@@ -52,14 +32,14 @@ public class Main {
         patchData.setOriginalFileHashCode(originalFile.hashCode());
         patchData.setProcessedFileHashCode(processedFile.hashCode());
 
-        Set<Map<Integer, Patch<String>>> patches = new LinkedHashSet<Map<Integer, Patch<String>>>();
-        Map<Integer, Patch<String>> patch = new HashMap<Integer, Patch<String>>();
+        Map<Integer, Delta> patches = new LinkedHashMap<Integer, Delta>();
 
-        patch.put(diff.hashCode(), diff);
-        patches.add(patch);
+        patches.put(diff.hashCode(), new Delta(diff));
         patchData.setPatches(patches);
+        System.out.println(patchData);
 
-        new JSONPatchWorker().writePatch(configFile, patchData);
-        // new JSONPatchWorker().readPatch(configFile, PatchData.class);
+        new JSONPatchWorker().writePatchData(configFile, patchData);
+        // System.out.println(new JSONPatchWorker().readPatchData(configFile,
+        // PatchData.class));
     }
 }

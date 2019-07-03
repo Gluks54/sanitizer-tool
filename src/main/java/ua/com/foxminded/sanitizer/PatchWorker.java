@@ -3,7 +3,7 @@ package ua.com.foxminded.sanitizer;
 import java.io.File;
 
 public interface PatchWorker {
-    public PatchData readPatch(File file, Class<?> c);
+    public PatchData readPatchData(File file, Class<?> c);
 
-    public void writePatch(File file, PatchData patchData);
+    public void writePatchData(File file, PatchData patchData);
 }

@@ -10,7 +10,7 @@ import javax.xml.bind.Unmarshaller;
 public class XMLPatchWorker implements PatchWorker {
 
     @Override
-    public PatchData readPatch(File file, Class<?> c) {
+    public PatchData readPatchData(File file, Class<?> c) {
         PatchData patch = null;
         try {
             JAXBContext context = JAXBContext.newInstance(c);
@@ -23,7 +23,7 @@ public class XMLPatchWorker implements PatchWorker {
     }
 
     @Override
-    public void writePatch(File file, PatchData patchData) {
+    public void writePatchData(File file, PatchData patchData) {
         try {
             JAXBContext context = JAXBContext.newInstance(patchData.getClass());
             Marshaller marshaller = context.createMarshaller();
