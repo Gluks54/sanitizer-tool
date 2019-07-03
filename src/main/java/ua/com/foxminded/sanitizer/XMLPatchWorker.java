@@ -23,12 +23,12 @@ public class XMLPatchWorker implements PatchWorker {
     }
 
     @Override
-    public void writePatch(File file, PatchData patch) {
+    public void writePatch(File file, PatchData patchData) {
         try {
-            JAXBContext context = JAXBContext.newInstance(patch.getClass());
+            JAXBContext context = JAXBContext.newInstance(patchData.getClass());
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(patch, System.out);
+            marshaller.marshal(patchData, System.out);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
