@@ -6,13 +6,14 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONPatchWorker implements PatchWorker {
+    private String configFileName = "/mnt/500GB/BACKUP/SANITIZER/patch.json";
 
     @Override
     public PatchData readPatch(File file, Class<?> c) {
         ObjectMapper mapper = new ObjectMapper();
         PatchData patch = new PatchData();
         try {
-            patch = mapper.readValue(new File("G:\\user.json"), PatchData.class);
+            patch = mapper.readValue(new File(configFileName), PatchData.class);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -24,7 +25,6 @@ public class JSONPatchWorker implements PatchWorker {
     @Override
     public void writePatch(File file, PatchData patchData) {
         ObjectMapper mapper = new ObjectMapper();
-        String configFileName = "/mnt/500GB/BACKUP/SANITIZER/patch.json";
         try {
             System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(patchData));
             mapper.writerWithDefaultPrettyPrinter().writeValue(new File(configFileName), patchData);

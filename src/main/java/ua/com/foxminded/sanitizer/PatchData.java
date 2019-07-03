@@ -1,7 +1,7 @@
 package ua.com.foxminded.sanitizer;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -20,5 +20,5 @@ public class PatchData {
     private String processedFileName;
     private int originalFileHashCode;
     private int processedFileHashCode;
-    private List<Map<Integer, Patch<String>>> patches;
+    private Set<Map<Integer, Patch<String>>> patches;
 }

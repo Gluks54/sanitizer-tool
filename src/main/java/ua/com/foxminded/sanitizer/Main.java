@@ -3,14 +3,14 @@ package ua.com.foxminded.sanitizer;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
-import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 
 /**
@@ -42,7 +42,7 @@ public class Main {
          * System.out.println(delta); }
          */
 
-        List<AbstractDelta<String>> delta = diff.getDeltas();
+        // List<AbstractDelta<String>> delta = diff.getDeltas();
 
         // delta.forEach(System.out::println);
 
@@ -52,7 +52,7 @@ public class Main {
         patchData.setOriginalFileHashCode(originalFile.hashCode());
         patchData.setProcessedFileHashCode(processedFile.hashCode());
 
-        List<Map<Integer, Patch<String>>> patches = new ArrayList<Map<Integer, Patch<String>>>();
+        Set<Map<Integer, Patch<String>>> patches = new LinkedHashSet<Map<Integer, Patch<String>>>();
         Map<Integer, Patch<String>> patch = new HashMap<Integer, Patch<String>>();
 
         patch.put(diff.hashCode(), diff);
@@ -60,5 +60,6 @@ public class Main {
         patchData.setPatches(patches);
 
         new JSONPatchWorker().writePatch(configFile, patchData);
+        // new JSONPatchWorker().readPatch(configFile, PatchData.class);
     }
 }

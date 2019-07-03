@@ -63,7 +63,7 @@
     <configuration>
      <archive>
       <manifest>
-       <mainClass>ua.patiy.yevgen.sanitizer.Main</mainClass>
+       <mainClass>ua.com.foxminded.sanitizer.Main</mainClass>
       </manifest>
      </archive>
      <descriptorRefs>
