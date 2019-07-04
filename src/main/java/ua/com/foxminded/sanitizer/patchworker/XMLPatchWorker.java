@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer;
+package ua.com.foxminded.sanitizer.patchworker;
 
 import java.io.File;
 
@@ -6,6 +6,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+
+import ua.com.foxminded.sanitizer.patch.PatchData;
 
 public class XMLPatchWorker implements PatchWorker {
 
@@ -29,6 +31,7 @@ public class XMLPatchWorker implements PatchWorker {
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.marshal(patchData, System.out);
+            marshaller.marshal(patchData, file);
         } catch (JAXBException e) {
             e.printStackTrace();
         }

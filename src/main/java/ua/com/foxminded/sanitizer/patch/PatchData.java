@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer;
+package ua.com.foxminded.sanitizer.patch;
 
 import java.util.Map;
 
@@ -15,9 +15,5 @@ import lombok.ToString;
 @NoArgsConstructor
 @XmlRootElement(name = "diff-data")
 public class PatchData {
-    private String originalFileName;
-    private String processedFileName;
-    private int originalFileHashCode;
-    private int processedFileHashCode;
     private Map<Integer, Delta> patches;
 }

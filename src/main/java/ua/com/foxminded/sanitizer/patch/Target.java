@@ -1,0 +1,19 @@
+package ua.com.foxminded.sanitizer.patch;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@XmlRootElement(name = "target")
+public class Target {
+    private int position;
+    private List<String> lines = new ArrayList<String>();
+}

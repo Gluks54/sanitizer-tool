@@ -1,6 +1,8 @@
-package ua.com.foxminded.sanitizer;
+package ua.com.foxminded.sanitizer.patchworker;
 
 import java.io.File;
+
+import ua.com.foxminded.sanitizer.patch.PatchData;
 
 public interface PatchWorker {
     public PatchData readPatchData(File file, Class<?> c);
