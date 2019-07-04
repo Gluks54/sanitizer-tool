@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer.patchworker;
+package ua.com.foxminded.sanitizer.worker;
 
 import java.io.File;
 
@@ -13,15 +13,15 @@ public class XMLPatchWorker implements PatchWorker {
 
     @Override
     public PatchData readPatchData(File file, Class<?> c) {
-        PatchData patch = null;
+        PatchData patchData = null;
         try {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            patch = (PatchData) unmarshaller.unmarshal(file);
+            patchData = (PatchData) unmarshaller.unmarshal(file);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
-        return patch;
+        return patchData;
     }
 
     @Override

@@ -9,7 +9,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-//@XmlRootElement(name = "patch")
 public class SanitizerFilePatch {
     private DeltaType type;
     private Source source = new Source();

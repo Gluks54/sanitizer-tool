@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer.patchworker;
+package ua.com.foxminded.sanitizer.worker;
 
 import java.io.File;
 
