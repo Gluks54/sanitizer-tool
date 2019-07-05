@@ -1,13 +1,11 @@
 package ua.com.foxminded.sanitizer;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.github.difflib.algorithm.DiffException;
 
 import ua.com.foxminded.sanitizer.patch.PatchData;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
-import ua.com.foxminded.sanitizer.worker.XMLPatchWorker;
 
 public class Main {
     public static void main(String[] args) throws DiffException, IOException {
@@ -19,7 +17,7 @@ public class Main {
         PatchData patchData;
 
         if ((patchData = fw.getPatchDataFromDiff()) != null) {
-            new XMLPatchWorker().writePatchData(new File(patchFileName), patchData);
+            // new XMLPatchWorker().writePatchData(new File(patchFileName), patchData);
             fw.updatePatchData();
         }
         // System.out.println(new XMLPatchWorker().readPatchData(configFile,

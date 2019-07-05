@@ -5,11 +5,20 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
-@ToString
 public class Delta {
+    private String description = "default description";
     private List<SanitizerFilePatch> delta = new ArrayList<SanitizerFilePatch>();
+
+    @Override
+    public String toString() {
+        String result = "Delta description=" + description + System.lineSeparator();
+        for (SanitizerFilePatch SFP : delta) {
+            result += SFP.toString() + System.lineSeparator();
+        }
+        return result;
+    }
+
 }
