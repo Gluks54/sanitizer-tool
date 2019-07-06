@@ -13,8 +13,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import ua.com.foxminded.sanitizer.worker.FileWorker;
 
-public class StartWindow {
+public final class StartWindow {
+    private FileWorker fw;
     private Button selectOriginalFolder = new Button();
     private Button selectTemplateFile = new Button();
     private Button selectOutputFolder = new Button();
@@ -36,18 +38,28 @@ public class StartWindow {
     }
 
     private void setButtonsActions(Stage stage) {
+        fw = new FileWorker();
         DirectoryChooser dc = new DirectoryChooser();
         selectOriginalFolder.setOnAction(event -> {
             dc.setTitle("Select original project root folder");
             originalFolder = dc.showDialog(stage);
+            if (originalFolder != null) {
+                System.out.println(fw.isMavenProject(originalFolder));
+            }
         });
         selectTemplateFile.setOnAction(event -> {
             dc.setTitle("Select project template file");
             templateFile = dc.showDialog(stage);
+            if (templateFile != null) {
+
+            }
         });
         selectOutputFolder.setOnAction(event -> {
             dc.setTitle("Select output project root folder");
             outputFolder = dc.showDialog(stage);
+            if (outputFolder != null) {
+
+            }
         });
     }
 

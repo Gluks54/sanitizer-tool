@@ -26,6 +26,7 @@ import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -35,6 +36,7 @@ import ua.com.foxminded.sanitizer.patch.PatchData;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 
 @Log
+@NoArgsConstructor
 @RequiredArgsConstructor
 public class FileWorker {
     private final String tabReplacer = "    ";
@@ -51,6 +53,17 @@ public class FileWorker {
     @Getter
     @Setter
     private String patchFilename;
+
+    public boolean isMavenProject(File file) {
+        boolean hasPomXml = (new File(file.getAbsoluteFile() + "/pom.xml")).exists();
+        File srcFolder = new File(file.getAbsoluteFile() + "/src");
+        boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
+        return file.isDirectory() && hasPomXml && hasSrcFolder;
+    }
+
+    public boolean isAngularProject(File file) {
+        return file.isDirectory();
+    }
 
     public boolean hasTabs(File file) {
         try (BufferedReader buffer = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
