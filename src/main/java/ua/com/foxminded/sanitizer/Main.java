@@ -3,6 +3,7 @@ package ua.com.foxminded.sanitizer;
 import java.io.IOException;
 
 import com.github.difflib.algorithm.DiffException;
+import com.sun.javafx.css.StyleManager;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -31,7 +32,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA);
-        // StyleManager.getInstance().addUserAgentStylesheet("/css/checker.css");
+        StyleManager.getInstance().addUserAgentStylesheet("/css/checker.css");
         // mainWindow.showMainWindow(primaryStage);
         new StartWindow().show(primaryStage);
     }
