@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -27,6 +28,7 @@ public final class StartWindow {
     private File originalFolder;
     private File templateFile;
     private File outputFolder;
+    private String title = "sanitizer";
 
     private void setMessages() {
         selectOriginalFolder.setText("Original project folder");
@@ -44,7 +46,16 @@ public final class StartWindow {
             dc.setTitle("Select original project root folder");
             originalFolder = dc.showDialog(stage);
             if (originalFolder != null) {
-                System.out.println(fw.isMavenProject(originalFolder));
+                if (fw.isMavenProject(originalFolder)) {
+                    originalFolderStatus.setText("project ok at " + originalFolder.getName());
+                    stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
+                    originalFolderStatus.setGraphic(
+                            new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
+                } else {
+                    originalFolderStatus.setText("ordinary directory");
+                    stage.setTitle(title);
+                    originalFolderStatus.setGraphic(null);
+                }
             }
         });
         selectTemplateFile.setOnAction(event -> {
@@ -70,6 +81,7 @@ public final class StartWindow {
         BorderPane root = new BorderPane();
         GridPane topPane = new GridPane();
         StackPane logPane = new StackPane();
+
         topPane.add(selectOriginalFolder, 0, 0);
         topPane.add(selectTemplateFile, 0, 1);
         topPane.add(selectOutputFolder, 0, 2);
@@ -99,7 +111,7 @@ public final class StartWindow {
         int mainH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));
-        stage.setTitle("sanitizer");
+        stage.setTitle(title);
         stage.show();
     }
 }

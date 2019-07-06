@@ -56,6 +56,7 @@ public class FileWorker {
 
     public boolean isMavenProject(File file) {
         boolean hasPomXml = (new File(file.getAbsoluteFile() + "/pom.xml")).exists();
+        boolean isProperPomXml;
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
         return file.isDirectory() && hasPomXml && hasSrcFolder;
