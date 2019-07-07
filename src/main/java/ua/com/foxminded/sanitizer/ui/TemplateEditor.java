@@ -4,8 +4,12 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import lombok.Getter;
+import lombok.Setter;
 
-public class TemplateEditor implements FXWindow {
+@Getter
+@Setter
+public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow {
     private String title;
 
     @Override

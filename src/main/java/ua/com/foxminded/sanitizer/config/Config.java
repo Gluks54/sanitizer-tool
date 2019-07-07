@@ -13,5 +13,6 @@ import lombok.Setter;
 @XmlRootElement(name = "config")
 public class Config {
     private boolean removeComments;
+    private boolean backupOriginal;
     private Map<String, String> replacement = new HashMap<String, String>();
 }

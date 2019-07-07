@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -20,7 +19,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
@@ -45,11 +43,12 @@ import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.PatchData;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
+import ua.com.foxminded.sanitizer.ui.SharedTextAreaLog;
 
 @Log
 @NoArgsConstructor
 @RequiredArgsConstructor
-public class FileWorker {
+public class FileWorker extends SharedTextAreaLog {
     private final String tabReplacer = "    ";
     private final char tab = '\u0009';
     @NonNull
@@ -65,24 +64,24 @@ public class FileWorker {
     @Setter
     private String patchFilename;
 
-    private String getResource(String filename) throws FileNotFoundException {
-        URL resource = getClass().getClassLoader().getResource(filename);
-        Objects.requireNonNull(resource);
-        return resource.getFile();
-    }
-
     private boolean validate(String xmlFile) {
         try {
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            URL schemaFile = new URL("https://maven.apache.org/xsd/maven-4.0.0.xsd");
-            Schema schema;
-            schema = schemaFactory.newSchema(schemaFile);
-            Validator validator = schema.newValidator();
-            validator.validate(new StreamSource(new File(xmlFile)));
-            return true;
+            if (xmlFile != null) {
+                SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+                URL schemaFile = new URL("https://maven.apache.org/xsd/maven-4.0.0.xsd");
+                getLog().info("validating " + xmlFile + " with " + schemaFile);
+                Schema schema;
+                schema = schemaFactory.newSchema(schemaFile);
+                Validator validator = schema.newValidator();
+                validator.validate(new StreamSource(new File(xmlFile)));
+                getLog().info("ok");
+                return true;
+            }
         } catch (SAXException e) {
+            getLog().severe("SAX error");
             e.printStackTrace();
         } catch (IOException e) {
+            getLog().severe("IO error");
             e.printStackTrace();
         }
         return false;
@@ -91,10 +90,21 @@ public class FileWorker {
     public boolean isMavenProject(File file) {
         String pomFileName = "pom.xml";
         boolean hasPomXml = (new File(file.getAbsoluteFile() + "/" + pomFileName)).exists();
-        boolean isProperPomXml = validate(pomFileName);
+        if (hasPomXml) {
+            getLog().info("found " + pomFileName);
+        } else {
+            getLog().info("no " + pomFileName);
+        }
+        boolean isProperPomXml = hasPomXml && validate(pomFileName);
 
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
+        if (hasSrcFolder) {
+            getLog().info("found src folder " + srcFolder);
+        } else {
+            getLog().info("no src folder");
+        }
+
         return file.isDirectory() && hasPomXml && isProperPomXml && hasSrcFolder;
     }
 

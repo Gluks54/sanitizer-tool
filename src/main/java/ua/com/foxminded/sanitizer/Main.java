@@ -32,7 +32,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA);
-        StyleManager.getInstance().addUserAgentStylesheet("/css/checker.css");
+        StyleManager.getInstance().addUserAgentStylesheet("/css/sanitizer.css");
         new StartWindow().show();
     }
 }

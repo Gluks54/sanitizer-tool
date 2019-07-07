@@ -1,12 +1,26 @@
 package ua.com.foxminded.sanitizer.ui;
 
+import java.util.Date;
 import java.util.logging.LogRecord;
+import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 import javafx.scene.control.TextArea;
 
 public class TextAreaHandler extends StreamHandler {
     TextArea textArea = null;
+
+    public TextAreaHandler() {
+        this.setFormatter(new SimpleFormatter() {
+            private static final String format = "[%1$tF %1$tT] [%2$-7s] %3$s %n";
+
+            @Override
+            public synchronized String format(LogRecord lr) {
+                return String.format(format, new Date(lr.getMillis()), lr.getLevel().getLocalizedName(),
+                        lr.getMessage());
+            }
+        });
+    }
 
     public void setTextArea(TextArea textArea) {
         this.textArea = textArea;
