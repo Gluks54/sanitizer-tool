@@ -3,6 +3,7 @@ package ua.com.foxminded.sanitizer.ui;
 import java.io.File;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,87 +11,127 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 
-public final class StartWindow {
+@Log
+public final class StartWindow implements FXWindow {
     private FileWorker fw;
-    private Button selectOriginalFolder = new Button();
-    private Button selectTemplateFile = new Button();
-    private Button selectOutputFolder = new Button();
-    private Label originalFolderStatus = new Label();
-    private Label templateFileStatus = new Label();
-    private Label outputFolderStatus = new Label();
+    private Button selectOriginalFolderButton = new Button();
+    private Button selectTemplateFileButton = new Button();
+    private Button selectOutputFolderButton = new Button();
+    private Label originalFolderStatusLabel = new Label();
+    private Label templateFileStatusLabel = new Label();
+    private Label outputFolderStatusLabel = new Label();
+    private Button editTemplateButton = new Button();
     private TextArea logTextArea = new TextArea();
     private File originalFolder;
     private File templateFile;
     private File outputFolder;
-    private String title = "sanitizer";
+    private Button checkOriginalProjectFilesButton = new Button();
+    private Button proceedOriginalProjectFilesButton = new Button();
+    private boolean originalFolderSelected;
+    private boolean templateFileSelected;
+    private boolean outputFolderSelected;
+    private String title;
+    private int inset = 10;
+    private TextAreaHandler textAreaHandler = new TextAreaHandler();
 
-    private void setMessages() {
-        selectOriginalFolder.setText("Original project folder");
-        selectTemplateFile.setText("Select Template File");
-        selectOutputFolder.setText("Output project folder");
-        originalFolderStatus.setText("not selected");
-        templateFileStatus.setText("not selected");
-        outputFolderStatus.setText("not selected");
+    @Override
+    public void setMessages() {
+        title = "sanitizer";
+        selectOriginalFolderButton.setText("Original project folder");
+        selectTemplateFileButton.setText("Select template file");
+        selectOutputFolderButton.setText("Output project folder");
+        originalFolderStatusLabel.setText("not selected");
+        templateFileStatusLabel.setText("not selected");
+        outputFolderStatusLabel.setText("not selected");
+        checkOriginalProjectFilesButton.setText("Check original files");
+        proceedOriginalProjectFilesButton.setText("Proceed original files");
+        editTemplateButton.setText("Edit or new template");
     }
 
-    private void setButtonsActions(Stage stage) {
+    @Override
+    public void setButtonsActions(Stage stage) {
         fw = new FileWorker();
         DirectoryChooser dc = new DirectoryChooser();
-        selectOriginalFolder.setOnAction(event -> {
+        selectOriginalFolderButton.setOnAction(event -> {
             dc.setTitle("Select original project root folder");
             originalFolder = dc.showDialog(stage);
             if (originalFolder != null) {
                 if (fw.isMavenProject(originalFolder)) {
-                    originalFolderStatus.setText("project ok at " + originalFolder.getName());
+                    originalFolderStatusLabel.setText("project ok at " + originalFolder.getName());
                     stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
-                    originalFolderStatus.setGraphic(
+                    originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
                 } else {
-                    originalFolderStatus.setText("ordinary directory");
+                    originalFolderStatusLabel.setText("ordinary directory");
                     stage.setTitle(title);
-                    originalFolderStatus.setGraphic(null);
+                    originalFolderStatusLabel.setGraphic(null);
+                }
+                originalFolderSelected = true;
+            } else {
+                if (!originalFolderSelected) {
+                    originalFolderSelected = false;
                 }
             }
         });
-        selectTemplateFile.setOnAction(event -> {
+        selectTemplateFileButton.setOnAction(event -> {
             dc.setTitle("Select project template file");
             templateFile = dc.showDialog(stage);
             if (templateFile != null) {
-
+                templateFileSelected = true;
+            } else {
+                if (!templateFileSelected) {
+                    templateFileSelected = false;
+                }
             }
         });
-        selectOutputFolder.setOnAction(event -> {
+        selectOutputFolderButton.setOnAction(event -> {
             dc.setTitle("Select output project root folder");
             outputFolder = dc.showDialog(stage);
             if (outputFolder != null) {
-
+                outputFolderSelected = true;
+            } else {
+                if (!outputFolderSelected) {
+                    outputFolderSelected = false;
+                }
             }
+        });
+        checkOriginalProjectFilesButton.setOnAction(event -> {
+
+        });
+        proceedOriginalProjectFilesButton.setOnAction(event -> {
+
+        });
+        editTemplateButton.setOnAction(event -> {
+            new TemplateEditor().show();
         });
     }
 
-    public void show(Stage stage) {
-        setMessages();
-        setButtonsActions(stage);
-
+    @Override
+    public void show() {
         BorderPane root = new BorderPane();
         GridPane topPane = new GridPane();
         StackPane logPane = new StackPane();
+        FlowPane bottomPane = new FlowPane();
 
-        topPane.add(selectOriginalFolder, 0, 0);
-        topPane.add(selectTemplateFile, 0, 1);
-        topPane.add(selectOutputFolder, 0, 2);
+        topPane.setGridLinesVisible(true);
+        topPane.add(selectOriginalFolderButton, 0, 0);
+        topPane.add(selectTemplateFileButton, 0, 1);
+        topPane.add(selectOutputFolderButton, 0, 2);
         topPane.add(new Label("status:"), 1, 0);
         topPane.add(new Label("status:"), 1, 1);
         topPane.add(new Label("status:"), 1, 2);
-        topPane.add(originalFolderStatus, 2, 0);
-        topPane.add(templateFileStatus, 2, 1);
-        topPane.add(outputFolderStatus, 2, 2);
+        topPane.add(originalFolderStatusLabel, 2, 0);
+        topPane.add(templateFileStatusLabel, 2, 1);
+        topPane.add(outputFolderStatusLabel, 2, 2);
+        topPane.add(editTemplateButton, 3, 1);
         topPane.getChildren().forEach(element -> {
             GridPane.setMargin(element, new Insets(10));
             if (element instanceof Button) {
@@ -102,13 +143,28 @@ public final class StartWindow {
         });
 
         logTextArea.setEditable(false);
+        textAreaHandler.setTextArea(logTextArea);
         logPane.getChildren().add(logTextArea);
+
+        checkOriginalProjectFilesButton.setDisable(true);
+        proceedOriginalProjectFilesButton.setDisable(true);
+        bottomPane.setAlignment(Pos.CENTER);
+        bottomPane.getChildren().add(checkOriginalProjectFilesButton);
+        bottomPane.getChildren().add(proceedOriginalProjectFilesButton);
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(inset)));
 
         root.setTop(topPane);
         root.setCenter(logPane);
+        root.setBottom(bottomPane);
+
+        log.addHandler(textAreaHandler);
+        log.info("sanitizer started");
 
         int mainW = 800;
         int mainH = 600;
+        Stage stage = new Stage();
+        setMessages();
+        setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));
         stage.setTitle(title);

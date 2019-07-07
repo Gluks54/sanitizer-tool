@@ -5,12 +5,14 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,8 +20,17 @@ import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
+
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+import org.xml.sax.SAXException;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
@@ -54,12 +65,37 @@ public class FileWorker {
     @Setter
     private String patchFilename;
 
+    private String getResource(String filename) throws FileNotFoundException {
+        URL resource = getClass().getClassLoader().getResource(filename);
+        Objects.requireNonNull(resource);
+        return resource.getFile();
+    }
+
+    private boolean validate(String xmlFile) {
+        try {
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            URL schemaFile = new URL("https://maven.apache.org/xsd/maven-4.0.0.xsd");
+            Schema schema;
+            schema = schemaFactory.newSchema(schemaFile);
+            Validator validator = schema.newValidator();
+            validator.validate(new StreamSource(new File(xmlFile)));
+            return true;
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public boolean isMavenProject(File file) {
-        boolean hasPomXml = (new File(file.getAbsoluteFile() + "/pom.xml")).exists();
-        boolean isProperPomXml;
+        String pomFileName = "pom.xml";
+        boolean hasPomXml = (new File(file.getAbsoluteFile() + "/" + pomFileName)).exists();
+        boolean isProperPomXml = validate(pomFileName);
+
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        return file.isDirectory() && hasPomXml && hasSrcFolder;
+        return file.isDirectory() && hasPomXml && isProperPomXml && hasSrcFolder;
     }
 
     public boolean isAngularProject(File file) {

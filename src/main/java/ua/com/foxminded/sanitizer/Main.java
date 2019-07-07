@@ -33,7 +33,6 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA);
         StyleManager.getInstance().addUserAgentStylesheet("/css/checker.css");
-        // mainWindow.showMainWindow(primaryStage);
-        new StartWindow().show(primaryStage);
+        new StartWindow().show();
     }
 }
