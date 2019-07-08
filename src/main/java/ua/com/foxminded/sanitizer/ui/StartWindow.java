@@ -23,7 +23,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 
@@ -41,8 +40,8 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
     private File originalFolder;
     private File templateFile;
     private File outputFolder;
-    private Button checkOriginalProjectFilesButton = new Button();
-    private Button proceedOriginalProjectFilesButton = new Button();
+    private Button exploreOriginalProjectFilesButton = new Button();
+    private Button processOriginalProjectFilesButton = new Button();
     private boolean originalFolderSelected;
     private boolean templateFileSelected;
     private boolean outputFolderSelected;
@@ -61,6 +60,12 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
     }
 
+    private void toggleBottomButtons() {
+        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && templateFileSelected));
+        processOriginalProjectFilesButton
+                .setDisable(!(originalFolderSelected && templateFileSelected && outputFolderSelected));
+    }
+
     @Override
     public void setMessages() {
         title = "sanitizer";
@@ -70,8 +75,8 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         originalFolderStatusLabel.setText("not selected");
         templateFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
-        checkOriginalProjectFilesButton.setText("Explore original files");
-        proceedOriginalProjectFilesButton.setText("Process original files");
+        exploreOriginalProjectFilesButton.setText("Explore original files");
+        processOriginalProjectFilesButton.setText("Process original files");
         editTemplateButton.setText("Edit or new template");
     }
 
@@ -88,7 +93,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 getLog().info("select original project root folder");
                 if (fw.isMavenProject(originalFolder)) {
                     processDirectory(originalFolder);
-                    originalInfoLabel.setText("Size: " + size + " / Files: " + files);
+                    originalInfoLabel.setText("Size: " + fw.convertToStringRepresentation(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
                     originalFolderStatusLabel.setText("project ok at " + originalFolder.getName());
                     originalFolderStatusLabel.setGraphic(
@@ -102,6 +107,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                             new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                     getLog().info("ordinary directory selected: " + originalFolder.toString());
                     getLog().info("no proper projects here");
+                    originalFolderSelected = false;
                     stage.setTitle(title);
                 }
             } else {
@@ -113,11 +119,13 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                     originalFolderSelected = false;
                 }
             }
+            toggleBottomButtons();
         });
         selectTemplateFileButton.setOnAction(event -> {
             getLog().info("trying select template file...");
             fc.setTitle("Select project template file");
-            fc.setSelectedExtensionFilter(new ExtensionFilter("XML", "*.xml"));
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml");
+            fc.getExtensionFilters().add(extFilter);
             templateFile = fc.showOpenDialog(stage);
             if (templateFile != null) {
                 templateFileStatusLabel.setText(templateFile.getAbsolutePath());
@@ -134,6 +142,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                     templateFileSelected = false;
                 }
             }
+            toggleBottomButtons();
         });
         selectOutputFolderButton.setOnAction(event -> {
             getLog().info("trying select output project folder...");
@@ -154,11 +163,12 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                     outputFolderSelected = false;
                 }
             }
+            toggleBottomButtons();
         });
-        checkOriginalProjectFilesButton.setOnAction(event -> {
-
+        exploreOriginalProjectFilesButton.setOnAction(event -> {
+            new ExploreProjectWindow(originalFolder).show();
         });
-        proceedOriginalProjectFilesButton.setOnAction(event -> {
+        processOriginalProjectFilesButton.setOnAction(event -> {
 
         });
         editTemplateButton.setOnAction(event -> {
@@ -202,12 +212,12 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         StackPane logPane = new StackPane();
         logPane.getChildren().add(getLogTextArea());
 
-        checkOriginalProjectFilesButton.setDisable(true);
-        proceedOriginalProjectFilesButton.setDisable(true);
+        exploreOriginalProjectFilesButton.setDisable(true);
+        processOriginalProjectFilesButton.setDisable(true);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
-        bottomPane.getChildren().add(checkOriginalProjectFilesButton);
-        bottomPane.getChildren().add(proceedOriginalProjectFilesButton);
+        bottomPane.getChildren().add(exploreOriginalProjectFilesButton);
+        bottomPane.getChildren().add(processOriginalProjectFilesButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(inset)));
 
         root.setTop(topPane);

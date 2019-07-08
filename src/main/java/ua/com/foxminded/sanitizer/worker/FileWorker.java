@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.DecimalFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,25 @@ public class FileWorker extends SharedTextAreaLog {
     @Getter
     @Setter
     private String patchFilename;
+
+    public String convertToStringRepresentation(final long value) {
+        long[] dividers = new long[] { 1_000_000_000, 1_000_000, 1_000, 1 };
+        String[] units = new String[] { "Gb", "Mb", "Kb", "B" };
+        String result = "";
+        for (int i = 0; i < dividers.length; i++) {
+            final long divider = dividers[i];
+            if (value >= divider) {
+                result = format(value, divider, units[i]);
+                break;
+            }
+        }
+        return result;
+    }
+
+    private String format(long value, long divider, String unit) {
+        double result = divider > 1 ? (double) value / (double) divider : (double) value;
+        return new DecimalFormat("#,##0.#").format(result) + " " + unit;
+    }
 
     private boolean validate(String xmlFile) {
         try {
