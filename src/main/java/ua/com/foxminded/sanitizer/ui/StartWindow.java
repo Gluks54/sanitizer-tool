@@ -172,7 +172,12 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
 
         });
         editTemplateButton.setOnAction(event -> {
-            new TemplateEditor().show();
+            if (templateFile != null) {
+                getLog().info("load " + templateFile.getAbsolutePath() + " to template editor");
+                new TemplateEditor(templateFile).show();
+            } else {
+                new TemplateEditor().show();
+            }
         });
     }
 

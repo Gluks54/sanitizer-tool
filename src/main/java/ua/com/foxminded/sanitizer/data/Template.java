@@ -12,10 +12,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@XmlRootElement(name = "config")
+@XmlRootElement(name = "template")
 public class Template {
     private boolean removeComments;
-    private boolean backupOriginal;
-    private List<String> extensions = new ArrayList<String>();
-    private Map<String, String> replacement = new HashMap<String, String>();
+    private List<String> patterns = new ArrayList<String>();
+    private Map<String, Replacement> replacementInFileContent = new HashMap<String, Replacement>();
+    private Map<String, Replacement> replacementInProjectStructure = new HashMap<String, Replacement>();
 }
