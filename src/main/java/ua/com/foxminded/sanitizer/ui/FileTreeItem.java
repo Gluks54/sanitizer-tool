@@ -16,7 +16,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import ua.com.foxminded.sanitizer.worker.FileData;
+import ua.com.foxminded.sanitizer.data.FileData;
 
 public class FileTreeItem extends TreeItem<File> {
     private boolean isFirstTimeChildren = true;

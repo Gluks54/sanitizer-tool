@@ -208,7 +208,6 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 ((Button) element).setMaxWidth(220);
             }
         });
-
         StackPane logPane = new StackPane();
         logPane.getChildren().add(getLogTextArea());
 
@@ -216,6 +215,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         processOriginalProjectFilesButton.setDisable(true);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
+        bottomPane.setId("bottomPane");
         bottomPane.getChildren().add(exploreOriginalProjectFilesButton);
         bottomPane.getChildren().add(processOriginalProjectFilesButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(inset)));
@@ -229,9 +229,9 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
 
         int mainW = 800;
         int mainH = 600;
-
         setMessages();
         Stage stage = new Stage();
+        stage.setOnCloseRequest(event -> getLog().info("bye!"));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));

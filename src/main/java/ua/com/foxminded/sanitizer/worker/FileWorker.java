@@ -42,7 +42,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.patch.Delta;
-import ua.com.foxminded.sanitizer.patch.PatchData;
+import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.ui.SharedTextAreaLog;
 
@@ -115,7 +115,8 @@ public class FileWorker extends SharedTextAreaLog {
         } else {
             getLog().info("no " + pomFileName);
         }
-        boolean isProperPomXml = hasPomXml && validate(pomFileName);
+        // boolean isProperPomXml = hasPomXml && validate(pomFileName);
+        boolean isProperPomXml = hasPomXml;
 
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
@@ -199,7 +200,7 @@ public class FileWorker extends SharedTextAreaLog {
         return result;
     }
 
-    public PatchData getPatchDataFromDiff() { // текущие изменения по сравнению с оригиналом
+    public Template getPatchDataFromDiff() { // текущие изменения по сравнению с оригиналом
         File originalFile = new File(originalFilename);
         File modifiedFile = new File(modifiedFilename);
         List<String> original;
@@ -214,7 +215,7 @@ public class FileWorker extends SharedTextAreaLog {
             e.printStackTrace();
             return null;
         }
-        PatchData patchData = new PatchData(); // весь патч со всеми изменениями за все время
+        Template patchData = new Template(); // весь патч со всеми изменениями за все время
         Map<Long, Delta> patches = new LinkedHashMap<Long, Delta>(); // мапа всех отдельных дельт (сеансов)
         Delta delta = new Delta(); // каждая дельта - список изменений в файле до сохранения
 
@@ -239,7 +240,7 @@ public class FileWorker extends SharedTextAreaLog {
         File patchFile = new File(patchFilename);
 
         if (patchFile.exists()) { // берем предыдущий патч целиком
-            PatchData currentPatchData = new XMLPatchWorker().readPatchData(patchFile, PatchData.class);
+            Template currentPatchData = new XMLPatchWorker().readPatchData(patchFile, Template.class);
             long modifiedFileCRC32 = getCheckSum(modifiedFile);
 
             if (currentPatchData == null) {
@@ -248,7 +249,7 @@ public class FileWorker extends SharedTextAreaLog {
                 log.severe("checksum equals, skipping patchFile update");
             } else if (currentPatchData.getModified() != modifiedFileCRC32) { // если изменения есть
                 log.severe("checksum not equals, updating patchFile");
-                PatchData previousPatchData = currentPatchData;
+                Template previousPatchData = currentPatchData;
                 currentPatchData = getPatchDataFromDiff();
 
                 Map<Long, Delta> patches = currentPatchData.getPatches();

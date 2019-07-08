@@ -9,29 +9,26 @@ import javax.xml.bind.Unmarshaller;
 
 import ua.com.foxminded.sanitizer.patch.Template;
 
-public class XMLPatchWorker implements PatchWorker {
-
-    @Override
-    public Template readPatchData(File file, Class<?> c) {
-        Template patchData = null;
+public class TemplateWorker {
+    public Template readTemplateData(File file, Class<?> c) {
+        Template template = null;
         try {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            patchData = (Template) unmarshaller.unmarshal(file);
+            template = (Template) unmarshaller.unmarshal(file);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
-        return patchData;
+        return template;
     }
 
-    @Override
-    public void writePatchData(File file, Template patchData) {
+    public void writeTemplateData(File file, Template template) {
         try {
-            JAXBContext context = JAXBContext.newInstance(patchData.getClass());
+            JAXBContext context = JAXBContext.newInstance(template.getClass());
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(patchData, System.out);
-            // marshaller.marshal(patchData, file);
+            marshaller.marshal(template, System.out);
+            // marshaller.marshal(template, file);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
