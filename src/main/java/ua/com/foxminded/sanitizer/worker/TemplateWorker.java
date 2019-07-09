@@ -21,6 +21,7 @@ public class TemplateWorker extends SharedTextAreaLog {
             return template;
         } catch (JAXBException e) {
             getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
+            getLog().info(file.getAbsolutePath() + " doesn't looks like template file");
             e.printStackTrace();
             return null;
         }
@@ -36,6 +37,7 @@ public class TemplateWorker extends SharedTextAreaLog {
             getLog().info("ok write template " + file.getAbsolutePath());
         } catch (JAXBException e) {
             getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
+            getLog().info(file.getAbsolutePath() + " doesn't looks like template file");
             e.printStackTrace();
         }
     }

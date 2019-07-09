@@ -8,10 +8,7 @@ import java.util.List;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -40,25 +37,18 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private final TextField filePatternTextField = new TextField("custom pattern");
     private File file;
 
-    public TemplateEditor() {
+    public TemplateEditor(Template template) {
+        this.template = template;
     }
 
-    public TemplateEditor(File file) {
+    public TemplateEditor(File file, Template template) {
         super();
         this.file = file;
-        template = new TemplateWorker().readTemplateData(file, Template.class);
+        this.template = template;
     }
 
     @Override
     public void show() {
-        if (template == null) {
-            Alert alert = new Alert(AlertType.WARNING, file.getName() + " not a template. Run new template?",
-                    ButtonType.YES, ButtonType.NO);
-            alert.showAndWait();
-        } else {
-            // читаем данные и показываем окно
-        }
-
         setMessages();
         BorderPane root = new BorderPane();
         FlowPane topPane = new FlowPane();

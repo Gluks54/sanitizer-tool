@@ -8,11 +8,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -24,7 +28,9 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import ua.com.foxminded.sanitizer.data.Template;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
+import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
 public final class StartWindow extends SharedTextAreaLog implements SanitizerWindow, FileVisitor<Path> {
     private FileWorker fw;
@@ -174,9 +180,21 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         editTemplateButton.setOnAction(event -> {
             if (templateFile != null) {
                 getLog().info("load " + templateFile.getAbsolutePath() + " to template editor");
-                new TemplateEditor(templateFile).show();
+                Template template = new TemplateWorker().readTemplateData(templateFile, Template.class);
+
+                if (template != null) {
+                    new TemplateEditor(templateFile, template).show();
+                } else {
+                    Alert alert = new Alert(AlertType.WARNING,
+                            templateFile.getName() + " not a template. Run new template?", ButtonType.YES,
+                            ButtonType.NO);
+                    Optional<ButtonType> option = alert.showAndWait();
+                    if (option.get() == ButtonType.YES) {
+                        new TemplateEditor(new Template()).show();
+                    }
+                }
             } else {
-                new TemplateEditor().show();
+                new TemplateEditor(new Template()).show();
             }
         });
     }
