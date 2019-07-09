@@ -39,13 +39,12 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-@Log
+//@Log
 @NoArgsConstructor
 @RequiredArgsConstructor
 public class FileWorker extends SharedTextAreaLog {
@@ -64,7 +63,7 @@ public class FileWorker extends SharedTextAreaLog {
     @Setter
     private String patchFilename;
 
-    public String convertToStringRepresentation(final long value) {
+    public String turnFileSizeToString(final long value) {
         final int BYTES = 1024;
         long[] dividers = new long[] { (long) Math.pow(BYTES, 3), (long) Math.pow(BYTES, 2), (long) Math.pow(BYTES, 1),
                 (long) Math.pow(BYTES, 0) };
@@ -85,7 +84,7 @@ public class FileWorker extends SharedTextAreaLog {
         return new DecimalFormat("#,##0.#").format(result) + " " + unit;
     }
 
-    private boolean validate(String xmlFile) {
+    private boolean validatePomXml(String xmlFile) {
         try {
             if (xmlFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -114,7 +113,7 @@ public class FileWorker extends SharedTextAreaLog {
         } else {
             getLog().info("no " + pomFileName);
         }
-        // boolean isProperPomXml = hasPomXml && validate(pomFileName);
+        // boolean isProperPomXml = hasPomXml && validatePomXml(pomFileName);
         boolean isProperPomXml = hasPomXml;
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
@@ -141,7 +140,7 @@ public class FileWorker extends SharedTextAreaLog {
                 }
             }
         } catch (IOException e) {
-            log.severe("error");
+            getLog().severe("error during tabs check in " + file.getAbsolutePath());
             e.printStackTrace();
         }
         return false;
@@ -192,7 +191,7 @@ public class FileWorker extends SharedTextAreaLog {
             }
             result = check.getChecksum().getValue();
         } catch (IOException e) {
-            log.severe("Error in get checksum method");
+            getLog().severe("error in get checksum method in " + file.getAbsolutePath());
             e.printStackTrace();
         }
         return result;
@@ -242,11 +241,11 @@ public class FileWorker extends SharedTextAreaLog {
             long modifiedFileCRC32 = getCheckSum(modifiedFile);
 
             if (currentPatchData == null) {
-                log.severe("null currentpatchdata");
+                getLog().severe("null currentpatchdata in " + modifiedFile.getAbsolutePath());
             } else if (currentPatchData.getModified() == modifiedFileCRC32) { // если изменений нет
-                log.severe("checksum equals, skipping patchFile update");
+                getLog().severe("checksum equals, skipping patchFile update " + modifiedFile.getAbsolutePath());
             } else if (currentPatchData.getModified() != modifiedFileCRC32) { // если изменения есть
-                log.severe("checksum not equals, updating patchFile");
+                getLog().severe("checksum not equals, updating patchFile " + modifiedFile.getAbsolutePath());
                 Template previousPatchData = currentPatchData;
                 currentPatchData = getPatchDataFromDiff();
 
@@ -257,7 +256,7 @@ public class FileWorker extends SharedTextAreaLog {
             }
 
         } else {
-            log.severe("no patchFile to update");
+            getLog().severe("no patchFile to update");
         }
     }
 }

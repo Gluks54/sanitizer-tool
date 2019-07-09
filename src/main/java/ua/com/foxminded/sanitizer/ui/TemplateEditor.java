@@ -48,7 +48,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private final TextField filePatternTextField = new TextField();
     private File file;
     @Setter
-    private StartWindow startWindow;
+    private MainAppWindow startWindow;
 
     public TemplateEditor(Template template) {
         this.template = template;
@@ -175,6 +175,14 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 alert.setTitle("Description error");
                 alert.setContentText("Empty descriptions are prohibited");
                 alert.showAndWait();
+            } else if (contentReplacementPane.isWrongSourceInReplacementItems()) {
+                alert.setTitle("Source error");
+                alert.setContentText("Empty sources are prohibited");
+                alert.showAndWait();
+            } else if (contentReplacementPane.isWrongTargetInReplacementItems()) {
+                alert.setTitle("Target error");
+                alert.setContentText("Empty targets are prohibited");
+                alert.showAndWait();
             } else if (contentReplacementPane.isDuplicateDescriptionsInReplacementItems()) {
                 alert.setTitle("Description error");
                 alert.setContentText("Similar descriptions are prohibited");
@@ -193,7 +201,9 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                             patterns.add(extension.getText());
                         }
                     });
+                    // читаем показатели из полей
                     template.setPatterns(patterns);
+                    template.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
                     template.setRemoveComments(removeCommentsCheckBox.isSelected());
                     if (new TemplateWorker().writeTemplateData(file, template)) {
                         // записали, обновили статус и проверили кнопки снизу

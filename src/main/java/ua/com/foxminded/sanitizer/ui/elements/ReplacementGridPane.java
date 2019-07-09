@@ -1,5 +1,7 @@
 package ua.com.foxminded.sanitizer.ui.elements;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
@@ -14,6 +16,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.Setter;
+import ua.com.foxminded.sanitizer.data.Replacement;
 import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 
 public class ReplacementGridPane extends TitledPane {
@@ -70,8 +73,32 @@ public class ReplacementGridPane extends TitledPane {
         setContent(scrollPane);
     }
 
+    public Map<String, Replacement> getReplacementsMap() {
+        Map<String, Replacement> result = new HashMap<String, Replacement>();
+        mainPane.getChildren().stream().forEach(node -> {
+            ReplacementItem item = (ReplacementItem) node;
+            Replacement replacement = new Replacement(item.getSourceTextField().getText(),
+                    item.getTargetTextField().getText());
+            result.put(item.getDescriptionTextField().getText(), replacement);
+        });
+        return result;
+
+    }
+
     public void clear() {
         mainPane.getChildren().clear();
+    }
+
+    public boolean isWrongSourceInReplacementItems() {
+        return mainPane.getChildren().stream()
+                .anyMatch(node -> ((ReplacementItem) node).getSourceTextField().getText().equals("")
+                        || ((ReplacementItem) node).getSourceTextField().getText().equals(null));
+    }
+
+    public boolean isWrongTargetInReplacementItems() {
+        return mainPane.getChildren().stream()
+                .anyMatch(node -> ((ReplacementItem) node).getTargetTextField().getText().equals("")
+                        || ((ReplacementItem) node).getTargetTextField().getText().equals(null));
     }
 
     public boolean isWrongDescriptionInReplacementItems() {

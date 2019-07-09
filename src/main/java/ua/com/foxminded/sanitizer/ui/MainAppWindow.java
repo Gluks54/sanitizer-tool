@@ -35,7 +35,7 @@ import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
-public final class StartWindow extends SharedTextAreaLog implements SanitizerWindow, FileVisitor<Path> {
+public final class MainAppWindow extends SharedTextAreaLog implements SanitizerWindow, FileVisitor<Path> {
     private FileWorker fw;
     private Button selectOriginalFolderButton = new Button();
     private Button selectTemplateFileButton = new Button();
@@ -61,7 +61,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
     private long size;
     private int files;
 
-    public StartWindow() {
+    public MainAppWindow() {
         super();
         originalFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
@@ -104,7 +104,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 getLog().info("select original project root folder");
                 if (fw.isMavenProject(originalFolder)) {
                     processDirectory(originalFolder);
-                    originalInfoLabel.setText("Size: " + fw.convertToStringRepresentation(size) + " / Files: " + files);
+                    originalInfoLabel.setText("Size: " + fw.turnFileSizeToString(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
                     originalFolderStatusLabel.setText(" ok project at " + originalFolder.getName());
                     originalFolderStatusLabel.setGraphic(
@@ -164,7 +164,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 outputFolderStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                 getLog().info("select output project folder " + outputFolder.getAbsolutePath());
-                outputInfoLabel.setText("Free space: " + fw.convertToStringRepresentation(outputFolder.getFreeSpace()));
+                outputInfoLabel.setText("Free space: " + fw.turnFileSizeToString(outputFolder.getFreeSpace()));
                 outputFolderSelected = true;
             } else {
                 outputFolderStatusLabel.setText("cancel select");
@@ -181,7 +181,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
             new ExploreProjectWindow(originalFolder).show();
         });
         processOriginalProjectFilesButton.setOnAction(event -> {
-
+            getLog().info("process files with template " + templateFile.getAbsolutePath());
         });
         editTemplateButton.setOnAction(event -> {
             TemplateEditor templateEditor;
