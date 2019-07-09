@@ -22,12 +22,12 @@ public class TemplateWorker extends SharedTextAreaLog {
         } catch (JAXBException e) {
             getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
             getLog().info(file.getAbsolutePath() + " doesn't looks like template file");
-            e.printStackTrace();
+            // e.printStackTrace();
             return null;
         }
     }
 
-    public void writeTemplateData(File file, Template template) {
+    public boolean writeTemplateData(File file, Template template) {
         try {
             JAXBContext context = JAXBContext.newInstance(template.getClass());
             Marshaller marshaller = context.createMarshaller();
@@ -35,10 +35,12 @@ public class TemplateWorker extends SharedTextAreaLog {
             marshaller.marshal(template, System.out);
             // marshaller.marshal(template, file);
             getLog().info("ok write template " + file.getAbsolutePath());
+            return true;
         } catch (JAXBException e) {
             getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
             getLog().info(file.getAbsolutePath() + " doesn't looks like template file");
-            e.printStackTrace();
+            // e.printStackTrace();
+            return false;
         }
     }
 }

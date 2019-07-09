@@ -13,6 +13,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -25,7 +26,6 @@ import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
 public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow {
     @Getter
-    @Setter
     private Template template = new Template();
     private Button newTemplateButton = new Button();
     private Button saveTemplateButton = new Button();
@@ -36,6 +36,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private final CheckBox filePatternCheckBox = new CheckBox();
     private final TextField filePatternTextField = new TextField("custom pattern");
     private File file;
+    @Setter
+    private StartWindow startWindow;
 
     public TemplateEditor(Template template) {
         this.template = template;
@@ -136,7 +138,19 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                     }
                 });
                 template.setPatterns(patterns);
-                new TemplateWorker().writeTemplateData(file, template);
+                if (new TemplateWorker().writeTemplateData(file, template)) {
+                    // записали, обновили статус и проверили кнопки снизу
+                    startWindow.setTemplateFile(file);
+                    startWindow.setTemplateFileSelected(true);
+                    startWindow.getTemplateFileStatusLabel().setText(file.getAbsolutePath());
+                    startWindow.getTemplateFileStatusLabel()
+                            .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+                    startWindow.toggleBottomButtons();
+                } else {
+                    startWindow.getTemplateFileStatusLabel().setText("cancel select");
+                    startWindow.getTemplateFileStatusLabel().setGraphic(
+                            new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                }
             } else {
                 getLog().info("cancel template save");
             }

@@ -28,6 +28,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lombok.Getter;
+import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Template;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.TemplateWorker;
@@ -38,17 +40,20 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
     private Button selectTemplateFileButton = new Button();
     private Button selectOutputFolderButton = new Button();
     private Label originalFolderStatusLabel = new Label();
+    @Getter
     private Label templateFileStatusLabel = new Label();
     private Label outputFolderStatusLabel = new Label();
     private Label originalInfoLabel = new Label();
     private Button editTemplateButton = new Button();
     private Label outputInfoLabel = new Label();
     private File originalFolder;
+    @Setter
     private File templateFile;
     private File outputFolder;
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button processOriginalProjectFilesButton = new Button();
     private boolean originalFolderSelected;
+    @Setter
     private boolean templateFileSelected;
     private boolean outputFolderSelected;
     private String title;
@@ -66,7 +71,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
     }
 
-    private void toggleBottomButtons() {
+    protected void toggleBottomButtons() {
         exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && templateFileSelected));
         processOriginalProjectFilesButton
                 .setDisable(!(originalFolderSelected && templateFileSelected && outputFolderSelected));
@@ -178,23 +183,30 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
 
         });
         editTemplateButton.setOnAction(event -> {
+            TemplateEditor templateEditor;
             if (templateFile != null) {
                 getLog().info("load " + templateFile.getAbsolutePath() + " to template editor");
                 Template template = new TemplateWorker().readTemplateData(templateFile, Template.class);
 
                 if (template != null) {
-                    new TemplateEditor(templateFile, template).show();
+                    templateEditor = new TemplateEditor(templateFile, template);
+                    templateEditor.setStartWindow(this);
+                    templateEditor.show();
                 } else {
                     Alert alert = new Alert(AlertType.WARNING,
                             templateFile.getName() + " not a template. Run new template?", ButtonType.YES,
                             ButtonType.NO);
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
-                        new TemplateEditor(new Template()).show();
+                        templateEditor = new TemplateEditor(new Template());
+                        templateEditor.setStartWindow(this);
+                        templateEditor.show();
                     }
                 }
             } else {
-                new TemplateEditor(new Template()).show();
+                templateEditor = new TemplateEditor(new Template());
+                templateEditor.setStartWindow(this);
+                templateEditor.show();
             }
         });
     }
