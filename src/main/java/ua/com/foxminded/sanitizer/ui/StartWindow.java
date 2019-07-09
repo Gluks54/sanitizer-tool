@@ -57,7 +57,6 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
     private boolean templateFileSelected;
     private boolean outputFolderSelected;
     private String title;
-    private int inset = 10;
     private long size;
     private int files;
 
@@ -241,7 +240,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         topPane.add(outputInfoLabel, 2, 2);
 
         topPane.getChildren().forEach(element -> {
-            GridPane.setMargin(element, new Insets(inset));
+            GridPane.setMargin(element, new Insets(SanitizerWindow.INSET));
             if (element instanceof Button) {
                 ((Button) element).setMaxWidth(220);
             }
@@ -256,7 +255,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
         bottomPane.setId("bottomPane");
         bottomPane.getChildren().add(exploreOriginalProjectFilesButton);
         bottomPane.getChildren().add(processOriginalProjectFilesButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(inset)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
 
         root.setTop(topPane);
         root.setCenter(logPane);

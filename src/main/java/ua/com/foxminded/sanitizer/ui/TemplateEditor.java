@@ -6,11 +6,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -30,6 +32,11 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private Button newTemplateButton = new Button();
     private Button saveTemplateButton = new Button();
     private Button cancelButton = new Button();
+    private Button addContentReplacementButton = new Button();
+    private Button addFileSystemReplacementButton = new Button();
+    private ReplacementGridPane contentReplacementPane = new ReplacementGridPane();
+    private ReplacementGridPane filesystemReplacementPane = new ReplacementGridPane();
+    private CheckBox removeCommentsCheckBox = new CheckBox();
     private final List<CheckBox> extensions = Arrays.asList(new CheckBox("*.java"), new CheckBox("*.xml"),
             new CheckBox("*.sql"), new CheckBox("*.ts"));
     private final HBox filePatternHBox = new HBox();
@@ -52,11 +59,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     @Override
     public void show() {
         setMessages();
-        BorderPane root = new BorderPane();
-        FlowPane topPane = new FlowPane();
-        FlowPane bottomPane = new FlowPane();
-
-        topPane.getChildren().add(new Label("Files pattern:"));
+        FlowPane extensionsPane = new FlowPane();
+        extensionsPane.getChildren().add(new Label("Files pattern:"));
         extensions.forEach(extension -> {
             if ((extension.getText().equalsIgnoreCase("*.java")) || (extension.getText().equalsIgnoreCase("*.xml"))) {
                 extension.setSelected(true);
@@ -64,30 +68,45 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 extension.setSelected(false);
             }
             extension.setOnAction(event -> System.out.println("check"));
-            topPane.getChildren().add(extension);
+            extensionsPane.getChildren().add(extension);
         });
         filePatternHBox.setAlignment(Pos.BASELINE_CENTER);
         filePatternTextField.setEditable(false);
         filePatternHBox.getChildren().addAll(filePatternCheckBox, filePatternTextField);
-        topPane.getChildren().add(filePatternHBox);
-        topPane.setAlignment(Pos.CENTER);
-        topPane.setId("topPane");
-        topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(10)));
+        extensionsPane.getChildren().add(filePatternHBox);
+        extensionsPane.setAlignment(Pos.CENTER);
+        extensionsPane.setId("topPane");
+        extensionsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
 
-        bottomPane.setAlignment(Pos.CENTER);
-        bottomPane.setId("bottomPane");
-        bottomPane.getChildren().addAll(newTemplateButton, saveTemplateButton, cancelButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(10)));
+        BorderPane centerPane = new BorderPane();
+        FlowPane centerTopButtonsPane = new FlowPane();
+        centerTopButtonsPane.getChildren().addAll(removeCommentsCheckBox, addContentReplacementButton,
+                addFileSystemReplacementButton);
+        centerTopButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
+        centerPane.setTop(centerTopButtonsPane);
+        SplitPane splitCenterPane = new SplitPane();
+        splitCenterPane.setOrientation(Orientation.VERTICAL);
+        splitCenterPane.getItems().addAll(contentReplacementPane, filesystemReplacementPane);
 
-        root.setTop(topPane);
-        root.setBottom(bottomPane);
+        centerPane.setCenter(splitCenterPane);
+
+        FlowPane bottomButtonsPane = new FlowPane();
+        bottomButtonsPane.setAlignment(Pos.CENTER);
+        bottomButtonsPane.setId("bottomPane");
+        bottomButtonsPane.getChildren().addAll(newTemplateButton, saveTemplateButton, cancelButton);
+        bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
+
+        BorderPane root = new BorderPane();
+        root.setTop(extensionsPane);
+        root.setCenter(centerPane);
+        root.setBottom(bottomButtonsPane);
         Stage stage = new Stage();
         setButtonsActions(stage);
         stage.setOnCloseRequest(event -> {
             getLog().info("cancel template");
         });
 
-        int mainW = 800;
+        int mainW = 650;
         int mainH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));
@@ -106,6 +125,11 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         newTemplateButton.setText("New template");
         saveTemplateButton.setText("Save template");
         cancelButton.setText("Cancel");
+        addContentReplacementButton.setText("Add per-file replacement");
+        addFileSystemReplacementButton.setText("Add project structure replacement");
+        removeCommentsCheckBox.setText("Remove comments");
+        contentReplacementPane.setText("In-file replacements");
+        filesystemReplacementPane.setText("Project file structure replacements");
     }
 
     @Override
@@ -159,6 +183,12 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         cancelButton.setOnAction(event -> {
             getLog().info("cancel template");
             stage.close();
+        });
+        addContentReplacementButton.setOnAction(event -> {
+            contentReplacementPane.addReplacementItem();
+        });
+        addFileSystemReplacementButton.setOnAction(event -> {
+            filesystemReplacementPane.addReplacementItem();
         });
     }
 }
