@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer.ui;
+package ua.com.foxminded.sanitizer.ui.elements;
 
 import java.io.File;
 import java.io.IOException;

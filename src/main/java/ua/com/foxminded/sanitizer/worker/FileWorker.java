@@ -43,7 +43,7 @@ import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
-import ua.com.foxminded.sanitizer.ui.SharedTextAreaLog;
+import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @Log
 @NoArgsConstructor

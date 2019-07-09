@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
+import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
+import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 public class ExploreProjectWindow extends SharedTextAreaLog implements SanitizerWindow {
     private File selectedDirectory;

@@ -8,7 +8,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import ua.com.foxminded.sanitizer.data.Template;
-import ua.com.foxminded.sanitizer.ui.SharedTextAreaLog;
+import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 public class TemplateWorker extends SharedTextAreaLog {
     public Template readTemplateData(File file, Class<?> c) {

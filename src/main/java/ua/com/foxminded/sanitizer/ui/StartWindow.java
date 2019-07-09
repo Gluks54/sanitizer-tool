@@ -31,6 +31,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Template;
+import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 

@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer.ui;
+package ua.com.foxminded.sanitizer.ui.elements;
 
 import java.util.Date;
 import java.util.logging.LogRecord;
