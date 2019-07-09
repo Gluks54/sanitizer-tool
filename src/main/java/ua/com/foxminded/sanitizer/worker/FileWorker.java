@@ -11,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,8 +41,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import ua.com.foxminded.sanitizer.patch.Delta;
-import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
+import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.ui.SharedTextAreaLog;
 
 @Log
@@ -66,7 +65,9 @@ public class FileWorker extends SharedTextAreaLog {
     private String patchFilename;
 
     public String convertToStringRepresentation(final long value) {
-        long[] dividers = new long[] { 1_000_000_000, 1_000_000, 1_000, 1 };
+        final int BYTES = 1024;
+        long[] dividers = new long[] { (long) Math.pow(BYTES, 3), (long) Math.pow(BYTES, 2), (long) Math.pow(BYTES, 1),
+                (long) Math.pow(BYTES, 0) };
         String[] units = new String[] { "Gb", "Mb", "Kb", "B" };
         String result = "";
         for (int i = 0; i < dividers.length; i++) {
@@ -88,10 +89,11 @@ public class FileWorker extends SharedTextAreaLog {
         try {
             if (xmlFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-                URL schemaFile = new URL("https://maven.apache.org/xsd/maven-4.0.0.xsd");
-                getLog().info("validating " + xmlFile + " with " + schemaFile);
-                Schema schema;
-                schema = schemaFactory.newSchema(schemaFile);
+                String schemaFile = "maven-4.0.0.xsd";
+                getLog().info("validating " + xmlFile);
+
+                Schema schema = schemaFactory
+                        .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/" + schemaFile)));
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(new File(xmlFile)));
                 getLog().info("ok");
@@ -115,8 +117,8 @@ public class FileWorker extends SharedTextAreaLog {
         } else {
             getLog().info("no " + pomFileName);
         }
-        // boolean isProperPomXml = hasPomXml && validate(pomFileName);
-        boolean isProperPomXml = hasPomXml;
+        boolean isProperPomXml = hasPomXml && validate(pomFileName);
+        // boolean isProperPomXml = hasPomXml;
 
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());

@@ -164,6 +164,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                 outputFolderStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                 getLog().info("select output project folder " + outputFolder.getAbsolutePath());
+                outputInfoLabel.setText("Free space: " + fw.convertToStringRepresentation(outputFolder.getFreeSpace()));
                 outputFolderSelected = true;
             } else {
                 outputFolderStatusLabel.setText("cancel select");
