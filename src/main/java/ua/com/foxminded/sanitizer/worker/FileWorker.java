@@ -89,14 +89,11 @@ public class FileWorker extends SharedTextAreaLog {
         try {
             if (xmlFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-                String schemaFile = "maven-4.0.0.xsd";
-                getLog().info("validating " + xmlFile);
-
                 Schema schema = schemaFactory
-                        .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/" + schemaFile)));
+                        .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(new File(xmlFile)));
-                getLog().info("ok");
+                getLog().info("ok validate " + xmlFile);
                 return true;
             }
         } catch (SAXException e) {
@@ -117,9 +114,8 @@ public class FileWorker extends SharedTextAreaLog {
         } else {
             getLog().info("no " + pomFileName);
         }
-        boolean isProperPomXml = hasPomXml && validate(pomFileName);
-        // boolean isProperPomXml = hasPomXml;
-
+        // boolean isProperPomXml = hasPomXml && validate(pomFileName);
+        boolean isProperPomXml = hasPomXml;
         File srcFolder = new File(file.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
         if (hasSrcFolder) {

@@ -106,7 +106,7 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                     processDirectory(originalFolder);
                     originalInfoLabel.setText("Size: " + fw.convertToStringRepresentation(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
-                    originalFolderStatusLabel.setText("project ok at " + originalFolder.getName());
+                    originalFolderStatusLabel.setText(" ok project at " + originalFolder.getName());
                     originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
                     getLog().info("+++ maven project found at " + originalFolder);
@@ -202,6 +202,8 @@ public final class StartWindow extends SharedTextAreaLog implements SanitizerWin
                         templateEditor = new TemplateEditor(new Template());
                         templateEditor.setStartWindow(this);
                         templateEditor.show();
+                    } else {
+                        getLog().info("cancel new template");
                     }
                 }
             } else {
