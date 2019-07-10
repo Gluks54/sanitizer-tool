@@ -56,7 +56,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private final CheckBox filePatternCheckBox = new CheckBox();
     private final TextField filePatternTextField = new TextField();
     @Setter
-    private MainAppWindow startWindow;
+    private MainAppWindow mainAppWindow;
 
     @Override
     public void show() {
@@ -285,15 +285,15 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
 
                     if (new TemplateWorker().writeTemplateData(file, template)) {
                         // записали, обновили статус и проверили кнопки снизу
-                        startWindow.setTemplateFile(file);
-                        startWindow.setProperTemplateFileSelected(true);
-                        startWindow.getTemplateFileStatusLabel().setText(file.getAbsolutePath());
-                        startWindow.getTemplateFileStatusLabel().setGraphic(
+                        mainAppWindow.setTemplateFile(file);
+                        mainAppWindow.setProperTemplateFileSelected(true);
+                        mainAppWindow.getTemplateFileStatusLabel().setText(file.getAbsolutePath());
+                        mainAppWindow.getTemplateFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                        startWindow.toggleBottomButtons();
+                        mainAppWindow.toggleBottomButtons();
                     } else {
-                        startWindow.getTemplateFileStatusLabel().setText("cancel select");
-                        startWindow.getTemplateFileStatusLabel().setGraphic(
+                        mainAppWindow.getTemplateFileStatusLabel().setText("cancel select");
+                        mainAppWindow.getTemplateFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                     }
                 } else {

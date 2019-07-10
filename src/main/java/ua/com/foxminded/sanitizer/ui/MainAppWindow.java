@@ -191,7 +191,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
 
                 if (template != null) {
                     templateEditor = new TemplateEditor(template, templateFile);
-                    templateEditor.setStartWindow(this);
+                    templateEditor.setMainAppWindow(this);
                     templateEditor.show();
                 } else {
                     Alert alert = new Alert(AlertType.WARNING,
@@ -200,7 +200,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
                         templateEditor = new TemplateEditor();
-                        templateEditor.setStartWindow(this);
+                        templateEditor.setMainAppWindow(this);
                         templateEditor.show();
                     } else {
                         getLog().info("cancel new template");
@@ -208,7 +208,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 }
             } else {
                 templateEditor = new TemplateEditor();
-                templateEditor.setStartWindow(this);
+                templateEditor.setMainAppWindow(this);
                 templateEditor.show();
             }
         });

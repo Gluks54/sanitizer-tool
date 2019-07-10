@@ -42,6 +42,7 @@ import lombok.Setter;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
+import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @NoArgsConstructor
@@ -95,7 +96,7 @@ public class FileWorker extends SharedTextAreaLog {
                         .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(new File(xmlFile)));
-                getLog().info("ok validate " + xmlFile);
+                getLog().info("validate " + xmlFile + " " + SanitizerWindow.Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
