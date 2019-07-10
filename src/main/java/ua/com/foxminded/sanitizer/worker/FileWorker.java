@@ -62,6 +62,10 @@ public class FileWorker extends SharedTextAreaLog {
     @Setter
     private String patchFilename;
 
+    public boolean isMatchPatterns(File file, List<String> patterns, String customPattern) {
+        return false;
+    }
+
     public String turnFileSizeToString(final long value) {
         final int BYTES = 1024;
         long[] dividers = new long[] { (long) Math.pow(BYTES, 3), (long) Math.pow(BYTES, 2), (long) Math.pow(BYTES, 1),

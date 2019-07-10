@@ -50,8 +50,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private ReplacementPane contentReplacementPane = new ReplacementPane();
     private ReplacementPane filesystemReplacementPane = new ReplacementPane();
     private CheckBox removeCommentsCheckBox = new CheckBox();
-    private final List<CheckBox> extensions = Arrays.asList(new CheckBox("*.java"), new CheckBox("*.xml"),
-            new CheckBox("*.sql"), new CheckBox("*.ts"));
+    private final List<CheckBox> extensions = Arrays.asList(new CheckBox(".java"), new CheckBox(".xml"),
+            new CheckBox(".sql"), new CheckBox(".ts"));
     private final HBox filePatternHBox = new HBox();
     private final CheckBox filePatternCheckBox = new CheckBox();
     private final TextField filePatternTextField = new TextField();
@@ -63,16 +63,11 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         setMessages();
         FlowPane extensionsPane = new FlowPane();
         extensionsPane.getChildren().add(new Label("Files pattern:"));
-        extensions.forEach(extension -> {
-            if ((extension.getText().equalsIgnoreCase("*.java")) || (extension.getText().equalsIgnoreCase("*.xml"))) {
-                extension.setSelected(true);
-            } else {
-                extension.setSelected(false);
-            }
-            extensionsPane.getChildren().add(extension);
-        });
-        filePatternTextField.setEditable(false);
+        extensions.forEach(extension -> extension.setSelected(
+                (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
+        extensionsPane.getChildren().addAll(extensions);
 
+        filePatternTextField.setEditable(false);
         filePatternHBox.setAlignment(Pos.BASELINE_CENTER);
         filePatternHBox.getChildren().addAll(filePatternCheckBox, filePatternTextField);
         extensionsPane.getChildren().add(filePatternHBox);
@@ -127,11 +122,10 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
 
     public void loadTemplateData() {
         if (template.getPatterns() != null) {
-            extensions.stream().forEach(e -> {
-                e.setSelected(
-                        template.getPatterns().stream().anyMatch(t -> t.equalsIgnoreCase(e.getText())) ? true : false);
+            extensions.stream().forEach(extension -> {
+                extension.setSelected(template.getPatterns().stream()
+                        .anyMatch(template -> template.equalsIgnoreCase(extension.getText())) ? true : false);
             });
-
             operationStatus = SanitizerWindow.Status.OK;
         } else {
             operationStatus = SanitizerWindow.Status.FAIL;
@@ -154,9 +148,9 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         if (template.getReplacementInFileContent() != null
                 && template.getReplacementInFileContent().entrySet().size() > 0) {
             template.getReplacementInFileContent().entrySet().stream()
-                    .forEach(item -> contentReplacementPane
-                            .addReplacementItem((new ReplacementPane()).new ReplacementItem(item.getKey(),
-                                    item.getValue().getSource(), item.getValue().getTarget(), contentReplacementPane)));
+                    .forEach(entry -> contentReplacementPane.addReplacementItem(
+                            contentReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
+                                    entry.getValue().getTarget(), contentReplacementPane)));
             operationStatus = SanitizerWindow.Status.OK;
         } else {
             operationStatus = SanitizerWindow.Status.FAIL;
@@ -166,9 +160,9 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         if (template.getReplacementInProjectStructure() != null
                 && template.getReplacementInProjectStructure().entrySet().size() > 0) {
             template.getReplacementInProjectStructure().entrySet().stream()
-                    .forEach(item -> filesystemReplacementPane.addReplacementItem(
-                            (new ReplacementPane()).new ReplacementItem(item.getKey(), item.getValue().getSource(),
-                                    item.getValue().getTarget(), filesystemReplacementPane)));
+                    .forEach(entry -> filesystemReplacementPane.addReplacementItem(
+                            filesystemReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
+                                    entry.getValue().getTarget(), filesystemReplacementPane)));
             operationStatus = SanitizerWindow.Status.OK;
         } else {
             operationStatus = SanitizerWindow.Status.FAIL;
@@ -180,14 +174,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         removeCommentsCheckBox.setSelected(false);
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
-
-        extensions.forEach(extension -> {
-            if ((extension.getText().equalsIgnoreCase("*.java")) || (extension.getText().equalsIgnoreCase("*.xml"))) {
-                extension.setSelected(true);
-            } else {
-                extension.setSelected(false);
-            }
-        });
+        extensions.stream().forEach(extension -> extension.setSelected(
+                (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
         filePatternCheckBox.setSelected(false);
         filePatternTextField.setText("custom pattern");
     }
@@ -222,26 +210,29 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         });
         saveTemplateButton.setOnAction(event -> {
             Alert alert = new Alert(AlertType.ERROR);
-            if (contentReplacementPane.isWrongDescriptionInReplacementItems()) {
+            if (contentReplacementPane.isWrongDescriptionInReplacementItems()
+                    || filesystemReplacementPane.isWrongDescriptionInReplacementItems()) {
                 alert.setTitle("Description error");
                 alert.setContentText("Empty descriptions are prohibited");
                 alert.showAndWait();
-            } else if (contentReplacementPane.isWrongSourceInReplacementItems()) {
+            } else if (contentReplacementPane.isWrongSourceInReplacementItems()
+                    || filesystemReplacementPane.isWrongSourceInReplacementItems()) {
                 alert.setTitle("Source error");
                 alert.setContentText("Empty sources are prohibited");
                 alert.showAndWait();
-            } else if (contentReplacementPane.isWrongTargetInReplacementItems()) {
+            } else if (contentReplacementPane.isWrongTargetInReplacementItems()
+                    || filesystemReplacementPane.isWrongTargetInReplacementItems()) {
                 alert.setTitle("Target error");
                 alert.setContentText("Empty targets are prohibited");
                 alert.showAndWait();
-            } else if (contentReplacementPane.isDuplicateDescriptionsInReplacementItems()) {
+            } else if (contentReplacementPane.isDuplicateDescriptionsInReplacementItems()
+                    || filesystemReplacementPane.isDuplicateDescriptionsInReplacementItems()) {
                 alert.setTitle("Description error");
                 alert.setContentText("Similar descriptions are prohibited");
                 alert.showAndWait();
             } else {
                 FileChooser fc = new FileChooser();
-                FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml");
-                fc.getExtensionFilters().add(extFilter);
+                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
                 file = fc.showSaveDialog(stage);
                 if (file != null) {
                     getLog().info("save current template to " + file.getAbsolutePath());
@@ -295,7 +286,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                     if (new TemplateWorker().writeTemplateData(file, template)) {
                         // записали, обновили статус и проверили кнопки снизу
                         startWindow.setTemplateFile(file);
-                        startWindow.setTemplateFileSelected(true);
+                        startWindow.setProperTemplateFileSelected(true);
                         startWindow.getTemplateFileStatusLabel().setText(file.getAbsolutePath());
                         startWindow.getTemplateFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
@@ -312,14 +303,14 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
             }
         });
         cancelButton.setOnAction(event -> {
-            getLog().info("cancel template");
+            getLog().info("cancel template save");
             stage.close();
         });
         addContentReplacementButton.setOnAction(event -> {
-            contentReplacementPane.addReplacementItem();
+            contentReplacementPane.addReplacementItem(null);
         });
         addFileSystemReplacementButton.setOnAction(event -> {
-            filesystemReplacementPane.addReplacementItem();
+            filesystemReplacementPane.addReplacementItem(null);
         });
     }
 }

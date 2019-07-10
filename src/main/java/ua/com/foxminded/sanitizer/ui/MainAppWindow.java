@@ -55,7 +55,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     private Button processOriginalProjectFilesButton = new Button();
     private boolean originalFolderSelected;
     @Setter
-    private boolean templateFileSelected;
+    private boolean properTemplateFileSelected;
     private boolean outputFolderSelected;
     private String title;
     private long size;
@@ -72,9 +72,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     }
 
     protected void toggleBottomButtons() {
-        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && templateFileSelected));
+        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && properTemplateFileSelected));
         processOriginalProjectFilesButton
-                .setDisable(!(originalFolderSelected && templateFileSelected && outputFolderSelected));
+                .setDisable(!(originalFolderSelected && properTemplateFileSelected && outputFolderSelected));
     }
 
     @Override
@@ -136,22 +136,21 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         selectTemplateFileButton.setOnAction(event -> {
             getLog().info("trying select template file...");
             fc.setTitle("Select project template file");
-            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml");
-            fc.getExtensionFilters().add(extFilter);
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
             templateFile = fc.showOpenDialog(stage);
             if (templateFile != null) {
                 templateFileStatusLabel.setText(templateFile.getAbsolutePath());
                 templateFileStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                 getLog().info("select template file " + templateFile.getAbsolutePath());
-                templateFileSelected = true;
+                properTemplateFileSelected = true;
             } else {
                 templateFileStatusLabel.setText("cancel select");
                 templateFileStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                 getLog().info("cancel select template file");
-                if (!templateFileSelected) {
-                    templateFileSelected = false;
+                if (!properTemplateFileSelected) {
+                    properTemplateFileSelected = false;
                 }
             }
             toggleBottomButtons();

@@ -28,13 +28,13 @@ public class ReplacementPane extends TitledPane {
         private TextField sourceTextField = new TextField();
         private TextField targetTextField = new TextField();
         private Button deleteReplacementItemButton = new Button();
-        private ReplacementPane replacementGridPane;
+        private ReplacementPane replacementPane;
 
-        public ReplacementItem(String description, String source, String target, ReplacementPane replacementGridPane) {
+        public ReplacementItem(String description, String source, String target, ReplacementPane replacementPane) {
             super();
             setMessages();
             setButtonActions();
-            this.replacementGridPane = replacementGridPane;
+            this.replacementPane = replacementPane;
             descriptionTextField.setText(description);
             sourceTextField.setText(source);
             targetTextField.setText(target);
@@ -52,7 +52,7 @@ public class ReplacementPane extends TitledPane {
         }
 
         private void setButtonActions() {
-            deleteReplacementItemButton.setOnAction(event -> replacementGridPane.removeReplacementItem(this));
+            deleteReplacementItemButton.setOnAction(event -> replacementPane.removeReplacementItem(this));
         }
     }
 
@@ -76,7 +76,6 @@ public class ReplacementPane extends TitledPane {
             result.put(item.descriptionTextField.getText(), replacement);
         });
         return result;
-
     }
 
     public void clear() {
@@ -106,12 +105,9 @@ public class ReplacementPane extends TitledPane {
                 .collect(Collectors.toSet()).size() < mainPane.getChildren().size();
     }
 
-    public void addReplacementItem() {
-        mainPane.add(new ReplacementItem("", "", "", this), 0, mainPane.getChildren().size());
-    }
-
     public void addReplacementItem(ReplacementItem replacementItem) {
-        mainPane.add(replacementItem, 0, mainPane.getChildren().size());
+        mainPane.add((replacementItem == null) ? new ReplacementItem("", "", "", this) : replacementItem, 0,
+                mainPane.getChildren().size());
     }
 
     public void removeReplacementItem(ReplacementItem replacementItem) {
