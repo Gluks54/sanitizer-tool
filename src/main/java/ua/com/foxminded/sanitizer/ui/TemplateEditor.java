@@ -29,7 +29,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Template;
-import ua.com.foxminded.sanitizer.ui.elements.ReplacementGridPane;
+import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
@@ -47,8 +47,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private Button cancelButton = new Button();
     private Button addContentReplacementButton = new Button();
     private Button addFileSystemReplacementButton = new Button();
-    private ReplacementGridPane contentReplacementPane = new ReplacementGridPane();
-    private ReplacementGridPane filesystemReplacementPane = new ReplacementGridPane();
+    private ReplacementPane contentReplacementPane = new ReplacementPane();
+    private ReplacementPane filesystemReplacementPane = new ReplacementPane();
     private CheckBox removeCommentsCheckBox = new CheckBox();
     private final List<CheckBox> extensions = Arrays.asList(new CheckBox("*.java"), new CheckBox("*.xml"),
             new CheckBox("*.sql"), new CheckBox("*.ts"));
@@ -155,7 +155,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 && template.getReplacementInFileContent().entrySet().size() > 0) {
             template.getReplacementInFileContent().entrySet().stream()
                     .forEach(item -> contentReplacementPane
-                            .addReplacementItem((new ReplacementGridPane()).new ReplacementItem(item.getKey(),
+                            .addReplacementItem((new ReplacementPane()).new ReplacementItem(item.getKey(),
                                     item.getValue().getSource(), item.getValue().getTarget(), contentReplacementPane)));
             operationStatus = SanitizerWindow.Status.OK;
         } else {
@@ -167,7 +167,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 && template.getReplacementInProjectStructure().entrySet().size() > 0) {
             template.getReplacementInProjectStructure().entrySet().stream()
                     .forEach(item -> filesystemReplacementPane.addReplacementItem(
-                            (new ReplacementGridPane()).new ReplacementItem(item.getKey(), item.getValue().getSource(),
+                            (new ReplacementPane()).new ReplacementItem(item.getKey(), item.getValue().getSource(),
                                     item.getValue().getTarget(), filesystemReplacementPane)));
             operationStatus = SanitizerWindow.Status.OK;
         } else {

@@ -15,13 +15,11 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
-import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Replacement;
 import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 
-public class ReplacementGridPane extends TitledPane {
-    @Getter
-    @Setter
+public class ReplacementPane extends TitledPane {
+    // строки, добавляемые в панель
     public class ReplacementItem extends HBox {
         private Label descriptionLabel = new Label();
         private Label sourceLabel = new Label();
@@ -30,21 +28,20 @@ public class ReplacementGridPane extends TitledPane {
         private TextField sourceTextField = new TextField();
         private TextField targetTextField = new TextField();
         private Button deleteReplacementItemButton = new Button();
-        private ReplacementGridPane replacementGridPane;
+        private ReplacementPane replacementGridPane;
 
-        public ReplacementItem(String description, String source, String target,
-                ReplacementGridPane replacementGridPane) {
+        public ReplacementItem(String description, String source, String target, ReplacementPane replacementGridPane) {
             super();
             setMessages();
             setButtonActions();
             this.replacementGridPane = replacementGridPane;
-            this.descriptionTextField.setText(description);
-            this.sourceTextField.setText(source);
-            this.targetTextField.setText(target);
-            this.getChildren().addAll(descriptionLabel, descriptionTextField, sourceLabel, sourceTextField, targetLabel,
+            descriptionTextField.setText(description);
+            sourceTextField.setText(source);
+            targetTextField.setText(target);
+            getChildren().addAll(descriptionLabel, descriptionTextField, sourceLabel, sourceTextField, targetLabel,
                     targetTextField, deleteReplacementItemButton);
-            this.setAlignment(Pos.BASELINE_CENTER);
-            this.getChildren().forEach(node -> setMargin(node, new Insets(SanitizerWindow.INSET)));
+            setAlignment(Pos.BASELINE_CENTER);
+            getChildren().forEach(node -> setMargin(node, new Insets(SanitizerWindow.INSET)));
         }
 
         private void setMessages() {
@@ -55,9 +52,7 @@ public class ReplacementGridPane extends TitledPane {
         }
 
         private void setButtonActions() {
-            deleteReplacementItemButton.setOnAction(event -> {
-                replacementGridPane.removeReplacementItem(this);
-            });
+            deleteReplacementItemButton.setOnAction(event -> replacementGridPane.removeReplacementItem(this));
         }
     }
 
@@ -66,7 +61,7 @@ public class ReplacementGridPane extends TitledPane {
     private GridPane mainPane = new GridPane();
     private ScrollPane scrollPane = new ScrollPane();
 
-    public ReplacementGridPane() {
+    public ReplacementPane() {
         mainColumn.setPercentWidth(100);
         mainPane.getColumnConstraints().add(mainColumn);
         scrollPane.setContent(mainPane);
@@ -77,9 +72,8 @@ public class ReplacementGridPane extends TitledPane {
         Map<String, Replacement> result = new HashMap<String, Replacement>();
         mainPane.getChildren().stream().forEach(node -> {
             ReplacementItem item = (ReplacementItem) node;
-            Replacement replacement = new Replacement(item.getSourceTextField().getText(),
-                    item.getTargetTextField().getText());
-            result.put(item.getDescriptionTextField().getText(), replacement);
+            Replacement replacement = new Replacement(item.sourceTextField.getText(), item.targetTextField.getText());
+            result.put(item.descriptionTextField.getText(), replacement);
         });
         return result;
 
@@ -91,24 +85,24 @@ public class ReplacementGridPane extends TitledPane {
 
     public boolean isWrongSourceInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).getSourceTextField().getText().equals("")
-                        || ((ReplacementItem) node).getSourceTextField().getText().equals(null));
+                .anyMatch(node -> ((ReplacementItem) node).sourceTextField.getText().equals("")
+                        || ((ReplacementItem) node).sourceTextField.getText().equals(null));
     }
 
     public boolean isWrongTargetInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).getTargetTextField().getText().equals("")
-                        || ((ReplacementItem) node).getTargetTextField().getText().equals(null));
+                .anyMatch(node -> ((ReplacementItem) node).targetTextField.getText().equals("")
+                        || ((ReplacementItem) node).targetTextField.getText().equals(null));
     }
 
     public boolean isWrongDescriptionInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).getDescriptionTextField().getText().equals("")
-                        || ((ReplacementItem) node).getDescriptionTextField().getText().equals(null));
+                .anyMatch(node -> ((ReplacementItem) node).descriptionTextField.getText().equals("")
+                        || ((ReplacementItem) node).descriptionTextField.getText().equals(null));
     }
 
     public boolean isDuplicateDescriptionsInReplacementItems() {
-        return mainPane.getChildren().stream().map(node -> ((ReplacementItem) node).getDescriptionTextField().getText())
+        return mainPane.getChildren().stream().map(node -> ((ReplacementItem) node).descriptionTextField.getText())
                 .collect(Collectors.toSet()).size() < mainPane.getChildren().size();
     }
 
