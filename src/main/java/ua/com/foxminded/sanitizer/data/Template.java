@@ -21,6 +21,7 @@ import lombok.Setter;
 public class Template {
     private boolean removeComments;
     private List<String> patterns = new ArrayList<String>();
+    private String customPattern;
     @XmlElementWrapper
     @XmlElement
     private Map<String, Replacement> replacementInFileContent = new HashMap<String, Replacement>();

@@ -44,7 +44,6 @@ import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-//@Log
 @NoArgsConstructor
 @RequiredArgsConstructor
 public class FileWorker extends SharedTextAreaLog {

@@ -24,15 +24,24 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Template;
 import ua.com.foxminded.sanitizer.ui.elements.ReplacementGridPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
+@RequiredArgsConstructor
+@NoArgsConstructor
 public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow {
     @Getter
-    private Template template = new Template();
+    @NonNull
+    private Template template;
+    @NonNull
+    private File file;
+    private SanitizerWindow.Status operationStatus;
     private Button newTemplateButton = new Button();
     private Button saveTemplateButton = new Button();
     private Button cancelButton = new Button();
@@ -46,19 +55,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
     private final HBox filePatternHBox = new HBox();
     private final CheckBox filePatternCheckBox = new CheckBox();
     private final TextField filePatternTextField = new TextField();
-    private File file;
     @Setter
     private MainAppWindow startWindow;
-
-    public TemplateEditor(Template template) {
-        this.template = template;
-    }
-
-    public TemplateEditor(File file, Template template) {
-        super();
-        this.file = file;
-        this.template = template;
-    }
 
     @Override
     public void show() {
@@ -114,7 +112,10 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         int mainH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));
-        if (file != null) {
+
+        // если проинжекчен template, инитим данные в окне
+        if (template != null && file != null) {
+            loadTemplateData();
             stage.setTitle("Edit template " + file.getAbsolutePath());
             getLog().info("edit template " + file.getAbsolutePath());
         } else {
@@ -124,8 +125,58 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         stage.show();
     }
 
+    public void loadTemplateData() {
+        if (template.getPatterns() != null) {
+            extensions.stream().forEach(e -> {
+                e.setSelected(
+                        template.getPatterns().stream().anyMatch(t -> t.equalsIgnoreCase(e.getText())) ? true : false);
+            });
+
+            operationStatus = SanitizerWindow.Status.OK;
+        } else {
+            operationStatus = SanitizerWindow.Status.FAIL;
+        }
+        getLog().info("...load file extensions: " + operationStatus.getStatus());
+
+        if (template.getCustomPattern() != null) {
+            filePatternCheckBox.setSelected(true);
+            filePatternTextField.setEditable(true);
+            filePatternTextField.setText(template.getCustomPattern());
+            operationStatus = SanitizerWindow.Status.OK;
+        } else {
+            operationStatus = SanitizerWindow.Status.FAIL;
+        }
+        getLog().info("...load custom file pattern: " + operationStatus.getStatus());
+
+        removeCommentsCheckBox.setSelected(template.isRemoveComments());
+        getLog().info("...load remove comments feature: " + SanitizerWindow.Status.OK.getStatus());
+
+        if (template.getReplacementInFileContent() != null
+                && template.getReplacementInFileContent().entrySet().size() > 0) {
+            template.getReplacementInFileContent().entrySet().stream()
+                    .forEach(item -> contentReplacementPane
+                            .addReplacementItem((new ReplacementGridPane()).new ReplacementItem(item.getKey(),
+                                    item.getValue().getSource(), item.getValue().getTarget(), contentReplacementPane)));
+            operationStatus = SanitizerWindow.Status.OK;
+        } else {
+            operationStatus = SanitizerWindow.Status.FAIL;
+        }
+        getLog().info("...load per-file replacements: " + operationStatus.getStatus());
+
+        if (template.getReplacementInProjectStructure() != null
+                && template.getReplacementInProjectStructure().entrySet().size() > 0) {
+            template.getReplacementInProjectStructure().entrySet().stream()
+                    .forEach(item -> filesystemReplacementPane.addReplacementItem(
+                            (new ReplacementGridPane()).new ReplacementItem(item.getKey(), item.getValue().getSource(),
+                                    item.getValue().getTarget(), filesystemReplacementPane)));
+            operationStatus = SanitizerWindow.Status.OK;
+        } else {
+            operationStatus = SanitizerWindow.Status.FAIL;
+        }
+        getLog().info("...load project structure replacements: " + operationStatus.getStatus());
+    }
+
     public void clearTemplate() {
-        // все обнулить
         removeCommentsCheckBox.setSelected(false);
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
@@ -194,21 +245,53 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 file = fc.showSaveDialog(stage);
                 if (file != null) {
                     getLog().info("save current template to " + file.getAbsolutePath());
-                    // все считать
+                    // считать все расширения файлов
                     List<String> patterns = new ArrayList<String>();
                     extensions.forEach(extension -> {
                         if (extension.isSelected()) {
                             patterns.add(extension.getText());
                         }
                     });
+                    // читаем показатели из полей
+                    // если template не проинжекчен конструктором,
+                    // создаем новый
+                    if (template == null) {
+                        template = new Template();
+                    }
+                    template.setPatterns(patterns);
+                    getLog().info("...save file extensions: " + SanitizerWindow.Status.OK.getStatus());
+
+                    if (contentReplacementPane.getReplacementsMap() != null
+                            && contentReplacementPane.getReplacementsMap().size() > 0) {
+                        template.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
+                        operationStatus = SanitizerWindow.Status.OK;
+                    } else {
+                        operationStatus = SanitizerWindow.Status.FAIL;
+                    }
+                    getLog().info("...save per-file replacements: " + operationStatus.getStatus());
+
+                    template.setRemoveComments(removeCommentsCheckBox.isSelected());
+                    getLog().info("...save remove comments feature: " + SanitizerWindow.Status.OK.getStatus());
+
+                    // добавляем regexp из поля
                     if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
                             && (!filePatternTextField.getText().equals(null))) {
-                        patterns.add(filePatternTextField.getText());
+                        template.setCustomPattern(filePatternTextField.getText());
+                        operationStatus = SanitizerWindow.Status.OK;
+                    } else {
+                        operationStatus = SanitizerWindow.Status.FAIL;
                     }
-                    // читаем показатели из полей
-                    template.setPatterns(patterns);
-                    template.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
-                    template.setRemoveComments(removeCommentsCheckBox.isSelected());
+                    getLog().info("...save custom file regexp: " + operationStatus.getStatus());
+
+                    if (filesystemReplacementPane.getReplacementsMap() != null
+                            && filesystemReplacementPane.getReplacementsMap().size() > 0) {
+                        template.setReplacementInProjectStructure(filesystemReplacementPane.getReplacementsMap());
+                        operationStatus = SanitizerWindow.Status.OK;
+                    } else {
+                        operationStatus = SanitizerWindow.Status.FAIL;
+                    }
+                    getLog().info("...save project structure replacements: " + operationStatus.getStatus());
+
                     if (new TemplateWorker().writeTemplateData(file, template)) {
                         // записали, обновили статус и проверили кнопки снизу
                         startWindow.setTemplateFile(file);

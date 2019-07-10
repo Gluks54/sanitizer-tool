@@ -8,6 +8,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import ua.com.foxminded.sanitizer.data.Template;
+import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 public class TemplateWorker extends SharedTextAreaLog {
@@ -17,11 +18,12 @@ public class TemplateWorker extends SharedTextAreaLog {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             template = (Template) unmarshaller.unmarshal(file);
-            getLog().info("ok read template " + file.getAbsolutePath());
+            getLog().info("read template " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
             return template;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
+            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read template: "
+                    + SanitizerWindow.Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like template file");
             return null;
         }
@@ -33,12 +35,13 @@ public class TemplateWorker extends SharedTextAreaLog {
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.marshal(template, System.out);
-            // marshaller.marshal(template, file);
-            getLog().info("ok write template " + file.getAbsolutePath());
+            marshaller.marshal(template, file);
+            getLog().info("write template " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
             return true;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("template read failure at JAXB in " + file.getAbsolutePath());
+            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read template: "
+                    + SanitizerWindow.Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like template file");
             return false;
         }

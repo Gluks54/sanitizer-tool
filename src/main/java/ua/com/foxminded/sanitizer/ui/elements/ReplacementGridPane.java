@@ -113,7 +113,10 @@ public class ReplacementGridPane extends TitledPane {
     }
 
     public void addReplacementItem() {
-        ReplacementItem replacementItem = new ReplacementItem("", "", "", this);
+        mainPane.add(new ReplacementItem("", "", "", this), 0, mainPane.getChildren().size());
+    }
+
+    public void addReplacementItem(ReplacementItem replacementItem) {
         mainPane.add(replacementItem, 0, mainPane.getChildren().size());
     }
 

@@ -106,7 +106,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     processDirectory(originalFolder);
                     originalInfoLabel.setText("Size: " + fw.turnFileSizeToString(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
-                    originalFolderStatusLabel.setText(" ok project at " + originalFolder.getName());
+                    originalFolderStatusLabel.setText(
+                            "project at " + originalFolder.getName() + " " + SanitizerWindow.Status.OK.getStatus());
                     originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
                     getLog().info("+++ maven project found at " + originalFolder);
@@ -190,7 +191,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 Template template = new TemplateWorker().readTemplateData(templateFile, Template.class);
 
                 if (template != null) {
-                    templateEditor = new TemplateEditor(templateFile, template);
+                    templateEditor = new TemplateEditor(template, templateFile);
                     templateEditor.setStartWindow(this);
                     templateEditor.show();
                 } else {
@@ -199,7 +200,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                             ButtonType.NO);
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
-                        templateEditor = new TemplateEditor(new Template());
+                        templateEditor = new TemplateEditor();
                         templateEditor.setStartWindow(this);
                         templateEditor.show();
                     } else {
@@ -207,7 +208,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     }
                 }
             } else {
-                templateEditor = new TemplateEditor(new Template());
+                templateEditor = new TemplateEditor();
                 templateEditor.setStartWindow(this);
                 templateEditor.show();
             }
