@@ -201,6 +201,10 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                             patterns.add(extension.getText());
                         }
                     });
+                    if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
+                            && (!filePatternTextField.getText().equals(null))) {
+                        patterns.add(filePatternTextField.getText());
+                    }
                     // читаем показатели из полей
                     template.setPatterns(patterns);
                     template.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
