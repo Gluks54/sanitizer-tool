@@ -34,7 +34,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
-import ua.com.foxminded.sanitizer.worker.OSWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @RequiredArgsConstructor
@@ -44,10 +43,7 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
     private String modifiedFileString;
     private String ownerFileString;
     private String permissionsFileString;
-    private OSWorker.OS os = new OSWorker().getOs();
     private FileWorker fileWorker = new FileWorker();
-    private final int viewW = 800;
-    private final int viewH = 600;
     private static final String[] KEYWORD = new String[] { "abstract", "assert", "boolean", "break", "byte", "case",
             "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends",
             "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface",
@@ -86,7 +82,6 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
     @Override
     public void setButtonsActions(Stage stage) {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -104,9 +99,7 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
         textArea.setCache(true);
         textArea.setEditable(false);
         textArea.setParagraphGraphicFactory(LineNumberFactory.get(textArea));
-        textArea.textProperty().addListener((obs, oldText, newText) -> {
-            textArea.setStyleSpans(0, highlight(newText));
-        });
+        textArea.textProperty().addListener((obs, oldText, newText) -> textArea.setStyleSpans(0, highlight(newText)));
 
         try (InputStream in = new FileInputStream(file.toFile());
                 Reader reader = new InputStreamReader(in, "UTF-8");
@@ -126,7 +119,7 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
             getLog().severe("read file modification time fail");
         }
 
-        if ((os == OS.MAC) || (os == OS.UNIX) || (os == OS.SOLARIS)) {
+        if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX) || (SanitizerWindow.ENV == OS.SOLARIS)) {
             try {
                 bottomPane.getChildren()
                         .add(new Label(ownerFileString + Files.getOwner(file, LinkOption.NOFOLLOW_LINKS)));
@@ -141,9 +134,13 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setBottom(bottomPane);
 
-        stage.setTitle(file.getFileName().toString() + " | "
-                + ((fileWorker.getFileType(file.toFile()) == null) ? "undetected type"
-                        : fileWorker.getFileType(file.toFile())));
+        try {
+            stage.setTitle(file.getFileName().toString() + " | " + fileWorker.getFileType(file.toFile()));
+        } catch (IOException e) {
+            stage.setTitle(file.getFileName().toString());
+        }
+        int viewW = 800;
+        int viewH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, viewW, viewH));
         stage.show();

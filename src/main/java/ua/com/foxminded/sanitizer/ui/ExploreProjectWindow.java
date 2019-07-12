@@ -67,7 +67,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         root.setCenter(splitPane);
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(okButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(10)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setBottom(bottomPane);
         Stage stage = new Stage();
         stage.setOnCloseRequest(event -> {

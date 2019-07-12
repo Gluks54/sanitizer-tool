@@ -73,13 +73,8 @@ public class FileWorker extends SharedTextAreaLog {
     @Setter
     private String patchFilename;
 
-    public String getFileType(File file) {
-        try {
-            return new Tika().detect(file);
-        } catch (IOException e) {
-            getLog().severe("file type detect for " + file.getAbsolutePath() + " " + SanitizerWindow.Status.FAIL);
-            return null;
-        }
+    public String getFileType(File file) throws IOException {
+        return new Tika().detect(file);
     }
 
     public String getFileTime(File file) throws IOException {
@@ -144,7 +139,11 @@ public class FileWorker extends SharedTextAreaLog {
     }
 
     public boolean isMatchPatterns(File file, Config config) {
-        return true;
+        System.out.println("------");
+        config.getPatterns().stream().forEach(System.out::println);
+        System.out.println(config.getCustomPattern());
+        boolean isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
+        return isMatchFileExtension;
     }
 
     public String turnFileSizeToString(final long value) {

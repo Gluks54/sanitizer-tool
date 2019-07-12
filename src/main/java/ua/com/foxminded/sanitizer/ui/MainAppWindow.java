@@ -55,10 +55,10 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     private File outputFolder;
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button processOriginalProjectFilesButton = new Button();
-    private boolean originalFolderSelected;
+    private boolean isOriginalFolderSelected;
     @Setter
-    private boolean properConfigFileSelected;
-    private boolean outputFolderSelected;
+    private boolean isProperConfigFileSelected;
+    private boolean isOutputFolderSelected;
     private String title;
     private long size;
     private int files;
@@ -74,9 +74,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     }
 
     protected void toggleBottomButtons() {
-        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && properConfigFileSelected));
+        exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected));
         processOriginalProjectFilesButton
-                .setDisable(!(originalFolderSelected && properConfigFileSelected && outputFolderSelected));
+                .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
     }
 
     @Override
@@ -114,14 +114,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                             new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
                     getLog().info("+++ maven project found at " + originalFolder);
                     stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
-                    originalFolderSelected = true;
+                    isOriginalFolderSelected = true;
                 } else {
                     originalFolderStatusLabel.setText("ordinary directory");
                     originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                     getLog().info("ordinary directory selected: " + originalFolder.toString());
                     getLog().info("no proper projects here");
-                    originalFolderSelected = false;
+                    isOriginalFolderSelected = false;
                     stage.setTitle(title);
                 }
             } else {
@@ -129,8 +129,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 originalFolderStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                 getLog().info("cancel select original project root folder");
-                if (!originalFolderSelected) {
-                    originalFolderSelected = false;
+                if (!isOriginalFolderSelected) {
+                    isOriginalFolderSelected = false;
                 }
             }
             toggleBottomButtons();
@@ -143,12 +143,12 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             if (configFile != null) {
                 configFileStatusLabel.setText(configFile.getAbsolutePath());
                 getLog().info("select template file " + configFile.getAbsolutePath());
-                config = new ConfigWorker().readConfigData(configFile, Config.class);
 
+                config = new ConfigWorker().readConfigData(configFile, Config.class);
                 if (config != null) {
                     configFileStatusLabel
                             .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                    properConfigFileSelected = true;
+                    isProperConfigFileSelected = true;
                     getLog().info("+++ " + configFile.getName() + " is proper sanitizer config");
                 } else {
                     configFileStatusLabel.setGraphic(
@@ -164,8 +164,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 configFileStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                 getLog().info("cancel select template file");
-                if (!properConfigFileSelected) {
-                    properConfigFileSelected = false;
+                if (!isProperConfigFileSelected) {
+                    isProperConfigFileSelected = false;
                 }
             }
             toggleBottomButtons();
@@ -180,14 +180,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                 getLog().info("select output project folder " + outputFolder.getAbsolutePath());
                 outputInfoLabel.setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
-                outputFolderSelected = true;
+                isOutputFolderSelected = true;
             } else {
                 outputFolderStatusLabel.setText("cancel select");
                 outputFolderStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                 getLog().info("cancel select output project folder");
-                if (!outputFolderSelected) {
-                    outputFolderSelected = false;
+                if (!isOutputFolderSelected) {
+                    isOutputFolderSelected = false;
                 }
             }
             toggleBottomButtons();

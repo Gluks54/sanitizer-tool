@@ -2,9 +2,12 @@ package ua.com.foxminded.sanitizer.ui.elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,6 +18,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTreeCell;
@@ -24,7 +28,9 @@ import lombok.NoArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
 import ua.com.foxminded.sanitizer.ui.FileView;
+import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
+import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @NoArgsConstructor
 public class FileTreeItem extends TreeItem<File> {
@@ -51,19 +57,24 @@ public class FileTreeItem extends TreeItem<File> {
     private boolean isFirstTimeChildren = true;
     private boolean isFirstTimeLeaf = true;
     private boolean isLeaf;
+    private String modifiedFileString;
+    private String ownerFileString;
+    private String permissionsFileString;
+    private String sizeFileString;
+    private String contentFileString;
     private Image folderCollapsedImage = new Image(getClass().getResourceAsStream("/img/folder.png"));
     private Image folderOpenedImage = new Image(getClass().getResourceAsStream("/img/folder_open.png"));
     private Image fileImage = new Image(getClass().getResourceAsStream("/img/file.png"));
     private ObservableList<FileData> dataView;
     private ArrayList<FileData> fileList = new ArrayList<FileData>();
     private TableView<FileData> tableView = new TableView<FileData>();
-    // private String extension = ".java"; // not constant, could be a list
     private Config config = new Config();
     private FileWorker fileWorker = new FileWorker();
 
     public FileTreeItem(File file, Config config) {
         super(file);
         this.config = config;
+        setMessages();
         setGraphic(file.isDirectory() ? new ImageView(folderCollapsedImage) : new ImageView(fileImage));
 
         addEventHandler(TreeItem.branchExpandedEvent(), event -> {
@@ -78,7 +89,6 @@ public class FileTreeItem extends TreeItem<File> {
                 }
             }
         });
-
         addEventHandler(TreeItem.branchCollapsedEvent(), event -> {
             TreeItem<Object> source = event.getSource();
             if (!source.isExpanded()) {
@@ -86,6 +96,38 @@ public class FileTreeItem extends TreeItem<File> {
                 iv.setImage(folderCollapsedImage);
             }
         });
+    }
+
+    public void setMessages() {
+        contentFileString = "Type: ";
+        modifiedFileString = "Modified: ";
+        ownerFileString = "Owner: ";
+        permissionsFileString = "Permissions: ";
+        sizeFileString = "Size: ";
+    }
+
+    public String getToolTipText(String fileName) {
+        File file = new File(fileName);
+        String result = file.getName() + System.lineSeparator() + "------" + System.lineSeparator();
+        try {
+            result += contentFileString + " " + fileWorker.getFileType(file) + System.lineSeparator();
+            result += modifiedFileString + " " + fileWorker.getFileTime(file) + System.lineSeparator();
+            if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX)
+                    || (SanitizerWindow.ENV == OS.SOLARIS)) {
+                Path currentFilePath = Paths.get(file.getAbsolutePath());
+                result += ownerFileString + " " + Files.getOwner(currentFilePath, LinkOption.NOFOLLOW_LINKS)
+                        + System.lineSeparator();
+                result += permissionsFileString + " "
+                        + fileWorker.getPermissions(
+                                Files.getPosixFilePermissions(currentFilePath, LinkOption.NOFOLLOW_LINKS))
+                        + System.lineSeparator();
+            }
+            result += "------" + System.lineSeparator();
+            result += sizeFileString + " " + file.length();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -109,13 +151,12 @@ public class FileTreeItem extends TreeItem<File> {
             final MenuItem mi1 = new MenuItem();
             mi1.setOnAction(event -> new FileView(row.getItem().getFileName()).show());
 
-            row.setOnContextMenuRequested(event -> {
-                if (!row.isEmpty()) {
-                    mi1.setText("View " + Paths.get(row.getItem().getFileName()).getFileName());
-                }
+            row.setOnContextMenuRequested(event -> mi1
+                    .setText(row.isEmpty() ? null : "View " + Paths.get(row.getItem().getFileName()).getFileName()));
+            row.emptyProperty().addListener((observable, wasEmpty, isEmpty) -> {
+                row.setContextMenu(isEmpty ? null : new ContextMenu(mi1));
+                row.setTooltip(isEmpty ? null : new Tooltip(getToolTipText(row.getItem().getFileName())));
             });
-            row.emptyProperty().addListener(
-                    (observable, wasEmpty, isEmpty) -> row.setContextMenu(isEmpty ? null : new ContextMenu(mi1)));
             return row;
         });
         tableView.setItems(dataView);
@@ -152,20 +193,14 @@ public class FileTreeItem extends TreeItem<File> {
     private ObservableList<TreeItem<File>> buildChildren(TreeItem<File> TreeItem) {
         File file = TreeItem.getValue();
         if (file != null && file.isDirectory()) {
-            // with FileFilter
+            // дерево каталогов слева, FileFilter на каталог
             File[] files = file.listFiles(pathname -> {
-                boolean isShownDirectory = (!pathname.isHidden()) && pathname.isDirectory();
-                boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
-                // && pathname.getName().toLowerCase().endsWith(extension);
-                        && fileWorker.isMatchPatterns(file, config);
-                return isShownDirectory || isShownFile;
+                return (!pathname.isHidden()) && pathname.isDirectory();
             });
 
             if (files != null) {
                 ObservableList<TreeItem<File>> children = FXCollections.observableArrayList();
-                for (File childFile : files) {
-                    children.add(new FileTreeItem(childFile, config));
-                }
+                Arrays.stream(files).forEach(f -> children.add(new FileTreeItem(f, config)));
                 return children;
             }
         }
@@ -175,15 +210,12 @@ public class FileTreeItem extends TreeItem<File> {
     private void processDirectory(Path dir) throws IOException {
         fileList.clear();
         File[] files = dir.toFile().listFiles(pathname -> {
-            boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
-            // && pathname.getName().toLowerCase().endsWith(extension);
-                    && fileWorker.isMatchPatterns(pathname, config);
-            return isShownFile;
+            return (!pathname.isHidden()) && (!pathname.isDirectory()) && fileWorker.isMatchPatterns(pathname, config);
         });
 
-        for (File F : files) {
+        for (File file : files) {
             FileData tableItem = new FileData();
-            tableItem.setFileName(F.getAbsolutePath());
+            tableItem.setFileName(file.getAbsolutePath());
             fileList.add(tableItem);
         }
         dataView = FXCollections.observableArrayList(fileList);

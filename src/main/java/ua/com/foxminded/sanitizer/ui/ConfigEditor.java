@@ -272,8 +272,10 @@ public class ConfigEditor extends SharedTextAreaLog implements SanitizerWindow {
                         config.setCustomPattern(filePatternTextField.getText());
                         operationStatus = SanitizerWindow.Status.OK;
                     } else {
+                        config.setCustomPattern(null);
                         operationStatus = SanitizerWindow.Status.FAIL;
                     }
+                    System.out.println("=" + filePatternTextField.getText() + "=");
                     getLog().info("...save custom file regexp: " + operationStatus.getStatus());
 
                     if (filesystemReplacementPane.getReplacementsMap() != null
