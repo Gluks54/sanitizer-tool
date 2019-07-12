@@ -28,22 +28,22 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import ua.com.foxminded.sanitizer.data.Template;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
-import ua.com.foxminded.sanitizer.worker.TemplateWorker;
+import ua.com.foxminded.sanitizer.worker.ConfigWorker;
 
 @RequiredArgsConstructor
 @NoArgsConstructor
-public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow {
+public class ConfigEditor extends SharedTextAreaLog implements SanitizerWindow {
     @Getter
     @NonNull
-    private Template template;
+    private Config config;
     @NonNull
     private File file;
     private SanitizerWindow.Status operationStatus;
-    private Button newTemplateButton = new Button();
-    private Button saveTemplateButton = new Button();
+    private Button newConfigButton = new Button();
+    private Button saveConfigButton = new Button();
     private Button cancelButton = new Button();
     private Button addContentReplacementButton = new Button();
     private Button addFileSystemReplacementButton = new Button();
@@ -90,7 +90,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         FlowPane bottomButtonsPane = new FlowPane();
         bottomButtonsPane.setAlignment(Pos.CENTER);
         bottomButtonsPane.setId("bottomPane");
-        bottomButtonsPane.getChildren().addAll(newTemplateButton, saveTemplateButton, cancelButton);
+        bottomButtonsPane.getChildren().addAll(newConfigButton, saveConfigButton, cancelButton);
         bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
 
         BorderPane root = new BorderPane();
@@ -100,7 +100,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         Stage stage = new Stage();
         setButtonsActions(stage);
         stage.setOnCloseRequest(event -> {
-            getLog().info("cancel template");
+            getLog().info("cancel config");
         });
 
         int mainW = 950;
@@ -108,23 +108,25 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, mainW, mainH));
 
-        // если проинжекчен template, инитим данные в окне
-        if (template != null && file != null) {
-            loadTemplateData();
-            stage.setTitle("Edit template " + file.getAbsolutePath());
-            getLog().info("edit template " + file.getAbsolutePath());
+        // если проинжекчен config, инитим данные в окне
+        if (config != null && file != null) {
+            loadConfigData();
+            stage.setTitle("Edit config " + file.getAbsolutePath());
+            getLog().info("edit config " + file.getAbsolutePath());
         } else {
-            stage.setTitle("New template file");
-            getLog().info("new template file started");
+            stage.setTitle("New config file");
+            getLog().info("new config file started");
         }
         stage.show();
     }
 
-    public void loadTemplateData() {
-        if (template.getPatterns() != null) {
+    public void loadConfigData() {
+        if (config.getPatterns() != null) {
             extensions.stream().forEach(extension -> {
-                extension.setSelected(template.getPatterns().stream()
-                        .anyMatch(template -> template.equalsIgnoreCase(extension.getText())) ? true : false);
+                extension.setSelected(
+                        config.getPatterns().stream().anyMatch(config -> config.equalsIgnoreCase(extension.getText()))
+                                ? true
+                                : false);
             });
             operationStatus = SanitizerWindow.Status.OK;
         } else {
@@ -132,22 +134,22 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         }
         getLog().info("...load file extensions: " + operationStatus.getStatus());
 
-        if (template.getCustomPattern() != null) {
+        if (config.getCustomPattern() != null) {
             filePatternCheckBox.setSelected(true);
             filePatternTextField.setEditable(true);
-            filePatternTextField.setText(template.getCustomPattern());
+            filePatternTextField.setText(config.getCustomPattern());
             operationStatus = SanitizerWindow.Status.OK;
         } else {
             operationStatus = SanitizerWindow.Status.FAIL;
         }
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
 
-        removeCommentsCheckBox.setSelected(template.isRemoveComments());
+        removeCommentsCheckBox.setSelected(config.isRemoveComments());
         getLog().info("...load remove comments feature: " + SanitizerWindow.Status.OK.getStatus());
 
-        if (template.getReplacementInFileContent() != null
-                && template.getReplacementInFileContent().entrySet().size() > 0) {
-            template.getReplacementInFileContent().entrySet().stream()
+        if (config.getReplacementInFileContent() != null
+                && config.getReplacementInFileContent().entrySet().size() > 0) {
+            config.getReplacementInFileContent().entrySet().stream()
                     .forEach(entry -> contentReplacementPane.addReplacementItem(
                             contentReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
                                     entry.getValue().getTarget(), contentReplacementPane)));
@@ -157,9 +159,9 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         }
         getLog().info("...load per-file replacements: " + operationStatus.getStatus());
 
-        if (template.getReplacementInProjectStructure() != null
-                && template.getReplacementInProjectStructure().entrySet().size() > 0) {
-            template.getReplacementInProjectStructure().entrySet().stream()
+        if (config.getReplacementInProjectStructure() != null
+                && config.getReplacementInProjectStructure().entrySet().size() > 0) {
+            config.getReplacementInProjectStructure().entrySet().stream()
                     .forEach(entry -> filesystemReplacementPane.addReplacementItem(
                             filesystemReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
                                     entry.getValue().getTarget(), filesystemReplacementPane)));
@@ -170,7 +172,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
         getLog().info("...load project structure replacements: " + operationStatus.getStatus());
     }
 
-    public void clearTemplate() {
+    public void clearConfig() {
         removeCommentsCheckBox.setSelected(false);
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
@@ -182,8 +184,8 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
 
     @Override
     public void setMessages() {
-        newTemplateButton.setText("New template");
-        saveTemplateButton.setText("Save template");
+        newConfigButton.setText("New config");
+        saveConfigButton.setText("Save config");
         cancelButton.setText("Cancel");
         addContentReplacementButton.setText("Add per-file replacement");
         addFileSystemReplacementButton.setText("Add project structure replacement");
@@ -204,11 +206,11 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 filePatternTextField.setEditable(false);
             }
         });
-        newTemplateButton.setOnAction(event -> {
-            getLog().info("start new template");
-            clearTemplate();
+        newConfigButton.setOnAction(event -> {
+            getLog().info("start new config");
+            clearConfig();
         });
-        saveTemplateButton.setOnAction(event -> {
+        saveConfigButton.setOnAction(event -> {
             Alert alert = new Alert(AlertType.ERROR);
             if (contentReplacementPane.isWrongDescriptionInReplacementItems()
                     || filesystemReplacementPane.isWrongDescriptionInReplacementItems()) {
@@ -235,7 +237,7 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                 fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
                 file = fc.showSaveDialog(stage);
                 if (file != null) {
-                    getLog().info("save current template to " + file.getAbsolutePath());
+                    getLog().info("save current config to " + file.getAbsolutePath());
                     // считать все расширения файлов
                     List<String> patterns = new ArrayList<String>();
                     extensions.forEach(extension -> {
@@ -244,30 +246,30 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
                         }
                     });
                     // читаем показатели из полей
-                    // если template не проинжекчен конструктором,
+                    // если config не проинжекчен конструктором,
                     // создаем новый
-                    if (template == null) {
-                        template = new Template();
+                    if (config == null) {
+                        config = new Config();
                     }
-                    template.setPatterns(patterns);
+                    config.setPatterns(patterns);
                     getLog().info("...save file extensions: " + SanitizerWindow.Status.OK.getStatus());
 
                     if (contentReplacementPane.getReplacementsMap() != null
                             && contentReplacementPane.getReplacementsMap().size() > 0) {
-                        template.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
+                        config.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
                         operationStatus = SanitizerWindow.Status.OK;
                     } else {
                         operationStatus = SanitizerWindow.Status.FAIL;
                     }
                     getLog().info("...save per-file replacements: " + operationStatus.getStatus());
 
-                    template.setRemoveComments(removeCommentsCheckBox.isSelected());
+                    config.setRemoveComments(removeCommentsCheckBox.isSelected());
                     getLog().info("...save remove comments feature: " + SanitizerWindow.Status.OK.getStatus());
 
                     // добавляем regexp из поля
                     if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
                             && (!filePatternTextField.getText().equals(null))) {
-                        template.setCustomPattern(filePatternTextField.getText());
+                        config.setCustomPattern(filePatternTextField.getText());
                         operationStatus = SanitizerWindow.Status.OK;
                     } else {
                         operationStatus = SanitizerWindow.Status.FAIL;
@@ -276,34 +278,35 @@ public class TemplateEditor extends SharedTextAreaLog implements SanitizerWindow
 
                     if (filesystemReplacementPane.getReplacementsMap() != null
                             && filesystemReplacementPane.getReplacementsMap().size() > 0) {
-                        template.setReplacementInProjectStructure(filesystemReplacementPane.getReplacementsMap());
+                        config.setReplacementInProjectStructure(filesystemReplacementPane.getReplacementsMap());
                         operationStatus = SanitizerWindow.Status.OK;
                     } else {
                         operationStatus = SanitizerWindow.Status.FAIL;
                     }
                     getLog().info("...save project structure replacements: " + operationStatus.getStatus());
 
-                    if (new TemplateWorker().writeTemplateData(file, template)) {
-                        // записали, обновили статус и проверили кнопки снизу
-                        mainAppWindow.setTemplateFile(file);
-                        mainAppWindow.setProperTemplateFileSelected(true);
-                        mainAppWindow.getTemplateFileStatusLabel().setText(file.getAbsolutePath());
-                        mainAppWindow.getTemplateFileStatusLabel().setGraphic(
+                    if (new ConfigWorker().writeConfigData(file, config)) {
+                        // записали, обновили статус, проверили кнопки снизу
+                        mainAppWindow.setConfigFile(file);
+                        mainAppWindow.setProperConfigFileSelected(true);
+                        mainAppWindow.getConfigFileStatusLabel().setText(file.getAbsolutePath());
+                        mainAppWindow.getConfigFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                         mainAppWindow.toggleBottomButtons();
+                        mainAppWindow.setConfig(config);
                     } else {
-                        mainAppWindow.getTemplateFileStatusLabel().setText("cancel select");
-                        mainAppWindow.getTemplateFileStatusLabel().setGraphic(
+                        mainAppWindow.getConfigFileStatusLabel().setText("cancel select");
+                        mainAppWindow.getConfigFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                     }
                 } else {
-                    getLog().info("cancel template save");
+                    getLog().info("cancel config save");
                 }
                 stage.close();
             }
         });
         cancelButton.setOnAction(event -> {
-            getLog().info("cancel template save");
+            getLog().info("cancel config save");
             stage.close();
         });
         addContentReplacementButton.setOnAction(event -> {

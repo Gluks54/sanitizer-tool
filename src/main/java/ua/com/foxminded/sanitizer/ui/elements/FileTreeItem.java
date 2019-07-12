@@ -21,8 +21,10 @@ import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.NoArgsConstructor;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
 import ua.com.foxminded.sanitizer.ui.FileView;
+import ua.com.foxminded.sanitizer.worker.FileWorker;
 
 @NoArgsConstructor
 public class FileTreeItem extends TreeItem<File> {
@@ -55,10 +57,13 @@ public class FileTreeItem extends TreeItem<File> {
     private ObservableList<FileData> dataView;
     private ArrayList<FileData> fileList = new ArrayList<FileData>();
     private TableView<FileData> tableView = new TableView<FileData>();
-    private String extension = ".java"; // not constant, could be a list
+    // private String extension = ".java"; // not constant, could be a list
+    private Config config = new Config();
+    private FileWorker fileWorker = new FileWorker();
 
-    public FileTreeItem(File file) {
+    public FileTreeItem(File file, Config config) {
         super(file);
+        this.config = config;
         setGraphic(file.isDirectory() ? new ImageView(folderCollapsedImage) : new ImageView(fileImage));
 
         addEventHandler(TreeItem.branchExpandedEvent(), event -> {
@@ -151,14 +156,15 @@ public class FileTreeItem extends TreeItem<File> {
             File[] files = file.listFiles(pathname -> {
                 boolean isShownDirectory = (!pathname.isHidden()) && pathname.isDirectory();
                 boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
-                        && pathname.getName().toLowerCase().endsWith(extension);
+                // && pathname.getName().toLowerCase().endsWith(extension);
+                        && fileWorker.isMatchPatterns(file, config);
                 return isShownDirectory || isShownFile;
             });
 
             if (files != null) {
                 ObservableList<TreeItem<File>> children = FXCollections.observableArrayList();
                 for (File childFile : files) {
-                    children.add(new FileTreeItem(childFile));
+                    children.add(new FileTreeItem(childFile, config));
                 }
                 return children;
             }
@@ -170,7 +176,8 @@ public class FileTreeItem extends TreeItem<File> {
         fileList.clear();
         File[] files = dir.toFile().listFiles(pathname -> {
             boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
-                    && pathname.getName().toLowerCase().endsWith(extension);
+            // && pathname.getName().toLowerCase().endsWith(extension);
+                    && fileWorker.isMatchPatterns(pathname, config);
             return isShownFile;
         });
 

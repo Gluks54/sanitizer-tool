@@ -7,19 +7,19 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import ua.com.foxminded.sanitizer.data.Template;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class TemplateWorker extends SharedTextAreaLog {
-    public Template readTemplateData(File file, Class<?> c) {
-        Template template = null;
+public class ConfigWorker extends SharedTextAreaLog {
+    public Config readConfigData(File file, Class<?> c) {
+        Config config = null;
         try {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            template = (Template) unmarshaller.unmarshal(file);
+            config = (Config) unmarshaller.unmarshal(file);
             getLog().info("read template " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
-            return template;
+            return config;
         } catch (JAXBException e) {
             e.printStackTrace();
             getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read template: "
@@ -29,20 +29,20 @@ public class TemplateWorker extends SharedTextAreaLog {
         }
     }
 
-    public boolean writeTemplateData(File file, Template template) {
+    public boolean writeConfigData(File file, Config config) {
         try {
-            JAXBContext context = JAXBContext.newInstance(template.getClass());
+            JAXBContext context = JAXBContext.newInstance(config.getClass());
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(template, System.out);
-            marshaller.marshal(template, file);
-            getLog().info("write template " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
+            marshaller.marshal(config, System.out);
+            marshaller.marshal(config, file);
+            getLog().info("write config " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
             return true;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read template: "
+            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
                     + SanitizerWindow.Status.FAIL.getStatus());
-            getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like template file");
+            getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return false;
         }
     }

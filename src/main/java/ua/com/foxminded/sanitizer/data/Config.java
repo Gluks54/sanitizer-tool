@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 @XmlRootElement(name = "template")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Template {
+public class Config {
     private boolean removeComments;
     private List<String> patterns = new ArrayList<String>();
     private String customPattern;

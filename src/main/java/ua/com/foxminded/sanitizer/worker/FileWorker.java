@@ -48,6 +48,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
@@ -142,8 +143,8 @@ public class FileWorker extends SharedTextAreaLog {
         return s;
     }
 
-    public boolean isMatchPatterns(File file, List<String> patterns, String customPattern) {
-        return false;
+    public boolean isMatchPatterns(File file, Config config) {
+        return true;
     }
 
     public String turnFileSizeToString(final long value) {

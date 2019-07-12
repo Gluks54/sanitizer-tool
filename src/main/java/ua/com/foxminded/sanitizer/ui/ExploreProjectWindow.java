@@ -14,18 +14,20 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
+@RequiredArgsConstructor
 public class ExploreProjectWindow extends SharedTextAreaLog implements SanitizerWindow {
+    @NonNull
     private File selectedDirectory;
+    @NonNull
+    private Config config;
     private String title;
     private Button okButton = new Button();
-
-    public ExploreProjectWindow(File originalProject) {
-        super();
-        this.selectedDirectory = originalProject;
-    }
 
     @Override
     public void setMessages() {
@@ -48,7 +50,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         BorderPane root = new BorderPane();
         FlowPane bottomPane = new FlowPane();
         SplitPane splitPane = new SplitPane();
-        FileTreeItem fileItem = new FileTreeItem(selectedDirectory);
+        FileTreeItem fileItem = new FileTreeItem(selectedDirectory, config);
         TreeView<File> fileView = new TreeView<File>(fileItem);
 
         int mainW = 800;

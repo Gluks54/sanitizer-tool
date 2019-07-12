@@ -30,32 +30,34 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
-import ua.com.foxminded.sanitizer.data.Template;
+import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
+import ua.com.foxminded.sanitizer.worker.ConfigWorker;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
-import ua.com.foxminded.sanitizer.worker.TemplateWorker;
 
 public final class MainAppWindow extends SharedTextAreaLog implements SanitizerWindow, FileVisitor<Path> {
-    private FileWorker fw;
+    private FileWorker fileWorker;
+    @Setter
+    private Config config;
     private Button selectOriginalFolderButton = new Button();
-    private Button selectTemplateFileButton = new Button();
+    private Button selectConfigFileButton = new Button();
     private Button selectOutputFolderButton = new Button();
     private Label originalFolderStatusLabel = new Label();
     @Getter
-    private Label templateFileStatusLabel = new Label();
+    private Label configFileStatusLabel = new Label();
     private Label outputFolderStatusLabel = new Label();
     private Label originalInfoLabel = new Label();
-    private Button editTemplateButton = new Button();
+    private Button editConfigButton = new Button();
     private Label outputInfoLabel = new Label();
     private File originalFolder;
     @Setter
-    private File templateFile;
+    private File configFile;
     private File outputFolder;
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button processOriginalProjectFilesButton = new Button();
     private boolean originalFolderSelected;
     @Setter
-    private boolean properTemplateFileSelected;
+    private boolean properConfigFileSelected;
     private boolean outputFolderSelected;
     private String title;
     private long size;
@@ -65,35 +67,35 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         super();
         originalFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-        templateFileStatusLabel
+        configFileStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
         outputFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
     }
 
     protected void toggleBottomButtons() {
-        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && properTemplateFileSelected));
+        exploreOriginalProjectFilesButton.setDisable(!(originalFolderSelected && properConfigFileSelected));
         processOriginalProjectFilesButton
-                .setDisable(!(originalFolderSelected && properTemplateFileSelected && outputFolderSelected));
+                .setDisable(!(originalFolderSelected && properConfigFileSelected && outputFolderSelected));
     }
 
     @Override
     public void setMessages() {
         title = "sanitizer";
         selectOriginalFolderButton.setText("Original project folder");
-        selectTemplateFileButton.setText("Select template file");
+        selectConfigFileButton.setText("Select template file");
         selectOutputFolderButton.setText("Output project folder");
         originalFolderStatusLabel.setText("not selected");
-        templateFileStatusLabel.setText("not selected");
+        configFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
         exploreOriginalProjectFilesButton.setText("Explore original files");
         processOriginalProjectFilesButton.setText("Process original files");
-        editTemplateButton.setText("Edit or new template");
+        editConfigButton.setText("Edit or new template");
     }
 
     @Override
     public void setButtonsActions(Stage stage) {
-        fw = new FileWorker();
+        fileWorker = new FileWorker();
         DirectoryChooser dc = new DirectoryChooser();
         FileChooser fc = new FileChooser();
         selectOriginalFolderButton.setOnAction(event -> {
@@ -102,9 +104,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             originalFolder = dc.showDialog(stage);
             if (originalFolder != null) {
                 getLog().info("select original project root folder");
-                if (fw.isMavenProject(originalFolder)) {
+                if (fileWorker.isMavenProject(originalFolder)) {
                     processDirectory(originalFolder);
-                    originalInfoLabel.setText("Size: " + fw.turnFileSizeToString(size) + " / Files: " + files);
+                    originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
                     originalFolderStatusLabel.setText(
                             "project at " + originalFolder.getName() + " " + SanitizerWindow.Status.OK.getStatus());
@@ -133,24 +135,37 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             }
             toggleBottomButtons();
         });
-        selectTemplateFileButton.setOnAction(event -> {
+        selectConfigFileButton.setOnAction(event -> {
             getLog().info("trying select template file...");
             fc.setTitle("Select project template file");
             fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
-            templateFile = fc.showOpenDialog(stage);
-            if (templateFile != null) {
-                templateFileStatusLabel.setText(templateFile.getAbsolutePath());
-                templateFileStatusLabel
-                        .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                getLog().info("select template file " + templateFile.getAbsolutePath());
-                properTemplateFileSelected = true;
+            configFile = fc.showOpenDialog(stage);
+            if (configFile != null) {
+                configFileStatusLabel.setText(configFile.getAbsolutePath());
+                getLog().info("select template file " + configFile.getAbsolutePath());
+                config = new ConfigWorker().readConfigData(configFile, Config.class);
+
+                if (config != null) {
+                    configFileStatusLabel
+                            .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+                    properConfigFileSelected = true;
+                    getLog().info("+++ " + configFile.getName() + " is proper sanitizer config");
+                } else {
+                    configFileStatusLabel.setGraphic(
+                            new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Config error");
+                    alert.setHeaderText(configFile.getName() + " doesn't looks like proper sanitizer config");
+                    alert.setContentText("Use editor");
+                    alert.showAndWait();
+                }
             } else {
-                templateFileStatusLabel.setText("cancel select");
-                templateFileStatusLabel
+                configFileStatusLabel.setText("cancel select");
+                configFileStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                 getLog().info("cancel select template file");
-                if (!properTemplateFileSelected) {
-                    properTemplateFileSelected = false;
+                if (!properConfigFileSelected) {
+                    properConfigFileSelected = false;
                 }
             }
             toggleBottomButtons();
@@ -164,7 +179,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 outputFolderStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                 getLog().info("select output project folder " + outputFolder.getAbsolutePath());
-                outputInfoLabel.setText("Free space: " + fw.turnFileSizeToString(outputFolder.getFreeSpace()));
+                outputInfoLabel.setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
                 outputFolderSelected = true;
             } else {
                 outputFolderStatusLabel.setText("cancel select");
@@ -177,39 +192,35 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             }
             toggleBottomButtons();
         });
-        exploreOriginalProjectFilesButton.setOnAction(event -> {
-            new ExploreProjectWindow(originalFolder).show();
-        });
-        processOriginalProjectFilesButton.setOnAction(event -> {
-            getLog().info("process files with template " + templateFile.getAbsolutePath());
-        });
-        editTemplateButton.setOnAction(event -> {
-            TemplateEditor templateEditor;
-            if (templateFile != null) {
-                getLog().info("load " + templateFile.getAbsolutePath() + " to template editor");
-                Template template = new TemplateWorker().readTemplateData(templateFile, Template.class);
+        exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
+        processOriginalProjectFilesButton
+                .setOnAction(event -> getLog().info("process files with config " + configFile.getAbsolutePath()));
+        editConfigButton.setOnAction(event -> {
+            ConfigEditor configEditor;
+            if (configFile != null) {
+                getLog().info("load " + configFile.getAbsolutePath() + " to config editor");
+                config = new ConfigWorker().readConfigData(configFile, Config.class);
 
-                if (template != null) {
-                    templateEditor = new TemplateEditor(template, templateFile);
-                    templateEditor.setMainAppWindow(this);
-                    templateEditor.show();
+                if (config != null) {
+                    configEditor = new ConfigEditor(config, configFile);
+                    configEditor.setMainAppWindow(this);
+                    configEditor.show();
                 } else {
-                    Alert alert = new Alert(AlertType.WARNING,
-                            templateFile.getName() + " not a template. Run new template?", ButtonType.YES,
-                            ButtonType.NO);
+                    Alert alert = new Alert(AlertType.WARNING, configFile.getName() + " not a config. Run new config?",
+                            ButtonType.YES, ButtonType.NO);
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
-                        templateEditor = new TemplateEditor();
-                        templateEditor.setMainAppWindow(this);
-                        templateEditor.show();
+                        configEditor = new ConfigEditor();
+                        configEditor.setMainAppWindow(this);
+                        configEditor.show();
                     } else {
-                        getLog().info("cancel new template");
+                        getLog().info("cancel new config");
                     }
                 }
             } else {
-                templateEditor = new TemplateEditor();
-                templateEditor.setMainAppWindow(this);
-                templateEditor.show();
+                configEditor = new ConfigEditor();
+                configEditor.setMainAppWindow(this);
+                configEditor.show();
             }
         });
     }
@@ -231,13 +242,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
 
         topPane.setGridLinesVisible(false);
         topPane.add(selectOriginalFolderButton, 0, 0);
-        topPane.add(selectTemplateFileButton, 0, 1);
+        topPane.add(selectConfigFileButton, 0, 1);
         topPane.add(selectOutputFolderButton, 0, 2);
         topPane.add(originalFolderStatusLabel, 1, 0);
-        topPane.add(templateFileStatusLabel, 1, 1);
+        topPane.add(configFileStatusLabel, 1, 1);
         topPane.add(outputFolderStatusLabel, 1, 2);
         topPane.add(originalInfoLabel, 2, 0);
-        topPane.add(editTemplateButton, 2, 1);
+        topPane.add(editConfigButton, 2, 1);
         topPane.add(outputInfoLabel, 2, 2);
 
         topPane.getChildren().forEach(element -> {
