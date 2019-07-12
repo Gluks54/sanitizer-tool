@@ -12,13 +12,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
@@ -28,6 +36,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.apache.tika.Tika;
 import org.xml.sax.SAXException;
 
 import com.github.difflib.DiffUtils;
@@ -62,6 +71,76 @@ public class FileWorker extends SharedTextAreaLog {
     @Getter
     @Setter
     private String patchFilename;
+
+    public String getFileType(File file) {
+        try {
+            return new Tika().detect(file);
+        } catch (IOException e) {
+            getLog().severe("file type detect for " + file.getAbsolutePath() + " " + SanitizerWindow.Status.FAIL);
+            return null;
+        }
+    }
+
+    public String getFileTime(File file) throws IOException {
+        FileTime time = Files.getLastModifiedTime(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+        Instant acsessTime = time.toInstant();
+        ZonedDateTime zdt = acsessTime.atZone(ZoneId.of("UTC"));
+        return DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm:ss").format(zdt);
+    }
+
+    public String getPermissions(Set<PosixFilePermission> perm) {
+        String s = "-";
+
+        if (perm.contains(PosixFilePermission.OWNER_READ)) {
+            s += "r";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.OWNER_WRITE)) {
+            s += "w";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.OWNER_EXECUTE)) {
+            s += "x";
+        } else {
+            s += "-";
+        }
+        s += "/";
+        if (perm.contains(PosixFilePermission.GROUP_READ)) {
+            s += "r";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.GROUP_WRITE)) {
+            s += "w";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.GROUP_EXECUTE)) {
+            s += "x";
+        } else {
+            s += "-";
+        }
+        s += "/";
+
+        if (perm.contains(PosixFilePermission.OTHERS_READ)) {
+            s += "r";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.OTHERS_WRITE)) {
+            s += "w";
+        } else {
+            s += "-";
+        }
+        if (perm.contains(PosixFilePermission.OTHERS_EXECUTE)) {
+            s += "x";
+        } else {
+            s += "-";
+        }
+        return s;
+    }
 
     public boolean isMatchPatterns(File file, List<String> patterns, String customPattern) {
         return false;

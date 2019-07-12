@@ -7,11 +7,13 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
@@ -52,6 +54,13 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         int mainW = 800;
         int mainH = 600;
 
+        fileView.setCellFactory(new Callback<TreeView<File>, TreeCell<File>>() {
+            @Override
+            public TreeCell<File> call(TreeView<File> param) {
+                return (new FileTreeItem()).new CustomFileTreeCell();
+            }
+        });
+        fileItem.setExpanded(true);
         splitPane.getItems().addAll(fileView, fileItem.getTableView());
         root.setCenter(splitPane);
         bottomPane.setAlignment(Pos.CENTER);

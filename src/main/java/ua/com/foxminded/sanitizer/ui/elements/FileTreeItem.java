@@ -8,17 +8,44 @@ import java.util.ArrayList;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import lombok.NoArgsConstructor;
 import ua.com.foxminded.sanitizer.data.FileData;
+import ua.com.foxminded.sanitizer.ui.FileView;
 
+@NoArgsConstructor
 public class FileTreeItem extends TreeItem<File> {
+    public class CustomFileTreeCell extends TextFieldTreeCell<File> {
+        @Override
+        public void updateItem(File item, boolean empty) {
+            super.updateItem(item, empty);
+            if (!empty) {
+                if (item.isFile()) {
+                    ContextMenu contextMenu = new ContextMenu();
+                    MenuItem mi1 = new MenuItem("View " + item.getName());
+                    mi1.setOnAction(event -> {
+                        new FileView(item.toString()).show();
+                    });
+                    contextMenu.getItems().add(mi1);
+                    setContextMenu(contextMenu);
+                }
+                setEditable(false);
+                this.setText(item.getName());
+            }
+        }
+    }
+
     private boolean isFirstTimeChildren = true;
     private boolean isFirstTimeLeaf = true;
     private boolean isLeaf;
@@ -32,11 +59,7 @@ public class FileTreeItem extends TreeItem<File> {
 
     public FileTreeItem(File file) {
         super(file);
-        if (file.isDirectory()) {
-            setGraphic(new ImageView(folderCollapsedImage));
-        } else {
-            setGraphic(new ImageView(fileImage));
-        }
+        setGraphic(file.isDirectory() ? new ImageView(folderCollapsedImage) : new ImageView(fileImage));
 
         addEventHandler(TreeItem.branchExpandedEvent(), event -> {
             TreeItem<Object> source = event.getSource();
@@ -69,16 +92,27 @@ public class FileTreeItem extends TreeItem<File> {
             @Override
             public void updateIndex(int index) {
                 super.updateIndex(index);
-                if (isEmpty() || index < 0) {
-                    setText(null);
-                } else {
-                    setText(Integer.toString(index + 1));
-                }
+                setText((isEmpty() || index < 0) ? null : Integer.toString(index + 1));
             }
         });
 
-        TableColumn<FileData, String> filenameCol = new TableColumn<FileData, String>("file path");
+        TableColumn<FileData, String> filenameCol = new TableColumn<FileData, String>("File");
         filenameCol.setCellValueFactory(new PropertyValueFactory<FileData, String>("fileName"));
+
+        tableView.setRowFactory(tv -> {
+            final TableRow<FileData> row = new TableRow<>();
+            final MenuItem mi1 = new MenuItem();
+            mi1.setOnAction(event -> new FileView(row.getItem().getFileName()).show());
+
+            row.setOnContextMenuRequested(event -> {
+                if (!row.isEmpty()) {
+                    mi1.setText("View " + Paths.get(row.getItem().getFileName()).getFileName());
+                }
+            });
+            row.emptyProperty().addListener(
+                    (observable, wasEmpty, isEmpty) -> row.setContextMenu(isEmpty ? null : new ContextMenu(mi1)));
+            return row;
+        });
         tableView.setItems(dataView);
         tableView.getColumns().addAll(indexCol, filenameCol);
         tableView.getSortOrder().add(indexCol);
@@ -87,7 +121,7 @@ public class FileTreeItem extends TreeItem<File> {
         indexCol.setResizable(true);
         filenameCol.prefWidthProperty().bind(tableView.widthProperty().multiply(0.90));
         filenameCol.setResizable(true);
-        tableView.setPlaceholder(new Label("no java files here"));
+        tableView.setPlaceholder(new Label("no proper files here"));
         return tableView;
     }
 
@@ -114,7 +148,7 @@ public class FileTreeItem extends TreeItem<File> {
         File file = TreeItem.getValue();
         if (file != null && file.isDirectory()) {
             // with FileFilter
-            File[] files = file.listFiles((pathname) -> {
+            File[] files = file.listFiles(pathname -> {
                 boolean isShownDirectory = (!pathname.isHidden()) && pathname.isDirectory();
                 boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
                         && pathname.getName().toLowerCase().endsWith(extension);
@@ -134,7 +168,7 @@ public class FileTreeItem extends TreeItem<File> {
 
     private void processDirectory(Path dir) throws IOException {
         fileList.clear();
-        File[] files = dir.toFile().listFiles((pathname) -> {
+        File[] files = dir.toFile().listFiles(pathname -> {
             boolean isShownFile = (!pathname.isHidden()) && (!pathname.isDirectory())
                     && pathname.getName().toLowerCase().endsWith(extension);
             return isShownFile;
@@ -142,7 +176,7 @@ public class FileTreeItem extends TreeItem<File> {
 
         for (File F : files) {
             FileData tableItem = new FileData();
-            tableItem.setFileName(F.getName());
+            tableItem.setFileName(F.getAbsolutePath());
             fileList.add(tableItem);
         }
         dataView = FXCollections.observableArrayList(fileList);

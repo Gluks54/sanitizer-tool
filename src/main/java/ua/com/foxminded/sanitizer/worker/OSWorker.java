@@ -2,7 +2,7 @@ package ua.com.foxminded.sanitizer.worker;
 
 import lombok.Getter;
 
-public class OSValidator {
+public class OSWorker {
     public enum OS {
         MAC, WINDOWS, UNIX, SOLARIS
     }
@@ -10,7 +10,7 @@ public class OSValidator {
     @Getter
     private OS os;
 
-    public OSValidator() {
+    public OSWorker() {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
             os = OS.WINDOWS;

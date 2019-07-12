@@ -27,6 +27,16 @@
    <scope>test</scope>
   </dependency>
   <dependency>
+   <groupId>org.fxmisc.richtext</groupId>
+   <artifactId>richtextfx</artifactId>
+   <version>0.10.1</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.tika</groupId>
+   <artifactId>tika-core</artifactId>
+   <version>1.21</version>
+  </dependency>
+  <dependency>
    <groupId>com.github.ertugrulcetin</groupId>
    <artifactId>CommentRemover</artifactId>
    <version>1.2</version>
