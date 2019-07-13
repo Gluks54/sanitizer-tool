@@ -138,12 +138,20 @@ public class FileWorker extends SharedTextAreaLog {
         return s;
     }
 
-    public boolean isMatchPatterns(File file, Config config) {
-        System.out.println("------");
-        config.getPatterns().stream().forEach(System.out::println);
-        System.out.println(config.getCustomPattern());
-        boolean isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        return isMatchFileExtension;
+    public boolean isMatchFilePatterns(File file, Config config) {
+        boolean isMatchPattern = true;
+        boolean isMatchFileExtension = true;
+
+        isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
+        System.out.println(file.getName());
+
+        // PathMatcher matcher =
+        // FileSystems.getDefault().getPathMatcher(config.getCustomPattern());
+        // isMatchPattern = matcher.matches(file.toPath());
+        // Pattern pattern = Pattern.compile(config.getCustomPattern(),
+        // Pattern.CASE_INSENSITIVE);
+        // isMatchPattern = Pattern.matches(config.getCustomPattern(), file.getName());
+        return isMatchFileExtension || isMatchPattern;
     }
 
     public String turnFileSizeToString(final long value) {

@@ -103,12 +103,9 @@ public class ConfigEditor extends SharedTextAreaLog implements SanitizerWindow {
             getLog().info("cancel config");
         });
 
-        int mainW = 950;
-        int mainH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, mainW, mainH));
+        stage.setScene(new Scene(root, SanitizerWindow.CONFIGEDITOR_W, SanitizerWindow.CONFIGEDITOR_H));
 
-        // если проинжекчен config, инитим данные в окне
         if (config != null && file != null) {
             loadConfigData();
             stage.setTitle("Edit config " + file.getAbsolutePath());

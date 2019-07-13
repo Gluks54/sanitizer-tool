@@ -53,17 +53,18 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         FileTreeItem fileItem = new FileTreeItem(selectedDirectory, config);
         TreeView<File> fileView = new TreeView<File>(fileItem);
 
-        int mainW = 800;
-        int mainH = 600;
-
         fileView.setCellFactory(new Callback<TreeView<File>, TreeCell<File>>() {
             @Override
             public TreeCell<File> call(TreeView<File> param) {
                 return (new FileTreeItem()).new CustomFileTreeCell();
             }
         });
+        fileView.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> fileItem.processDirectory(newValue.getValue().toPath()));
         fileItem.setExpanded(true);
+
         splitPane.getItems().addAll(fileView, fileItem.getTableView());
+        splitPane.setDividerPositions(0.3);
         root.setCenter(splitPane);
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(okButton);
@@ -75,7 +76,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         });
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, mainW, mainH));
+        stage.setScene(new Scene(root, SanitizerWindow.EXPLORE_W, SanitizerWindow.EXPLORE_H));
         stage.setTitle(title);
         stage.show();
 

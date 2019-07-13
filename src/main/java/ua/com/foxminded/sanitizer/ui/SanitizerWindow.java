@@ -17,7 +17,14 @@ public interface SanitizerWindow {
     }
 
     public static final int INSET = 10;
-
+    public static final int MAIN_W = 800;
+    public static final int MAIN_H = 600;
+    public static final int EXPLORE_W = 800;
+    public static final int EXPLORE_H = 600;
+    public static final int VIEWER_W = 800;
+    public static final int VIEWER_H = 600;
+    public static final int CONFIGEDITOR_W = 950;
+    public static final int CONFIGEDITOR_H = 600;
     public static final OSWorker.OS ENV = new OSWorker().getOs();
 
     public void setMessages();

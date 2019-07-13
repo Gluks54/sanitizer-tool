@@ -82,11 +82,7 @@ public class FileTreeItem extends TreeItem<File> {
             if (source.isExpanded()) {
                 ImageView iv = (ImageView) source.getGraphic();
                 iv.setImage(folderOpenedImage);
-                try {
-                    processDirectory(Paths.get(source.getValue().toString()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                processDirectory(Paths.get(source.getValue().toString()));
             }
         });
         addEventHandler(TreeItem.branchCollapsedEvent(), event -> {
@@ -143,7 +139,7 @@ public class FileTreeItem extends TreeItem<File> {
             }
         });
 
-        TableColumn<FileData, String> filenameCol = new TableColumn<FileData, String>("File");
+        TableColumn<FileData, String> filenameCol = new TableColumn<FileData, String>("File (context menu available)");
         filenameCol.setCellValueFactory(new PropertyValueFactory<FileData, String>("fileName"));
 
         tableView.setRowFactory(tv -> {
@@ -207,10 +203,10 @@ public class FileTreeItem extends TreeItem<File> {
         return FXCollections.emptyObservableList();
     }
 
-    private void processDirectory(Path dir) throws IOException {
+    public void processDirectory(Path dir) {
         fileList.clear();
         File[] files = dir.toFile().listFiles(pathname -> {
-            return (!pathname.isHidden()) && (!pathname.isDirectory()) && fileWorker.isMatchPatterns(pathname, config);
+            return (!pathname.isHidden()) && (!pathname.isDirectory()) && fileWorker.isMatchFilePatterns(pathname, config);
         });
 
         for (File file : files) {

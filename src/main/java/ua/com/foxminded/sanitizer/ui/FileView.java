@@ -119,7 +119,8 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
             getLog().severe("read file modification time fail");
         }
 
-        if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX) || (SanitizerWindow.ENV == OS.SOLARIS)) {
+        if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX)
+                || (SanitizerWindow.ENV == OS.SOLARIS)) {
             try {
                 bottomPane.getChildren()
                         .add(new Label(ownerFileString + Files.getOwner(file, LinkOption.NOFOLLOW_LINKS)));
@@ -139,10 +140,8 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
         } catch (IOException e) {
             stage.setTitle(file.getFileName().toString());
         }
-        int viewW = 800;
-        int viewH = 600;
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, viewW, viewH));
+        stage.setScene(new Scene(root, SanitizerWindow.VIEWER_W, SanitizerWindow.VIEWER_H));
         stage.show();
     }
 }

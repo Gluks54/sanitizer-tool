@@ -276,14 +276,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         getLog().addHandler(getTextAreaHandler());
         getLog().info("sanitizer started");
 
-        int mainW = 800;
-        int mainH = 600;
         setMessages();
         Stage stage = new Stage();
         stage.setOnCloseRequest(event -> getLog().info("bye!"));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, mainW, mainH));
+
+        stage.setScene(new Scene(root, SanitizerWindow.MAIN_W, SanitizerWindow.MAIN_H));
         stage.setTitle(title);
         stage.show();
     }

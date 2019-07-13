@@ -68,7 +68,6 @@
      <include>**/*.png</include>
      <include>**/*.xsd</include>
      <include>**/*.css</include>
-     <include>**/*.properties</include>
     </includes>
    </resource>
   </resources>
