@@ -1,35 +1,57 @@
 package ua.com.foxminded.sanitizer.worker;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.concurrent.Task;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class ProcessWorker extends Task<List<File>> {
+@RequiredArgsConstructor
+public class ProcessWorker extends Task<List<Path>> {
+    private class LogFeature extends SharedTextAreaLog {
+    }
+
+    @NonNull
+    private File originalFolder;
+    @NonNull
+    private File outputFolder;
+    @NonNull
+    private Config config;
+    private LogFeature logFeature = new LogFeature();
 
     @Override
-    protected List<File> call() throws Exception {
-        File dir = new File("/usr/bin");
-        File[] files = dir.listFiles();
-        int count = files.length;
+    protected List<Path> call() throws Exception {
+        try (Stream<Path> walk = Files.walk(Paths.get(originalFolder.toURI()))) {
+            List<Path> result = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+            int filesQuantity = result.size();
+            int i = 0;
 
-        List<File> copied = new ArrayList<File>();
-        int i = 0;
-        for (File file : files) {
-            if (file.isFile()) {
-                this.copy(file);
-                copied.add(file);
+            for (Path path : result) {
+                logFeature.getLog().info("process file " + path);
+                process(path);
+                i++;
+                this.updateProgress(i, filesQuantity);
             }
-            i++;
-            this.updateProgress(i, count);
+            return result;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            logFeature.getLog().severe("!!! error during file process");
+            return null;
         }
-        return copied;
     }
 
-    private void copy(File file) throws Exception {
-        this.updateMessage("Copying: " + file.getAbsolutePath());
-        Thread.sleep(500);
+    private void process(Path file) throws Exception {
+        this.updateMessage("process " + file);
+        Thread.sleep(50);
     }
-
 }

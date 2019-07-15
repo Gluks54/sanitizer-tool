@@ -96,12 +96,12 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     @Override
     public void setButtonsActions(Stage stage) {
         fileWorker = new FileWorker();
-        DirectoryChooser dc = new DirectoryChooser();
-        FileChooser fc = new FileChooser();
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        FileChooser fileChooser = new FileChooser();
         selectOriginalFolderButton.setOnAction(event -> {
             getLog().info("trying select original project root folder...");
-            dc.setTitle("Select original project root folder");
-            originalFolder = dc.showDialog(stage);
+            directoryChooser.setTitle("Select original project root folder");
+            originalFolder = directoryChooser.showDialog(stage);
             if (originalFolder != null) {
                 getLog().info("select original project root folder");
                 if (fileWorker.isMavenProject(originalFolder)) {
@@ -137,9 +137,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         });
         selectConfigFileButton.setOnAction(event -> {
             getLog().info("trying select template file...");
-            fc.setTitle("Select project template file");
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
-            configFile = fc.showOpenDialog(stage);
+            fileChooser.setTitle("Select project template file");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
+            configFile = fileChooser.showOpenDialog(stage);
             if (configFile != null) {
                 configFileStatusLabel.setText(configFile.getAbsolutePath());
                 getLog().info("select template file " + configFile.getAbsolutePath());
@@ -172,8 +172,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         });
         selectOutputFolderButton.setOnAction(event -> {
             getLog().info("trying select output project folder...");
-            dc.setTitle("Select output project root folder");
-            outputFolder = dc.showDialog(stage);
+            directoryChooser.setTitle("Select output project root folder");
+            outputFolder = directoryChooser.showDialog(stage);
             if (outputFolder != null) {
                 if (outputFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
                     getLog().info("wrong output project folder selected!");
@@ -206,7 +206,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         processOriginalProjectFilesButton.setOnAction(event -> {
             getLog().info("process files with config " + configFile.getAbsolutePath());
-            new ProcessWindow().show();
+            new ProcessWindow(originalFolder, outputFolder, config).show();
         });
         editConfigButton.setOnAction(event -> {
             ConfigEditor configEditor;
