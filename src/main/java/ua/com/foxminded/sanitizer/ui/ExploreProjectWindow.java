@@ -71,9 +71,8 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setBottom(bottomPane);
         Stage stage = new Stage();
-        stage.setOnCloseRequest(event -> {
-            getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath());
-        });
+        stage.setOnCloseRequest(
+                event -> getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath()));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, SanitizerWindow.EXPLORE_W, SanitizerWindow.EXPLORE_H));

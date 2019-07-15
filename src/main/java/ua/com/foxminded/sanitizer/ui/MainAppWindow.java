@@ -88,8 +88,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         originalFolderStatusLabel.setText("not selected");
         configFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
-        exploreOriginalProjectFilesButton.setText("Explore original files");
-        processOriginalProjectFilesButton.setText("Process original files");
+        exploreOriginalProjectFilesButton.setText("Explore original project files");
+        processOriginalProjectFilesButton.setText("Process original project files");
         editConfigButton.setText("Edit or new template");
     }
 
@@ -184,13 +184,22 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     alert.setContentText("Choose another output project folder");
                     alert.showAndWait();
                 } else {
-                    outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
-                    outputFolderStatusLabel
-                            .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                    getLog().info("select output project folder " + outputFolder.getAbsolutePath());
-                    outputInfoLabel
-                            .setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
-                    isOutputFolderSelected = true;
+                    if (outputFolder.getFreeSpace() > size) {
+                        outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
+                        outputFolderStatusLabel.setGraphic(
+                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+                        getLog().info("select output project folder " + outputFolder.getAbsolutePath());
+                        outputInfoLabel
+                                .setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
+                        isOutputFolderSelected = true;
+                    } else {
+                        outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
+                        outputFolderStatusLabel.setGraphic(
+                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                        getLog().info("!!! not enough space in " + outputFolder.getAbsolutePath());
+                        outputInfoLabel.setText("Not enough space!");
+                        isOutputFolderSelected = false;
+                    }
                 }
             } else {
                 outputFolderStatusLabel.setText("cancel select");

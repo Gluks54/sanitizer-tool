@@ -131,7 +131,7 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
                         "read file owner and permissions info for " + file + ": " + SanitizerWindow.Status.FAIL);
             }
         }
-        bottomPane.getChildren().add(new Label("Size: " + file.toFile().length()));
+        bottomPane.getChildren().add(new Label("Size: " + file.toFile().length() + " bytes"));
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setBottom(bottomPane);
 

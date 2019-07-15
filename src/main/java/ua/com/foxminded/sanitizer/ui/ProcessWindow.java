@@ -35,19 +35,25 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
     private Button cancelProcessButton = new Button();
     private Button startProcessButton = new Button();
     private Button closeProcessButton = new Button();
+    private Button exploreButton = new Button();
 
     @Override
     public void setMessages() {
-        title = "Processing files...";
+        title = "Ready to go";
         cancelProcessButton.setText("Cancel");
         startProcessButton.setText("Start");
         closeProcessButton.setText("Close");
+        exploreButton.setText("Explore");
     }
 
     @Override
     public void setButtonsActions(Stage stage) {
         closeProcessButton.setOnAction(event -> {
             stage.close();
+        });
+        exploreButton.setOnAction(event -> {
+            stage.close();
+            new ExploreProjectWindow(outputFolder, config).show();
         });
         startProcessButton.setOnAction(event -> {
             startProcessButton.setDisable(true);
@@ -61,16 +67,21 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
             progressBar.progressProperty().bind(processWorker.progressProperty());
             progressIndicator.progressProperty().unbind();
             progressIndicator.progressProperty().bind(processWorker.progressProperty());
+            stage.titleProperty().unbind();
+            stage.titleProperty().bind(processWorker.messageProperty());
 
             processWorker.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED,
                     new EventHandler<WorkerStateEvent>() {
 
                         @Override
                         public void handle(WorkerStateEvent t) {
+                            exploreButton.setDisable(false);
                             closeProcessButton.setDisable(false);
                             cancelProcessButton.setDisable(true);
-                            // List<Path> proceedFiles = processWorker.getValue();
+                            startProcessButton.setDisable(true);
                             getLog().info("*** complete file process");
+                            stage.titleProperty().unbind();
+                            stage.setTitle("Job successfully completed");
                         }
                     });
             getLog().info("*** start file process");
@@ -81,9 +92,11 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
             closeProcessButton.setDisable(false);
             cancelProcessButton.setDisable(true);
             processWorker.cancel(true);
-            getLog().info("!!! cancel file process");
+            getLog().info("!!! user interrupt project files process");
             progressIndicator.progressProperty().unbind();
             progressBar.progressProperty().unbind();
+            stage.titleProperty().unbind();
+            progressBar.setProgress(0);
             progressIndicator.setProgress(0);
         });
     }
@@ -91,6 +104,9 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
     @Override
     public void show() {
         setMessages();
+        cancelProcessButton.setDisable(true);
+        exploreButton.setDisable(true);
+
         BorderPane root = new BorderPane();
         FlowPane topPane = new FlowPane();
         FlowPane bottomPane = new FlowPane();
@@ -101,23 +117,23 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
         topPane.setAlignment(Pos.CENTER);
         root.setTop(topPane);
 
-        progressBar.setMinWidth(0.85 * SanitizerWindow.PROCESS_W);
+        progressBar.setMinWidth(0.8 * SanitizerWindow.PROCESS_W);
         centerPane.setAlignment(Pos.BASELINE_CENTER);
         centerPane.getChildren().add(progressBar);
         centerPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setCenter(centerPane);
 
         bottomPane.setAlignment(Pos.CENTER);
-        bottomPane.getChildren().addAll(startProcessButton, cancelProcessButton, closeProcessButton);
+        bottomPane.getChildren().addAll(startProcessButton, cancelProcessButton, exploreButton, closeProcessButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
         root.setBottom(bottomPane);
 
         Stage stage = new Stage();
         setButtonsActions(stage);
         stage.setOnCloseRequest(event -> {
-            getLog().info("stop project files process");
             if (processWorker.isRunning()) {
                 processWorker.cancel(true);
+                getLog().info("!!! user interrupt project files process");
             }
             stage.close();
         });

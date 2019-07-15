@@ -143,7 +143,7 @@ public class FileWorker extends SharedTextAreaLog {
         boolean isMatchFileExtension = true;
 
         isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        System.out.println(file.getName());
+        // System.out.println(file.getName());
 
         // PathMatcher matcher =
         // FileSystems.getDefault().getPathMatcher(config.getCustomPattern());
@@ -151,14 +151,14 @@ public class FileWorker extends SharedTextAreaLog {
         // Pattern pattern = Pattern.compile(config.getCustomPattern(),
         // Pattern.CASE_INSENSITIVE);
         // isMatchPattern = Pattern.matches(config.getCustomPattern(), file.getName());
-        return isMatchFileExtension || isMatchPattern;
+        return isMatchFileExtension;
     }
 
     public String turnFileSizeToString(final long value) {
         final int BYTES = 1024;
         long[] dividers = new long[] { (long) Math.pow(BYTES, 3), (long) Math.pow(BYTES, 2), (long) Math.pow(BYTES, 1),
                 (long) Math.pow(BYTES, 0) };
-        String[] units = new String[] { "Gb", "Mb", "Kb", "B" };
+        String[] units = new String[] { "Gb", "Mb", "Kb", "b" };
         String result = "";
         for (int i = 0; i < dividers.length; i++) {
             final long divider = dividers[i];

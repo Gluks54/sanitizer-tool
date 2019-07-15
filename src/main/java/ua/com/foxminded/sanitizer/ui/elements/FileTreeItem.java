@@ -42,9 +42,7 @@ public class FileTreeItem extends TreeItem<File> {
                 if (item.isFile()) {
                     ContextMenu contextMenu = new ContextMenu();
                     MenuItem mi1 = new MenuItem("View " + item.getName());
-                    mi1.setOnAction(event -> {
-                        new FileView(item.toString()).show();
-                    });
+                    mi1.setOnAction(event -> new FileView(item.toString()).show());
                     contextMenu.getItems().add(mi1);
                     setContextMenu(contextMenu);
                 }
@@ -206,7 +204,8 @@ public class FileTreeItem extends TreeItem<File> {
     public void processDirectory(Path dir) {
         fileList.clear();
         File[] files = dir.toFile().listFiles(pathname -> {
-            return (!pathname.isHidden()) && (!pathname.isDirectory()) && fileWorker.isMatchFilePatterns(pathname, config);
+            return (!pathname.isHidden()) && (!pathname.isDirectory())
+                    && fileWorker.isMatchFilePatterns(pathname, config);
         });
 
         for (File file : files) {
