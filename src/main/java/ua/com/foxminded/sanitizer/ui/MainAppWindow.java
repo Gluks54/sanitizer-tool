@@ -175,12 +175,23 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             dc.setTitle("Select output project root folder");
             outputFolder = dc.showDialog(stage);
             if (outputFolder != null) {
-                outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
-                outputFolderStatusLabel
-                        .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                getLog().info("select output project folder " + outputFolder.getAbsolutePath());
-                outputInfoLabel.setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
-                isOutputFolderSelected = true;
+                if (outputFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
+                    getLog().info("wrong output project folder selected!");
+                    isOutputFolderSelected = false;
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Wrong folder selected!");
+                    alert.setHeaderText("Original and output folder couldn't be the same");
+                    alert.setContentText("Choose another output project folder");
+                    alert.showAndWait();
+                } else {
+                    outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
+                    outputFolderStatusLabel
+                            .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+                    getLog().info("select output project folder " + outputFolder.getAbsolutePath());
+                    outputInfoLabel
+                            .setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
+                    isOutputFolderSelected = true;
+                }
             } else {
                 outputFolderStatusLabel.setText("cancel select");
                 outputFolderStatusLabel
@@ -193,8 +204,10 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             toggleBottomButtons();
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
-        processOriginalProjectFilesButton
-                .setOnAction(event -> getLog().info("process files with config " + configFile.getAbsolutePath()));
+        processOriginalProjectFilesButton.setOnAction(event -> {
+            getLog().info("process files with config " + configFile.getAbsolutePath());
+            new ProcessWindow().show();
+        });
         editConfigButton.setOnAction(event -> {
             ConfigEditor configEditor;
             if (configFile != null) {
