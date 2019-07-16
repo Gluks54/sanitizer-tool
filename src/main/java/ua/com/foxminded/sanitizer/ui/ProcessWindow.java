@@ -9,7 +9,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -31,7 +30,6 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
     private String title;
     private ProcessWorker processWorker;
     private ProgressBar progressBar = new ProgressBar(0);
-    private ProgressIndicator progressIndicator = new ProgressIndicator(0);
     private Button cancelProcessButton = new Button();
     private Button startProcessButton = new Button();
     private Button closeProcessButton = new Button();
@@ -60,13 +58,10 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
             closeProcessButton.setDisable(true);
             cancelProcessButton.setDisable(false);
             progressBar.setProgress(0);
-            progressIndicator.setProgress(0);
 
             processWorker = new ProcessWorker(originalFolder, outputFolder, config);
             progressBar.progressProperty().unbind();
             progressBar.progressProperty().bind(processWorker.progressProperty());
-            progressIndicator.progressProperty().unbind();
-            progressIndicator.progressProperty().bind(processWorker.progressProperty());
             stage.titleProperty().unbind();
             stage.titleProperty().bind(processWorker.messageProperty());
 
@@ -93,11 +88,9 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
             cancelProcessButton.setDisable(true);
             processWorker.cancel(true);
             getLog().info("!!! user interrupt project files process");
-            progressIndicator.progressProperty().unbind();
             progressBar.progressProperty().unbind();
             stage.titleProperty().unbind();
             progressBar.setProgress(0);
-            progressIndicator.setProgress(0);
         });
     }
 
@@ -110,18 +103,12 @@ public class ProcessWindow extends SharedTextAreaLog implements SanitizerWindow 
         BorderPane root = new BorderPane();
         FlowPane topPane = new FlowPane();
         FlowPane bottomPane = new FlowPane();
-        FlowPane centerPane = new FlowPane();
-
-        topPane.getChildren().add(progressIndicator);
-        topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
-        topPane.setAlignment(Pos.CENTER);
-        root.setTop(topPane);
 
         progressBar.setMinWidth(0.8 * SanitizerWindow.PROCESS_W);
-        centerPane.setAlignment(Pos.BASELINE_CENTER);
-        centerPane.getChildren().add(progressBar);
-        centerPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
-        root.setCenter(centerPane);
+        topPane.setAlignment(Pos.BASELINE_CENTER);
+        topPane.getChildren().add(progressBar);
+        topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
+        root.setTop(topPane);
 
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().addAll(startProcessButton, cancelProcessButton, exploreButton, closeProcessButton);

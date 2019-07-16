@@ -51,11 +51,17 @@ public class ProcessWorker extends Task<List<Path>> {
                     Path targetFile = outputFolder.toPath()
                             .resolve(originalFolder.toPath().getParent().relativize(path));
                     Files.copy(path, targetFile, StandardCopyOption.REPLACE_EXISTING);
+
+                    if (fileWorker.isMatchFilePatterns(targetFile.toFile(), config)) {
+                        if (fileWorker.hasTabs(targetFile.toFile())) {
+                            System.out.println(fileWorker.hasTabs(targetFile.toFile()) + " " + targetFile.toFile());
+                        }
+                    }
                 }
-                logFeature.getLog().info("process file " + path);
-                process(path);
+                // logFeature.getLog().info("process file " + path);
                 i++;
                 this.updateProgress(i, filesQuantity);
+                this.updateMessage("process: " + i + "/" + filesQuantity + " files");
             }
             return result;
         } catch (IOException e) {
@@ -63,10 +69,5 @@ public class ProcessWorker extends Task<List<Path>> {
             logFeature.getLog().severe("!!! error during file process");
             return null;
         }
-    }
-
-    private void process(Path file) throws Exception {
-        this.updateMessage("process " + file.getFileName());
-        Thread.sleep(100);
     }
 }
