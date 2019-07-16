@@ -30,8 +30,8 @@ public class XMLPatchWorker implements PatchWorker {
             JAXBContext context = JAXBContext.newInstance(patchData.getClass());
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(patchData, System.out);
-            // marshaller.marshal(patchData, file);
+            // marshaller.marshal(patchData, System.out);
+            marshaller.marshal(patchData, file);
         } catch (JAXBException e) {
             e.printStackTrace();
         }

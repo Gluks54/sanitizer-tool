@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,6 +16,7 @@ import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.data.Replacement;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -29,7 +31,7 @@ public class ProcessWorker extends Task<List<Path>> {
     @NonNull
     private Config config;
     private LogFeature logFeature = new LogFeature();
-    private FileWorker fileWorker = new FileWorker();
+    private FileWorker fileWorker;
 
     @Override
     protected List<Path> call() throws Exception {
@@ -45,21 +47,45 @@ public class ProcessWorker extends Task<List<Path>> {
                                 .resolve(originalFolder.toPath().getParent().relativize(path));
                         Files.createDirectory(targetDir);
                     } catch (FileAlreadyExistsException e) {
-                        // its ok, do nothing
+                        // пропускаем
                     }
                 } else {
-                    Path targetFile = outputFolder.toPath()
+                    Path modifiedOriginalProjectFile = outputFolder.toPath()
                             .resolve(originalFolder.toPath().getParent().relativize(path));
-                    Files.copy(path, targetFile, StandardCopyOption.REPLACE_EXISTING);
 
-                    // check and fix tabs first
-                    if (fileWorker.isMatchFilePatterns(targetFile.toFile(), config)) {
-                        if (fileWorker.hasTabs(targetFile.toFile())) {
-                            fileWorker.fixTabsInFile(targetFile);
+                    Files.copy(path, modifiedOriginalProjectFile, StandardCopyOption.REPLACE_EXISTING);
+                    Path copyOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".original");
+                    // бэкапим оригинальный файл
+                    Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
+                            StandardCopyOption.REPLACE_EXISTING);
+                    Path patchForOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".patch.xml");
+
+                    fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
+                            modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());
+
+                    // наш файл или нет
+                    if (fileWorker.isMatchFilePatterns(modifiedOriginalProjectFile.toFile(), config)) {
+                        // читаем в строку и фиксим табы
+                        String originalCode = fileWorker
+                                .fixTabsInCodeString(fileWorker.fileToCodeString(modifiedOriginalProjectFile));
+                        String modifiedCode = originalCode;
+
+                        // замены в файле в соотв с конфигом
+                        if (config.getReplacementInFileContent() != null) {
+                            for (Map.Entry<String, Replacement> entry : config.getReplacementInFileContent()
+                                    .entrySet()) {
+
+                                modifiedCode = fileWorker.replaceInCodeString(modifiedCode,
+                                        entry.getValue().getSource(), entry.getValue().getTarget());
+
+                                // перезаписываем исходный файл с изменениями
+                                fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
+                                // записываем или перезаписываем патч
+                                fileWorker.updatePatchData();
+                            }
                         }
                     }
                 }
-                // logFeature.getLog().info("process file " + path);
                 i++;
                 this.updateProgress(i, filesQuantity);
                 this.updateMessage("process: " + i + "/" + filesQuantity + " files");

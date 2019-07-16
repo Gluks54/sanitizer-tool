@@ -5,17 +5,15 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
@@ -218,60 +216,36 @@ public class FileWorker extends SharedTextAreaLog {
     }
 
     public boolean isAngularProject(File file) {
-        return file.isDirectory();
+        return true;
     }
 
-    public boolean hasTabs(File file) {
-        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
-            int r;
-            while ((r = buffer.read()) != -1) {
-                if ((char) r == '\t') {
-                    buffer.close();
-                    return true;
-                }
+    public String fileToCodeString(Path path) { // fast file reader
+        String code = "";
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                code += line + System.lineSeparator();
             }
         } catch (IOException e) {
-            getLog().severe("error during tabs check in " + file.getAbsolutePath());
-            e.printStackTrace();
+            getLog().severe("!!! file read error at " + path.toString());
         }
-        return false;
+        return code;
     }
 
-    public void fixTabsInFile(Path file) throws IOException {
-        Path oldFile = Files.move(file, Paths.get(file.toString() + ".old"), StandardCopyOption.REPLACE_EXISTING);
-        try (BufferedReader readBuffer = new BufferedReader(
-                new InputStreamReader(new FileInputStream(oldFile.toFile())));
-                BufferedWriter writeBuffer = new BufferedWriter(
-                        new OutputStreamWriter(new FileOutputStream(file.toFile())))) {
-
-            int r;
-            while ((r = readBuffer.read()) != -1) {
-                if ((char) r == tab) {
-                    writeBuffer.write(tabReplacer);
-                } else {
-                    writeBuffer.write(r);
-                }
-            }
+    public void codeStringToFile(String code, Path path) { // fast file writer
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toString(), false))) {
+            writer.write(code);
+        } catch (IOException e) {
+            getLog().severe("!!! file write error at " + path.toString());
         }
-        Files.delete(oldFile);
     }
 
-    public void replaceStringInFile(File file, String oldString, String newString, boolean backup) throws IOException {
-        if (backup) {
-            String backupFileName = file.getName() + ".old";
-            Files.copy(file.toPath(), Paths.get(backupFileName), StandardCopyOption.REPLACE_EXISTING);
-        }
+    public String fixTabsInCodeString(String code) {
+        return code.replaceAll(String.valueOf(tab), tabReplacer);
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            String line = "";
-            String oldContent = "";
-            while ((line = reader.readLine()) != null) {
-                oldContent = oldContent + line + System.lineSeparator();
-            }
-            String newContent = oldContent.replaceAll(oldString, newString);
-            writer.write(newContent);
-        }
+    public String replaceInCodeString(String code, String original, String target) {
+        return code.replaceAll(original, target);
     }
 
     private long getCheckSum(File file) {
@@ -287,6 +261,76 @@ public class FileWorker extends SharedTextAreaLog {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public String removeComments(File file) {
+        String code = "";
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                code = code + line + System.lineSeparator();
+            }
+        } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        StringBuilder newCode = new StringBuilder();
+        try (StringReader sr = new StringReader(code)) {
+            boolean inBlockComment = false;
+            boolean inLineComment = false;
+            boolean out = true;
+
+            int prev = sr.read();
+            int cur;
+            for (cur = sr.read(); cur != -1; cur = sr.read()) {
+                if (inBlockComment) {
+                    if ((prev == '*' && cur == '/') || (prev == '*' && cur == '*')) {
+                        inBlockComment = false;
+                        out = false;
+                    }
+                } else if (inLineComment) {
+                    if (cur == '\r') { // start untested block
+                        sr.mark(1);
+                        int next = sr.read();
+                        if (next != '\n') {
+                            sr.reset();
+                        }
+                        inLineComment = false;
+                        out = false; // end untested block
+                    } else if (cur == '\n') {
+                        inLineComment = false;
+                        out = false;
+                    }
+                } else {
+                    if (prev == '/' && cur == '*') {
+                        sr.mark(1); // start untested block
+                        int next = sr.read();
+                        if (next != '*') {
+                            inBlockComment = true; // tested line (without rest of block)
+                        }
+                        sr.reset(); // end untested block
+                    } else if (prev == '/' && cur == '/') {
+                        inLineComment = true;
+                    } else if (out) {
+                        newCode.append((char) prev);
+                    } else {
+                        out = true;
+                    }
+                }
+                prev = cur;
+            }
+            if (prev != -1 && out && !inLineComment) {
+                newCode.append((char) prev);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return newCode.toString();
     }
 
     public Template getPatchDataFromDiff() { // текущие изменения по сравнению с оригиналом
@@ -319,7 +363,7 @@ public class FileWorker extends SharedTextAreaLog {
         });
         patchData.setOriginal(getCheckSum(originalFile));
         patchData.setModified(getCheckSum(modifiedFile));
-        patches.put(getCheckSum(modifiedFile), delta); // в
+        patches.put(getCheckSum(modifiedFile), delta);
         patchData.setPatches(patches);
         return patchData;
     }
@@ -327,28 +371,26 @@ public class FileWorker extends SharedTextAreaLog {
     public void updatePatchData() { // берем предыдущие изменения и добавляем текущий snapshot
         File modifiedFile = new File(modifiedFilename);
         File patchFile = new File(patchFilename);
+        Template currentPatchData;
+        long modifiedFileCRC32;
+        Map<Long, Delta> patches;
 
         if (patchFile.exists()) { // берем предыдущий патч целиком
-            Template currentPatchData = new XMLPatchWorker().readPatchData(patchFile, Template.class);
-            long modifiedFileCRC32 = getCheckSum(modifiedFile);
+            currentPatchData = new XMLPatchWorker().readPatchData(patchFile, Template.class);
+            modifiedFileCRC32 = getCheckSum(modifiedFile);
 
-            if (currentPatchData == null) {
-                getLog().severe("null currentpatchdata in " + modifiedFile.getAbsolutePath());
-            } else if (currentPatchData.getModified() == modifiedFileCRC32) { // если изменений нет
-                getLog().severe("checksum equals, skipping patchFile update " + modifiedFile.getAbsolutePath());
-            } else if (currentPatchData.getModified() != modifiedFileCRC32) { // если изменения есть
-                getLog().severe("checksum not equals, updating patchFile " + modifiedFile.getAbsolutePath());
+            if ((currentPatchData != null) && (currentPatchData.getModified() != modifiedFileCRC32)) {
                 Template previousPatchData = currentPatchData;
                 currentPatchData = getPatchDataFromDiff();
-
-                Map<Long, Delta> patches = currentPatchData.getPatches();
+                patches = currentPatchData.getPatches();
                 patches.putAll(previousPatchData.getPatches()); // объединяем предыдущие патчи с текущим
                 currentPatchData.setPatches(patches);
-                new XMLPatchWorker().writePatchData(patchFile, currentPatchData);
             }
-
         } else {
-            getLog().severe("no patchFile to update");
+            currentPatchData = getPatchDataFromDiff();
+            patches = currentPatchData.getPatches();
+            currentPatchData.setPatches(patches);
         }
+        new XMLPatchWorker().writePatchData(patchFile, currentPatchData);
     }
 }
