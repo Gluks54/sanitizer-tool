@@ -104,7 +104,7 @@ public class FileTreeItem extends TreeItem<File> {
         File file = new File(fileName);
         String result = file.getName() + System.lineSeparator() + "------" + System.lineSeparator();
         try {
-            result += contentFileString + " " + fileWorker.getFileType(file) + System.lineSeparator();
+            result += contentFileString + " " + fileWorker.getFileContentType(file) + System.lineSeparator();
             result += modifiedFileString + " " + fileWorker.getFileTime(file) + System.lineSeparator();
             if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX)
                     || (SanitizerWindow.ENV == OS.SOLARIS)) {

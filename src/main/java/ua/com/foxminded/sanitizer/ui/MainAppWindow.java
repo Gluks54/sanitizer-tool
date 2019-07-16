@@ -83,14 +83,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     public void setMessages() {
         title = "sanitizer";
         selectOriginalFolderButton.setText("Original project folder");
-        selectConfigFileButton.setText("Select template file");
+        selectConfigFileButton.setText("Select config file");
         selectOutputFolderButton.setText("Output project folder");
         originalFolderStatusLabel.setText("not selected");
         configFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
         exploreOriginalProjectFilesButton.setText("Explore original project files");
         processOriginalProjectFilesButton.setText("Process original project files");
-        editConfigButton.setText("Edit or new template");
+        editConfigButton.setText("Edit or new config");
     }
 
     @Override
@@ -136,13 +136,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             toggleBottomButtons();
         });
         selectConfigFileButton.setOnAction(event -> {
-            getLog().info("trying select template file...");
-            fileChooser.setTitle("Select project template file");
+            getLog().info("trying select config file...");
+            fileChooser.setTitle("Select project config file");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
             configFile = fileChooser.showOpenDialog(stage);
             if (configFile != null) {
                 configFileStatusLabel.setText(configFile.getAbsolutePath());
-                getLog().info("select template file " + configFile.getAbsolutePath());
+                getLog().info("select config file " + configFile.getAbsolutePath());
 
                 config = new ConfigWorker().readConfigData(configFile, Config.class);
                 if (config != null) {
@@ -163,7 +163,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                 configFileStatusLabel.setText("cancel select");
                 configFileStatusLabel
                         .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                getLog().info("cancel select template file");
+                getLog().info("cancel select config file");
                 if (!isProperConfigFileSelected) {
                     isProperConfigFileSelected = false;
                 }

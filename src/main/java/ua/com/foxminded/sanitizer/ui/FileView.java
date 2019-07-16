@@ -136,7 +136,7 @@ public class FileView extends SharedTextAreaLog implements SanitizerWindow {
         root.setBottom(bottomPane);
 
         try {
-            stage.setTitle(file.getFileName().toString() + " | " + fileWorker.getFileType(file.toFile()));
+            stage.setTitle(file.getFileName().toString() + " | " + fileWorker.getFileContentType(file.toFile()));
         } catch (IOException e) {
             stage.setTitle(file.getFileName().toString());
         }

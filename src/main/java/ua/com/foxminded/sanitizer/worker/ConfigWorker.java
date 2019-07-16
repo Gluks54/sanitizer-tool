@@ -18,13 +18,13 @@ public class ConfigWorker extends SharedTextAreaLog {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             config = (Config) unmarshaller.unmarshal(file);
-            getLog().info("read template " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
+            getLog().info("read config " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
             return config;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read template: "
+            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
                     + SanitizerWindow.Status.FAIL.getStatus());
-            getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like template file");
+            getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return null;
         }
     }

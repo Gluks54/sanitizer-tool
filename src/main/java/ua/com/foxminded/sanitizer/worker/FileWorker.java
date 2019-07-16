@@ -17,10 +17,10 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
-import java.time.Instant;
+import java.text.SimpleDateFormat;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,15 +71,17 @@ public class FileWorker extends SharedTextAreaLog {
     @Setter
     private String patchFilename;
 
-    public String getFileType(File file) throws IOException {
+    public String getCurrentDateTimeString() {
+        return new SimpleDateFormat("vyyyyMMddHHmmss-").format(new Date(System.currentTimeMillis()));
+    }
+
+    public String getFileContentType(File file) throws IOException {
         return new Tika().detect(file);
     }
 
     public String getFileTime(File file) throws IOException {
         FileTime time = Files.getLastModifiedTime(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
-        Instant acsessTime = time.toInstant();
-        ZonedDateTime zdt = acsessTime.atZone(ZoneId.of("UTC"));
-        return DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm:ss").format(zdt);
+        return DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm:ss").format(time.toInstant().atZone(ZoneId.of("UTC")));
     }
 
     public String getPermissions(Set<PosixFilePermission> perm) {

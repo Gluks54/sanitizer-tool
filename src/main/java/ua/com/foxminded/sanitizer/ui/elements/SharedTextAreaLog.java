@@ -14,6 +14,7 @@ public abstract class SharedTextAreaLog {
     private TextArea logTextArea = new TextArea();
 
     public SharedTextAreaLog() {
+        log.setUseParentHandlers(false);
         logTextArea.setEditable(false);
         textAreaHandler.setTextArea(logTextArea);
     }
