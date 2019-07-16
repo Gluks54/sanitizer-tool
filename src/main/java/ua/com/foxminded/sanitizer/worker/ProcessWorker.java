@@ -52,9 +52,10 @@ public class ProcessWorker extends Task<List<Path>> {
                             .resolve(originalFolder.toPath().getParent().relativize(path));
                     Files.copy(path, targetFile, StandardCopyOption.REPLACE_EXISTING);
 
+                    // check and fix tabs first
                     if (fileWorker.isMatchFilePatterns(targetFile.toFile(), config)) {
                         if (fileWorker.hasTabs(targetFile.toFile())) {
-                            System.out.println(fileWorker.hasTabs(targetFile.toFile()) + " " + targetFile.toFile());
+                            fileWorker.fixTabsInFile(targetFile);
                         }
                     }
                 }

@@ -253,6 +253,7 @@ public class FileWorker extends SharedTextAreaLog {
                 }
             }
         }
+        Files.delete(oldFile);
     }
 
     public void replaceStringInFile(File file, String oldString, String newString, boolean backup) throws IOException {
@@ -262,7 +263,7 @@ public class FileWorker extends SharedTextAreaLog {
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file));
-                FileWriter writer = new FileWriter(file)) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             String line = "";
             String oldContent = "";
             while ((line = reader.readLine()) != null) {
