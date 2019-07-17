@@ -37,7 +37,7 @@ import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @RequiredArgsConstructor
-public class FileView extends SharedTextAreaLog implements SanitizerWindow {
+public class FileViewWindow extends SharedTextAreaLog implements SanitizerWindow {
     @NonNull
     private String fileName;
     private String modifiedFileString;

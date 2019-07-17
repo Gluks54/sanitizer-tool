@@ -27,7 +27,7 @@ import javafx.scene.image.ImageView;
 import lombok.NoArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
-import ua.com.foxminded.sanitizer.ui.FileView;
+import ua.com.foxminded.sanitizer.ui.FileViewWindow;
 import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
@@ -42,7 +42,7 @@ public class FileTreeItem extends TreeItem<File> {
                 if (item.isFile()) {
                     ContextMenu contextMenu = new ContextMenu();
                     MenuItem mi1 = new MenuItem("View " + item.getName());
-                    mi1.setOnAction(event -> new FileView(item.toString()).show());
+                    mi1.setOnAction(event -> new FileViewWindow(item.toString()).show());
                     contextMenu.getItems().add(mi1);
                     setContextMenu(contextMenu);
                 }
@@ -143,7 +143,7 @@ public class FileTreeItem extends TreeItem<File> {
         tableView.setRowFactory(tv -> {
             final TableRow<FileData> row = new TableRow<>();
             final MenuItem mi1 = new MenuItem();
-            mi1.setOnAction(event -> new FileView(row.getItem().getFileName()).show());
+            mi1.setOnAction(event -> new FileViewWindow(row.getItem().getFileName()).show());
 
             row.setOnContextMenuRequested(event -> mi1
                     .setText(row.isEmpty() ? null : "View " + Paths.get(row.getItem().getFileName()).getFileName()));

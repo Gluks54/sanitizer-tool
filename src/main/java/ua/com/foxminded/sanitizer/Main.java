@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import ua.com.foxminded.sanitizer.ui.MainAppWindow;
 
+@SuppressWarnings("restriction")
 public class Main extends Application {
     public static void main(String[] args) throws DiffException, IOException {
         /*

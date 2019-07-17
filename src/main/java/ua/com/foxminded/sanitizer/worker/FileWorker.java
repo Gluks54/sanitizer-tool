@@ -72,7 +72,7 @@ public class FileWorker extends SharedTextAreaLog {
     private String patchFilename;
 
     public String getCurrentDateTimeString() {
-        return new SimpleDateFormat("vyyyyMMddHHmmss-").format(new Date(System.currentTimeMillis()));
+        return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
     }
 
     public String getFileContentType(File file) throws IOException {
@@ -139,7 +139,7 @@ public class FileWorker extends SharedTextAreaLog {
     }
 
     public boolean isMatchFilePatterns(File file, Config config) {
-        boolean isMatchPattern = true;
+        // boolean isMatchPattern = true;
         boolean isMatchFileExtension = true;
 
         isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
@@ -175,46 +175,40 @@ public class FileWorker extends SharedTextAreaLog {
         return new DecimalFormat("#,##0.#").format(result) + " " + unit;
     }
 
-    private boolean validatePomXml(String xmlFile) {
+    private boolean validatePomXml(File mavenPomFile) {
         try {
-            if (xmlFile != null) {
+            if (mavenPomFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
                 Schema schema = schemaFactory
                         .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
                 Validator validator = schema.newValidator();
-                validator.validate(new StreamSource(new File(xmlFile)));
-                getLog().info("validate " + xmlFile + " " + SanitizerWindow.Status.OK.getStatus());
+                validator.validate(new StreamSource(mavenPomFile));
+                getLog().info("validate " + mavenPomFile + " " + SanitizerWindow.Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
-            getLog().severe("SAX error");
+            getLog().severe("SAX error in " + mavenPomFile);
             e.printStackTrace();
         } catch (IOException e) {
-            getLog().severe("IO error");
+            getLog().severe("IO error " + mavenPomFile);
             e.printStackTrace();
         }
         return false;
     }
 
-    public boolean isMavenProject(File file) {
-        String pomFileName = "pom.xml";
-        boolean hasPomXml = (new File(file.getAbsoluteFile() + "/" + pomFileName)).exists();
-        if (hasPomXml) {
-            getLog().info("found " + pomFileName);
-        } else {
-            getLog().info("no " + pomFileName);
-        }
-        // boolean isProperPomXml = hasPomXml && validatePomXml(pomFileName);
-        boolean isProperPomXml = hasPomXml;
-        File srcFolder = new File(file.getAbsoluteFile() + "/src");
-        boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        if (hasSrcFolder) {
-            getLog().info("found src folder " + srcFolder);
-        } else {
-            getLog().info("no src folder");
-        }
+    public boolean isMavenProject(File projectRootFolder) {
+        File mavenPomFile = new File(projectRootFolder.getAbsoluteFile() + "/pom.xml");
+        boolean hasPomXml = mavenPomFile.exists();
+        getLog().info(hasPomXml ? mavenPomFile + " " + SanitizerWindow.Status.OK.getStatus()
+                : mavenPomFile + " " + SanitizerWindow.Status.FAIL.getStatus());
+        boolean isProperPomXml = validatePomXml(mavenPomFile);
 
-        return file.isDirectory() && hasPomXml && isProperPomXml && hasSrcFolder;
+        File srcFolder = new File(projectRootFolder.getAbsoluteFile() + "/src");
+        boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
+        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + SanitizerWindow.Status.OK.getStatus()
+                : "src folder: " + SanitizerWindow.Status.FAIL.getStatus());
+
+        return projectRootFolder.isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
     }
 
     public boolean isAngularProject(File file) {

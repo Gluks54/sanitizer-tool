@@ -17,6 +17,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.Replacement;
+import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -38,7 +39,7 @@ public class ProcessWorker extends Task<List<Path>> {
         try (Stream<Path> walk = Files.walk(Paths.get(originalFolder.toURI()))) {
             List<Path> result = walk.collect(Collectors.toList());
             int filesQuantity = result.size();
-            int i = 0;
+            int filesCounter = 0;
 
             for (Path path : result) {
                 if (path.toFile().isDirectory()) {
@@ -55,16 +56,15 @@ public class ProcessWorker extends Task<List<Path>> {
 
                     Files.copy(path, modifiedOriginalProjectFile, StandardCopyOption.REPLACE_EXISTING);
                     Path copyOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".original");
-                    // бэкапим оригинальный файл
-                    Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
-                            StandardCopyOption.REPLACE_EXISTING);
                     Path patchForOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".patch.xml");
 
                     fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
                             modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());
-
                     // наш файл или нет
                     if (fileWorker.isMatchFilePatterns(modifiedOriginalProjectFile.toFile(), config)) {
+                        // бэкапим оригинальный файл
+                        Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
+                                StandardCopyOption.REPLACE_EXISTING);
                         // читаем в строку и фиксим табы
                         String originalCode = fileWorker
                                 .fixTabsInCodeString(fileWorker.fileToCodeString(modifiedOriginalProjectFile));
@@ -84,11 +84,15 @@ public class ProcessWorker extends Task<List<Path>> {
                                 fileWorker.updatePatchData();
                             }
                         }
+                        logFeature.getLog().info(
+                                "Process " + modifiedOriginalProjectFile + " " + SanitizerWindow.Status.OK.getStatus());
+                        // удаляем оригинальный файл проекта, вместо него модиф и патч
+                        Files.delete(copyOriginalProjectFile);
                     }
                 }
-                i++;
-                this.updateProgress(i, filesQuantity);
-                this.updateMessage("process: " + i + "/" + filesQuantity + " files");
+                filesCounter++;
+                this.updateProgress(filesCounter, filesQuantity);
+                this.updateMessage("process: " + filesCounter + "/" + filesQuantity + " files");
             }
             return result;
         } catch (IOException e) {
