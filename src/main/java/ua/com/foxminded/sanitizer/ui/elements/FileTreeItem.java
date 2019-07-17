@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
 import ua.com.foxminded.sanitizer.ui.FileViewWindow;
-import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
@@ -106,8 +106,8 @@ public class FileTreeItem extends TreeItem<File> {
         try {
             result += contentFileString + " " + fileWorker.getFileContentType(file) + System.lineSeparator();
             result += modifiedFileString + " " + fileWorker.getFileTime(file) + System.lineSeparator();
-            if ((SanitizerWindow.ENV == OS.MAC) || (SanitizerWindow.ENV == OS.UNIX)
-                    || (SanitizerWindow.ENV == OS.SOLARIS)) {
+            if ((ISanitizerWindow.ENV == OS.MAC) || (ISanitizerWindow.ENV == OS.UNIX)
+                    || (ISanitizerWindow.ENV == OS.SOLARIS)) {
                 Path currentFilePath = Paths.get(file.getAbsolutePath());
                 result += ownerFileString + " " + Files.getOwner(currentFilePath, LinkOption.NOFOLLOW_LINKS)
                         + System.lineSeparator();

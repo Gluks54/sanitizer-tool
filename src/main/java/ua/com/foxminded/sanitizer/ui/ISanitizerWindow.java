@@ -4,7 +4,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import ua.com.foxminded.sanitizer.worker.OSWorker;
 
-public interface SanitizerWindow {
+public interface ISanitizerWindow {
     public enum Status {
         OK("ok"), FAIL("none");
 

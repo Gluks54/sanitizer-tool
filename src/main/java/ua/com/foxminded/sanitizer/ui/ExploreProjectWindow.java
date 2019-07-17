@@ -21,7 +21,7 @@ import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
-public class ExploreProjectWindow extends SharedTextAreaLog implements SanitizerWindow {
+public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitizerWindow {
     @NonNull
     private File selectedDirectory;
     @NonNull
@@ -68,14 +68,14 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements Sanitizer
         root.setCenter(splitPane);
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(okButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
         root.setBottom(bottomPane);
         Stage stage = new Stage();
         stage.setOnCloseRequest(
                 event -> getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath()));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, SanitizerWindow.EXPLORE_W, SanitizerWindow.EXPLORE_H));
+        stage.setScene(new Scene(root, ISanitizerWindow.EXPLORE_W, ISanitizerWindow.EXPLORE_H));
         stage.setTitle(title);
         stage.show();
 

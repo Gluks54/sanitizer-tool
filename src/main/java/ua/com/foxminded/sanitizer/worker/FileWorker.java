@@ -5,11 +5,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -50,7 +48,7 @@ import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
-import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @NoArgsConstructor
@@ -183,7 +181,7 @@ public class FileWorker extends SharedTextAreaLog {
                         .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(mavenPomFile));
-                getLog().info("validate " + mavenPomFile + " " + SanitizerWindow.Status.OK.getStatus());
+                getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
@@ -199,19 +197,20 @@ public class FileWorker extends SharedTextAreaLog {
     public boolean isMavenProject(File projectRootFolder) {
         File mavenPomFile = new File(projectRootFolder.getAbsoluteFile() + "/pom.xml");
         boolean hasPomXml = mavenPomFile.exists();
-        getLog().info(hasPomXml ? mavenPomFile + " " + SanitizerWindow.Status.OK.getStatus()
-                : mavenPomFile + " " + SanitizerWindow.Status.FAIL.getStatus());
+        getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
+                : mavenPomFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
         boolean isProperPomXml = validatePomXml(mavenPomFile);
 
         File srcFolder = new File(projectRootFolder.getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + SanitizerWindow.Status.OK.getStatus()
-                : "src folder: " + SanitizerWindow.Status.FAIL.getStatus());
+        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
+                : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
 
         return projectRootFolder.isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
     }
 
-    public boolean isAngularProject(File file) {
+    // TODO!
+    public boolean isAngularProject(File projectRootFolder) {
         return true;
     }
 
@@ -259,74 +258,26 @@ public class FileWorker extends SharedTextAreaLog {
         return result;
     }
 
-    public String removeComments(File file) {
-        String code = "";
+    public String removeCommentsFromProperties(String code) {
+        return code.replaceAll("([\\t]*#.*)|(=.*)", "$1 ");
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                code = code + line + System.lineSeparator();
-            }
-        } catch (FileNotFoundException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+    public String removeCommentsFromCss(String code) {
+        return code.replaceAll(
+                "(/\\*([^*]|[\\r\\n]|(\\*+([^*/]|[\\r\\n])))*\\*+/)|\"(\\\\.|[^\\\\\"])*\"|'(\\\\[\\s\\S]|[^'])*'",
+                "$1 ");
+    }
 
-        StringBuilder newCode = new StringBuilder();
-        try (StringReader sr = new StringReader(code)) {
-            boolean inBlockComment = false;
-            boolean inLineComment = false;
-            boolean out = true;
+    public String removeCommentsFromTs(String code) {
+        return code.replaceAll("<!--(?!\\\\s*(?:\\\\[if [^\\\\]]+]|<!|>))(?:(?!-->)(.|\\\\n))*-->", "$1 ");
+    }
 
-            int prev = sr.read();
-            int cur;
-            for (cur = sr.read(); cur != -1; cur = sr.read()) {
-                if (inBlockComment) {
-                    if ((prev == '*' && cur == '/') || (prev == '*' && cur == '*')) {
-                        inBlockComment = false;
-                        out = false;
-                    }
-                } else if (inLineComment) {
-                    if (cur == '\r') { // start untested block
-                        sr.mark(1);
-                        int next = sr.read();
-                        if (next != '\n') {
-                            sr.reset();
-                        }
-                        inLineComment = false;
-                        out = false; // end untested block
-                    } else if (cur == '\n') {
-                        inLineComment = false;
-                        out = false;
-                    }
-                } else {
-                    if (prev == '/' && cur == '*') {
-                        sr.mark(1); // start untested block
-                        int next = sr.read();
-                        if (next != '*') {
-                            inBlockComment = true; // tested line (without rest of block)
-                        }
-                        sr.reset(); // end untested block
-                    } else if (prev == '/' && cur == '/') {
-                        inLineComment = true;
-                    } else if (out) {
-                        newCode.append((char) prev);
-                    } else {
-                        out = true;
-                    }
-                }
-                prev = cur;
-            }
-            if (prev != -1 && out && !inLineComment) {
-                newCode.append((char) prev);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return newCode.toString();
+    public String removeCommentsFromXml(String code) {
+        return code.replaceAll("<!--(?!\\\\s*(?:\\\\[if [^\\\\]]+]|<!|>))(?:(?!-->)(.|\\\\n))*-->", "$1 ");
+    }
+
+    public String removeCommentsFromJava(String code) {
+        return code.replaceAll("//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1 ");
     }
 
     public Template getPatchDataFromDiff() { // текущие изменения по сравнению с оригиналом

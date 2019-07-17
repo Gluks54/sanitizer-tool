@@ -17,11 +17,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.Replacement;
-import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
-public class ProcessWorker extends Task<List<Path>> {
+public class StripWorker extends Task<List<Path>> {
     private class LogFeature extends SharedTextAreaLog {
     }
 
@@ -70,14 +70,25 @@ public class ProcessWorker extends Task<List<Path>> {
                                 .fixTabsInCodeString(fileWorker.fileToCodeString(modifiedOriginalProjectFile));
                         String modifiedCode = originalCode;
 
+                        // убираем коменты
+                        if (config.isRemoveComments()) {
+                            if (modifiedOriginalProjectFile.toString().endsWith(".java")) {
+                                modifiedCode = fileWorker.removeCommentsFromJava(modifiedCode);
+                            } else if (modifiedOriginalProjectFile.toString().endsWith(".xml")) {
+                                modifiedCode = fileWorker.removeCommentsFromXml(modifiedCode);
+                            }
+                            // перезаписываем исходный файл с изменениями
+                            fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
+                            // записываем или перезаписываем патч
+                            fileWorker.updatePatchData();
+                        }
+
                         // замены в файле в соотв с конфигом
                         if (config.getReplacementInFileContent() != null) {
                             for (Map.Entry<String, Replacement> entry : config.getReplacementInFileContent()
                                     .entrySet()) {
-
                                 modifiedCode = fileWorker.replaceInCodeString(modifiedCode,
                                         entry.getValue().getSource(), entry.getValue().getTarget());
-
                                 // перезаписываем исходный файл с изменениями
                                 fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
                                 // записываем или перезаписываем патч
@@ -85,19 +96,19 @@ public class ProcessWorker extends Task<List<Path>> {
                             }
                         }
                         logFeature.getLog().info(
-                                "Process " + modifiedOriginalProjectFile + " " + SanitizerWindow.Status.OK.getStatus());
+                                "Process " + modifiedOriginalProjectFile + " " + ISanitizerWindow.Status.OK.getStatus());
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
                         Files.delete(copyOriginalProjectFile);
                     }
                 }
                 filesCounter++;
                 this.updateProgress(filesCounter, filesQuantity);
-                this.updateMessage("process: " + filesCounter + "/" + filesQuantity + " files");
+                this.updateMessage("strip: " + filesCounter + "/" + filesQuantity + " files");
             }
             return result;
         } catch (IOException e) {
             e.printStackTrace();
-            logFeature.getLog().severe("!!! error during file process");
+            logFeature.getLog().severe("!!! error during file strip process");
             return null;
         }
     }

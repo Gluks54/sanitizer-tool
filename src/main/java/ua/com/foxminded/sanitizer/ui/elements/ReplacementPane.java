@@ -16,7 +16,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import ua.com.foxminded.sanitizer.data.Replacement;
-import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
 public class ReplacementPane extends TitledPane {
     // строки, добавляемые в панель
@@ -41,7 +41,7 @@ public class ReplacementPane extends TitledPane {
             getChildren().addAll(descriptionLabel, descriptionTextField, sourceLabel, sourceTextField, targetLabel,
                     targetTextField, deleteReplacementItemButton);
             setAlignment(Pos.BASELINE_CENTER);
-            getChildren().forEach(node -> setMargin(node, new Insets(SanitizerWindow.INSET)));
+            getChildren().forEach(node -> setMargin(node, new Insets(ISanitizerWindow.INSET)));
         }
 
         private void setMessages() {

@@ -13,12 +13,6 @@
   <maven.compiler.source>1.8</maven.compiler.source>
   <maven.compiler.target>1.8</maven.compiler.target>
  </properties>
- <repositories>
-  <repository>
-   <id>jitpack.io</id>
-   <url>https://jitpack.io</url>
-  </repository>
- </repositories>
  <dependencies>
   <dependency>
    <groupId>junit</groupId>
@@ -35,11 +29,6 @@
    <groupId>org.apache.tika</groupId>
    <artifactId>tika-core</artifactId>
    <version>1.21</version>
-  </dependency>
-  <dependency>
-   <groupId>com.github.ertugrulcetin</groupId>
-   <artifactId>CommentRemover</artifactId>
-   <version>1.2</version>
   </dependency>
   <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
   <dependency>
@@ -58,6 +47,12 @@
    <groupId>io.github.java-diff-utils</groupId>
    <artifactId>java-diff-utils</artifactId>
    <version>4.0</version>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+  <dependency>
+   <groupId>commons-io</groupId>
+   <artifactId>commons-io</artifactId>
+   <version>2.6</version>
   </dependency>
  </dependencies>
  <build>

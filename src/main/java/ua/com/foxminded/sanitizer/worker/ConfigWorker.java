@@ -8,7 +8,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.ui.SanitizerWindow;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 public class ConfigWorker extends SharedTextAreaLog {
@@ -18,12 +18,12 @@ public class ConfigWorker extends SharedTextAreaLog {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             config = (Config) unmarshaller.unmarshal(file);
-            getLog().info("read config " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
+            getLog().info("read config " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
             return config;
         } catch (JAXBException e) {
             e.printStackTrace();
             getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
-                    + SanitizerWindow.Status.FAIL.getStatus());
+                    + ISanitizerWindow.Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return null;
         }
@@ -36,12 +36,12 @@ public class ConfigWorker extends SharedTextAreaLog {
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.marshal(config, System.out);
             marshaller.marshal(config, file);
-            getLog().info("write config " + file.getAbsolutePath() + " " + SanitizerWindow.Status.OK.getStatus());
+            getLog().info("write config " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
             return true;
         } catch (JAXBException e) {
             e.printStackTrace();
             getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
-                    + SanitizerWindow.Status.FAIL.getStatus());
+                    + ISanitizerWindow.Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return false;
         }

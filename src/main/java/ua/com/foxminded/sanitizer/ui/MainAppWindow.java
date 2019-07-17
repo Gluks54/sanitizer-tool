@@ -35,7 +35,7 @@ import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.ConfigWorker;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 
-public final class MainAppWindow extends SharedTextAreaLog implements SanitizerWindow, FileVisitor<Path> {
+public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow, FileVisitor<Path> {
     private FileWorker fileWorker;
     @Setter
     private Config config;
@@ -53,11 +53,15 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
     @Setter
     private File configFile;
     private File outputFolder;
+    private File stripFolder;
     private Button exploreOriginalProjectFilesButton = new Button();
-    private Button processOriginalProjectFilesButton = new Button();
+    private Button prepareOutputFolderButton = new Button();
+    private Button stripOriginalProjectFilesButton = new Button();
     private boolean isOriginalFolderSelected;
     @Setter
     private boolean isProperConfigFileSelected;
+    @Setter
+    private boolean isOutputFolderPrepared;
     private boolean isOutputFolderSelected;
     private String title;
     private long size;
@@ -75,8 +79,10 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
 
     protected void toggleBottomButtons() {
         exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected));
-        processOriginalProjectFilesButton
+        prepareOutputFolderButton
                 .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
+        stripOriginalProjectFilesButton
+                .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderPrepared));
     }
 
     @Override
@@ -88,8 +94,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         originalFolderStatusLabel.setText("not selected");
         configFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
-        exploreOriginalProjectFilesButton.setText("Explore original project files");
-        processOriginalProjectFilesButton.setText("Process original project files");
+        exploreOriginalProjectFilesButton.setText("Explore original project");
+        prepareOutputFolderButton.setText("Prepare output folder");
+        stripOriginalProjectFilesButton.setText("Strip original project");
         editConfigButton.setText("Edit or new config");
     }
 
@@ -109,7 +116,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
                     getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
                     originalFolderStatusLabel.setText(
-                            "project at " + originalFolder.getName() + " " + SanitizerWindow.Status.OK.getStatus());
+                            "project at " + originalFolder.getName() + " " + ISanitizerWindow.Status.OK.getStatus());
                     originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
                     getLog().info("+++ maven project found at " + originalFolder);
@@ -119,8 +126,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     originalFolderStatusLabel.setText("ordinary directory");
                     originalFolderStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                    getLog().info("ordinary directory selected: " + originalFolder.toString());
-                    getLog().info("no proper projects here");
+                    getLog().info("no proper projects here: " + originalFolder.toString());
                     isOriginalFolderSelected = false;
                     stage.setTitle(title);
                 }
@@ -213,18 +219,23 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
             toggleBottomButtons();
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
-        processOriginalProjectFilesButton.setOnAction(event -> {
-            getLog().info("process files with config " + configFile.getAbsolutePath());
-            new ProcessWindow(originalFolder, outputFolder, config).show();
+        prepareOutputFolderButton.setOnAction(event -> {
+            getLog().info("prepare output folder " + outputFolder);
+            PrepareWindow prepareWindow = new PrepareWindow(originalFolder, outputFolder, config, this);
+            prepareWindow.show();
+        });
+        stripOriginalProjectFilesButton.setOnAction(event -> {
+            getLog().info("strip files according to config " + configFile.getAbsolutePath());
+            new StripWindow(originalFolder, outputFolder, config).show();
         });
         editConfigButton.setOnAction(event -> {
-            ConfigEditor configEditor;
+            ConfigEditorWindow configEditor;
             if (configFile != null) {
                 getLog().info("load " + configFile.getAbsolutePath() + " to config editor");
                 config = new ConfigWorker().readConfigData(configFile, Config.class);
 
                 if (config != null) {
-                    configEditor = new ConfigEditor(config, configFile);
+                    configEditor = new ConfigEditorWindow(config, configFile);
                     configEditor.setMainAppWindow(this);
                     configEditor.show();
                 } else {
@@ -232,7 +243,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                             ButtonType.YES, ButtonType.NO);
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
-                        configEditor = new ConfigEditor();
+                        configEditor = new ConfigEditorWindow();
                         configEditor.setMainAppWindow(this);
                         configEditor.show();
                     } else {
@@ -240,7 +251,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
                     }
                 }
             } else {
-                configEditor = new ConfigEditor();
+                configEditor = new ConfigEditorWindow();
                 configEditor.setMainAppWindow(this);
                 configEditor.show();
             }
@@ -274,7 +285,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         topPane.add(outputInfoLabel, 2, 2);
 
         topPane.getChildren().forEach(element -> {
-            GridPane.setMargin(element, new Insets(SanitizerWindow.INSET));
+            GridPane.setMargin(element, new Insets(ISanitizerWindow.INSET));
             if (element instanceof Button) {
                 ((Button) element).setMaxWidth(220);
             }
@@ -283,13 +294,15 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         logPane.getChildren().add(getLogTextArea());
 
         exploreOriginalProjectFilesButton.setDisable(true);
-        processOriginalProjectFilesButton.setDisable(true);
+        prepareOutputFolderButton.setDisable(true);
+        stripOriginalProjectFilesButton.setDisable(true);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
         bottomPane.getChildren().add(exploreOriginalProjectFilesButton);
-        bottomPane.getChildren().add(processOriginalProjectFilesButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(SanitizerWindow.INSET)));
+        bottomPane.getChildren().add(prepareOutputFolderButton);
+        bottomPane.getChildren().add(stripOriginalProjectFilesButton);
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
 
         root.setTop(topPane);
         root.setCenter(logPane);
@@ -304,7 +317,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements SanitizerW
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(root, SanitizerWindow.MAIN_W, SanitizerWindow.MAIN_H));
+        stage.setScene(new Scene(root, ISanitizerWindow.MAIN_W, ISanitizerWindow.MAIN_H));
         stage.setTitle(title);
         stage.show();
     }
