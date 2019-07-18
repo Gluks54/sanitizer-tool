@@ -9,7 +9,7 @@ import javax.xml.bind.Unmarshaller;
 
 import ua.com.foxminded.sanitizer.patch.Template;
 
-public class XMLPatchWorker implements PatchWorker {
+public class XMLPatchWorker implements IPatchWorker {
 
     @Override
     public Template readPatchData(File file, Class<?> c) {

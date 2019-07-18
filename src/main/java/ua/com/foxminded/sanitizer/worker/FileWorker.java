@@ -300,7 +300,7 @@ public class FileWorker extends SharedTextAreaLog {
         Map<Long, Delta> patches = new LinkedHashMap<Long, Delta>(); // мапа всех отдельных дельт (сеансов)
         Delta delta = new Delta(); // каждая дельта - список изменений в файле до сохранения
 
-        diff.getDeltas().stream().forEach(d -> { // маппим дифф файла на свой класс
+        diff.getDeltas().forEach(d -> { // маппим дифф файла на свой класс
             SanitizerFilePatch sfp = new SanitizerFilePatch(); // для marshal-unmarshal
             sfp.setType(d.getType());
             sfp.getSource().setLines(d.getSource().getLines());
