@@ -80,7 +80,7 @@ public class StripWorker extends Task<List<Path>> {
                             // перезаписываем исходный файл с изменениями
                             fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
                             // записываем или перезаписываем патч
-                            fileWorker.updatePatchData();
+                            fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString());
                         }
 
                         // замены в файле в соотв с конфигом
@@ -92,11 +92,12 @@ public class StripWorker extends Task<List<Path>> {
                                 // перезаписываем исходный файл с изменениями
                                 fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
                                 // записываем или перезаписываем патч
-                                fileWorker.updatePatchData();
+                                fileWorker.updateTotalPatch(
+                                        entry.getKey() + ": " + fileWorker.getCurrentDateTimeString());
                             }
                         }
-                        logFeature.getLog().info(
-                                "Process " + modifiedOriginalProjectFile + " " + ISanitizerWindow.Status.OK.getStatus());
+                        logFeature.getLog().info("Process " + modifiedOriginalProjectFile + " "
+                                + ISanitizerWindow.Status.OK.getStatus());
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
                         Files.delete(copyOriginalProjectFile);
                     }

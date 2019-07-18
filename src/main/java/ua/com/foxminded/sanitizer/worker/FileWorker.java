@@ -280,7 +280,8 @@ public class FileWorker extends SharedTextAreaLog {
         return code.replaceAll("//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1 ");
     }
 
-    public Template getPatchDataFromDiff() { // текущие изменения по сравнению с оригиналом
+    public Template getTotalPatchFromDiff(String currentPatchDescription) { // текущие изменения по сравнению с
+        // оригиналом
         File originalFile = new File(originalFilename);
         File modifiedFile = new File(modifiedFilename);
         List<String> original;
@@ -295,7 +296,7 @@ public class FileWorker extends SharedTextAreaLog {
             e.printStackTrace();
             return null;
         }
-        Template patchData = new Template(); // весь патч со всеми изменениями за все время
+        Template totalFilePatch = new Template(); // весь патч со всеми изменениями за все время
         Map<Long, Delta> patches = new LinkedHashMap<Long, Delta>(); // мапа всех отдельных дельт (сеансов)
         Delta delta = new Delta(); // каждая дельта - список изменений в файле до сохранения
 
@@ -306,38 +307,40 @@ public class FileWorker extends SharedTextAreaLog {
             sfp.getSource().setPosition(d.getSource().getPosition());
             sfp.getTarget().setLines(d.getTarget().getLines());
             sfp.getTarget().setPosition(d.getTarget().getPosition());
-            delta.getDelta().add(sfp);
+            delta.getDeltas().add(sfp);
         });
-        patchData.setOriginal(getCheckSum(originalFile));
-        patchData.setModified(getCheckSum(modifiedFile));
+        delta.setDescription(currentPatchDescription);
+        totalFilePatch.setOriginalCRC32(getCheckSum(originalFile));
+        totalFilePatch.setModifiedCRC32(getCheckSum(modifiedFile));
         patches.put(getCheckSum(modifiedFile), delta);
-        patchData.setPatches(patches);
-        return patchData;
+        totalFilePatch.setPatches(patches);
+        return totalFilePatch;
     }
 
-    public void updatePatchData() { // берем предыдущие изменения и добавляем текущий snapshot
+    public void updateTotalPatch(String currentPatchDescription) { // берем предыдущие изменения и добавляем текущий
+                                                                   // snapshot
         File modifiedFile = new File(modifiedFilename);
         File patchFile = new File(patchFilename);
-        Template currentPatchData;
+        Template totalFilePatch;
         long modifiedFileCRC32;
-        Map<Long, Delta> patches;
+        Map<Long, Delta> newPatches;
 
         if (patchFile.exists()) { // берем предыдущий патч целиком
-            currentPatchData = new XMLPatchWorker().readPatchData(patchFile, Template.class);
+            totalFilePatch = new XMLPatchWorker().readPatchData(patchFile, Template.class);
             modifiedFileCRC32 = getCheckSum(modifiedFile);
 
-            if ((currentPatchData != null) && (currentPatchData.getModified() != modifiedFileCRC32)) {
-                Template previousPatchData = currentPatchData;
-                currentPatchData = getPatchDataFromDiff();
-                patches = currentPatchData.getPatches();
-                patches.putAll(previousPatchData.getPatches()); // объединяем предыдущие патчи с текущим
-                currentPatchData.setPatches(patches);
+            if ((totalFilePatch != null) && (totalFilePatch.getModifiedCRC32() != modifiedFileCRC32)) {
+                Template previousPatchData = totalFilePatch;
+                totalFilePatch = getTotalPatchFromDiff(currentPatchDescription);
+                newPatches = totalFilePatch.getPatches();
+                newPatches.putAll(previousPatchData.getPatches()); // объединяем предыдущие патчи с текущим
+                totalFilePatch.setPatches(newPatches);
             }
         } else {
-            currentPatchData = getPatchDataFromDiff();
-            patches = currentPatchData.getPatches();
-            currentPatchData.setPatches(patches);
+            totalFilePatch = getTotalPatchFromDiff(currentPatchDescription);
+            newPatches = totalFilePatch.getPatches();
+            totalFilePatch.setPatches(newPatches);
         }
-        new XMLPatchWorker().writePatchData(patchFile, currentPatchData);
+        new XMLPatchWorker().writePatchData(patchFile, totalFilePatch);
     }
 }

@@ -13,7 +13,7 @@ import lombok.ToString;
 @ToString
 @XmlRootElement(name = "diff-data")
 public class Template {
-    private long original; // original file checksum
-    private long modified; // modified file checksum
+    private long originalCRC32; // original file checksum
+    private long modifiedCRC32; // modified file checksum
     private Map<Long, Delta> patches;
 }
