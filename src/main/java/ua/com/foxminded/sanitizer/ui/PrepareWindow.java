@@ -10,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import lombok.NonNull;
@@ -27,14 +26,14 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
     private File outputFolder;
     @NonNull
     private Config config;
+    @NonNull
+    private MainAppWindow mainAppWindow;
     private String title;
     private PreparationWorker preparationWorker;
     private ProgressBar preparationProgressBar = new ProgressBar(0);
     private Button cancelPreparationButton = new Button();
     private Button startPreparationButton = new Button();
     private Button closePreparationWindowButton = new Button();
-    @NonNull
-    private MainAppWindow mainAppWindow;
 
     @Override
     public void setMessages() {
@@ -97,7 +96,6 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
         setMessages();
         cancelPreparationButton.setDisable(true);
 
-        BorderPane root = new BorderPane();
         FlowPane topPane = new FlowPane();
         FlowPane bottomPane = new FlowPane();
 
@@ -105,12 +103,12 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
         topPane.setAlignment(Pos.BASELINE_CENTER);
         topPane.getChildren().add(preparationProgressBar);
         topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        root.setTop(topPane);
+        getRoot().setTop(topPane);
 
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().addAll(startPreparationButton, cancelPreparationButton, closePreparationWindowButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        root.setBottom(bottomPane);
+        getRoot().setBottom(bottomPane);
 
         Stage stage = new Stage();
         setButtonsActions(stage);
@@ -126,7 +124,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(root, ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
+        stage.setScene(new Scene(getRoot(), ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
         stage.setTitle(title);
         stage.show();
     }

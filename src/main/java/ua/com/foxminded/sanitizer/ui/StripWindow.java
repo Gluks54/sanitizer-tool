@@ -10,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import lombok.NonNull;
@@ -97,7 +96,6 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
         cancelStripButton.setDisable(true);
         exploreStripFolderButton.setDisable(true);
 
-        BorderPane root = new BorderPane();
         FlowPane topPane = new FlowPane();
         FlowPane bottomPane = new FlowPane();
 
@@ -105,13 +103,13 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
         topPane.setAlignment(Pos.BASELINE_CENTER);
         topPane.getChildren().add(stripProgressBar);
         topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        root.setTop(topPane);
+        getRoot().setTop(topPane);
 
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().addAll(startStripButton, cancelStripButton, exploreStripFolderButton,
                 closeStripWindowButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        root.setBottom(bottomPane);
+        getRoot().setBottom(bottomPane);
 
         Stage stage = new Stage();
         setButtonsActions(stage);
@@ -125,7 +123,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(root, ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
+        stage.setScene(new Scene(getRoot(), ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
         stage.setTitle(title);
         stage.show();
     }

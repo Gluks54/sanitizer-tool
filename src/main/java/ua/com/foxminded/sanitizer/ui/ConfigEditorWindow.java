@@ -94,10 +94,9 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         bottomButtonsPane.getChildren().addAll(newConfigButton, saveConfigButton, cancelButton);
         bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
 
-        BorderPane root = new BorderPane();
-        root.setTop(extensionsPane);
-        root.setCenter(centerPane);
-        root.setBottom(bottomButtonsPane);
+        getRoot().setTop(extensionsPane);
+        getRoot().setCenter(centerPane);
+        getRoot().setBottom(bottomButtonsPane);
         Stage stage = new Stage();
         setButtonsActions(stage);
         stage.setOnCloseRequest(event -> {
@@ -105,7 +104,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         });
 
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, ISanitizerWindow.CONFIGEDITOR_W, ISanitizerWindow.CONFIGEDITOR_H));
+        stage.setScene(new Scene(getRoot(), ISanitizerWindow.CONFIGEDITOR_W, ISanitizerWindow.CONFIGEDITOR_H));
 
         if (config != null && file != null) {
             loadConfigData();

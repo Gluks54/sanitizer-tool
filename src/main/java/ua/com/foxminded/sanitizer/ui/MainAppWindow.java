@@ -20,7 +20,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -57,6 +56,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button prepareOutputFolderButton = new Button();
     private Button stripOriginalProjectFilesButton = new Button();
+    private Button undoStrippedProjectFilesButton = new Button();
     private boolean isOriginalFolderSelected;
     @Setter
     private boolean isProperConfigFileSelected;
@@ -97,6 +97,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setText("Explore original project");
         prepareOutputFolderButton.setText("Prepare output folder");
         stripOriginalProjectFilesButton.setText("Strip original project");
+        undoStrippedProjectFilesButton.setText("Undo stripped steps");
         editConfigButton.setText("Edit or new config");
     }
 
@@ -221,12 +222,15 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         prepareOutputFolderButton.setOnAction(event -> {
             getLog().info("prepare output folder " + outputFolder);
-            PrepareWindow prepareWindow = new PrepareWindow(originalFolder, outputFolder, config, this);
-            prepareWindow.show();
+            new PrepareWindow(originalFolder, outputFolder, config, this).show();
         });
         stripOriginalProjectFilesButton.setOnAction(event -> {
             getLog().info("strip files according to config " + configFile.getAbsolutePath());
             new StripWindow(originalFolder, outputFolder, config).show();
+        });
+        undoStrippedProjectFilesButton.setOnAction(event -> {
+            getLog().info("select undo stage");
+            new UndoSelectWindow().show();
         });
         editConfigButton.setOnAction(event -> {
             ConfigEditorWindow configEditor;
@@ -260,8 +264,6 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
 
     @Override
     public void show() {
-        BorderPane root = new BorderPane();
-
         GridPane topPane = new GridPane();
         ColumnConstraints buttonsLeftColumn = new ColumnConstraints();
         buttonsLeftColumn.setPercentWidth(25);
@@ -296,17 +298,17 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setDisable(true);
         prepareOutputFolderButton.setDisable(true);
         stripOriginalProjectFilesButton.setDisable(true);
+        undoStrippedProjectFilesButton.setDisable(false);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
-        bottomPane.getChildren().add(exploreOriginalProjectFilesButton);
-        bottomPane.getChildren().add(prepareOutputFolderButton);
-        bottomPane.getChildren().add(stripOriginalProjectFilesButton);
+        bottomPane.getChildren().addAll(exploreOriginalProjectFilesButton, prepareOutputFolderButton,
+                stripOriginalProjectFilesButton, undoStrippedProjectFilesButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
 
-        root.setTop(topPane);
-        root.setCenter(logPane);
-        root.setBottom(bottomPane);
+        getRoot().setTop(topPane);
+        getRoot().setCenter(logPane);
+        getRoot().setBottom(bottomPane);
 
         getLog().addHandler(getTextAreaHandler());
         getLog().info("sanitizer started");
@@ -317,7 +319,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(root, ISanitizerWindow.MAIN_W, ISanitizerWindow.MAIN_H));
+        stage.setScene(new Scene(getRoot(), ISanitizerWindow.MAIN_W, ISanitizerWindow.MAIN_H));
         stage.setTitle(title);
         stage.show();
     }

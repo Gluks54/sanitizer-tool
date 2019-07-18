@@ -27,6 +27,8 @@ public interface ISanitizerWindow {
     public static final int CONFIGEDITOR_H = 600;
     public static final int PROCESS_W = 320;
     public static final int PROCESS_H = 100;
+    public static final int UNDO_W = 480;
+    public static final int UNDO_H = 600;
     public static final OSWorker.OS ENV = new OSWorker().getOs();
 
     public void setMessages();

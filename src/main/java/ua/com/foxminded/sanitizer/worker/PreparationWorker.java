@@ -25,7 +25,6 @@ public class PreparationWorker extends Task<List<Path>> {
     private File originalFolder;
     @NonNull
     private File outputFolder;
-    @NonNull
     private LogFeature logFeature = new LogFeature();
 
     @Override
@@ -35,13 +34,13 @@ public class PreparationWorker extends Task<List<Path>> {
             int filesQuantity = paths.size();
             int filesCounter = 0;
             String snapshotTimeString = new FileWorker().getCurrentDateTimeString();
+            String projectName = Paths.get(outputFolder.toString(), originalFolder.getName()).toString();
+            String projectNameWithSnapshot = projectName + "-v" + snapshotTimeString + "-";
             logFeature.getLog().info("### current time snapshot: " + snapshotTimeString);
 
             for (Path path : paths) {
                 String basePathString = outputFolder.toPath()
                         .resolve(originalFolder.getParentFile().toPath().relativize(path)).toString();
-                String projectName = Paths.get(outputFolder.toString(), originalFolder.getName()).toString();
-                String projectNameWithSnapshot = projectName + "-v" + snapshotTimeString + "-";
 
                 Path origPath = Paths.get(basePathString.replaceFirst(projectName, projectNameWithSnapshot + "orig"));
                 Path stripPath = Paths.get(basePathString.replaceFirst(projectName, projectNameWithSnapshot + "strip"));

@@ -26,7 +26,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -93,8 +92,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
-        BorderPane root = new BorderPane();
-        root.setPadding(new Insets(ISanitizerWindow.INSET));
+        getRoot().setPadding(new Insets(ISanitizerWindow.INSET));
 
         textArea.setCache(true);
         textArea.setEditable(false);
@@ -111,7 +109,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
         } catch (IOException e) {
             getLog().severe("count content lines for " + file + ": " + ISanitizerWindow.Status.FAIL);
         }
-        root.setCenter(new StackPane(new VirtualizedScrollPane<CodeArea>(textArea)));
+        getRoot().setCenter(new StackPane(new VirtualizedScrollPane<CodeArea>(textArea)));
 
         try {
             bottomPane.getChildren().add(new Label(modifiedFileString + fileWorker.getFileTime(file.toFile())));
@@ -133,7 +131,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
         }
         bottomPane.getChildren().add(new Label("Size: " + file.toFile().length() + " bytes"));
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        root.setBottom(bottomPane);
+        getRoot().setBottom(bottomPane);
 
         try {
             stage.setTitle(file.getFileName().toString() + " | " + fileWorker.getFileContentType(file.toFile()));
@@ -141,7 +139,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
             stage.setTitle(file.getFileName().toString());
         }
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(root, ISanitizerWindow.VIEWER_W, ISanitizerWindow.VIEWER_H));
+        stage.setScene(new Scene(getRoot(), ISanitizerWindow.VIEWER_W, ISanitizerWindow.VIEWER_H));
         stage.show();
     }
 }
