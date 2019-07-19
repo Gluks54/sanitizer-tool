@@ -147,6 +147,11 @@ public class FileWorker extends SharedTextAreaLog {
                 .anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ISanitizerWindow.ORIG_SUFFIX)));
     }
 
+    public boolean isContainProperStripFolder(File dir) {
+        return Arrays.stream(dir.listFiles())
+                .anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ISanitizerWindow.STRIP_SUFFIX)));
+    }
+
     public boolean isMatchFilePatterns(File file, Config config) {
         // boolean isMatchPattern = true;
         boolean isMatchFileExtension = true;

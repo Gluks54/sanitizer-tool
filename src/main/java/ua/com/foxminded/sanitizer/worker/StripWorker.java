@@ -57,7 +57,8 @@ public class StripWorker extends Task<List<Path>> {
                     Path copyOriginalProjectFile = Paths
                             .get(modifiedOriginalProjectFile.toString() + ISanitizerWindow.ORIGINAL_EXT);
                     Path patchForOriginalProjectFile = Paths
-                            .get(modifiedOriginalProjectFile.toString() + ISanitizerWindow.PATCH_EXT);
+                            .get(modifiedOriginalProjectFile.toString().replaceAll(ISanitizerWindow.STRIP_SUFFIX,
+                                    ISanitizerWindow.ORIG_SUFFIX) + ISanitizerWindow.PATCH_EXT);
 
                     fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
                             modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());

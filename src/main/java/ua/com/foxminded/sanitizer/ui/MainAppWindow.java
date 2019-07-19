@@ -110,25 +110,38 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             directoryChooser.setTitle("Select original project root folder");
             originalFolder = directoryChooser.showDialog(stage);
             if (originalFolder != null) {
-                getLog().info("select original project root folder");
-                if (fileWorker.isMavenProject(originalFolder)) {
-                    processDirectory(originalFolder);
-                    originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
-                    getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
-                    originalFolderStatusLabel.setText(
-                            "project at " + originalFolder.getName() + " " + ISanitizerWindow.Status.OK.getStatus());
-                    originalFolderStatusLabel.setGraphic(
-                            new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
-                    getLog().info("+++ maven project found at " + originalFolder);
-                    stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
-                    isOriginalFolderSelected = true;
-                } else {
-                    originalFolderStatusLabel.setText("ordinary directory");
-                    originalFolderStatusLabel.setGraphic(
-                            new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                    getLog().info("no proper projects here: " + originalFolder.toString());
+                if (outputPreparedFolder != null
+                        && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
+                    getLog().info("wrong original project folder selected!");
+                    isOutputFolderSelected = false;
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Wrong folder selected!");
+                    alert.setHeaderText("Original and output folder couldn't be the same");
+                    alert.setContentText("Choose another output or original project folder");
+                    alert.showAndWait();
                     isOriginalFolderSelected = false;
-                    stage.setTitle(title);
+                } else {
+                    getLog().info("select original project root folder");
+                    if (fileWorker.isMavenProject(originalFolder)) {
+                        processDirectory(originalFolder);
+                        originalInfoLabel
+                                .setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
+                        getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
+                        originalFolderStatusLabel.setText("project at " + originalFolder.getName() + " "
+                                + ISanitizerWindow.Status.OK.getStatus());
+                        originalFolderStatusLabel.setGraphic(
+                                new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
+                        getLog().info("+++ maven project found at " + originalFolder);
+                        stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
+                        isOriginalFolderSelected = true;
+                    } else {
+                        originalFolderStatusLabel.setText("ordinary directory");
+                        originalFolderStatusLabel.setGraphic(
+                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                        getLog().info("no proper projects here: " + originalFolder.toString());
+                        isOriginalFolderSelected = false;
+                        stage.setTitle(title);
+                    }
                 }
             } else {
                 originalFolderStatusLabel.setText("cancel select");
@@ -181,14 +194,16 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             directoryChooser.setTitle("Select output project root folder");
             outputPreparedFolder = directoryChooser.showDialog(stage);
             if (outputPreparedFolder != null) {
-                if (outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
+                if (originalFolder != null
+                        && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
                     getLog().info("wrong output project folder selected!");
                     isOutputFolderSelected = false;
                     Alert alert = new Alert(AlertType.ERROR);
                     alert.setTitle("Wrong folder selected!");
                     alert.setHeaderText("Original and output folder couldn't be the same");
-                    alert.setContentText("Choose another output project folder");
+                    alert.setContentText("Choose another output or original project folder");
                     alert.showAndWait();
+                    isOutputFolderSelected = false;
                 } else {
                     if (outputPreparedFolder.getFreeSpace() > size) {
                         outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
@@ -220,8 +235,19 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         prepareOutputFolderButton.setOnAction(event -> {
-            getLog().info("prepare output folder " + outputPreparedFolder);
-            new PrepareWindow(originalFolder, outputPreparedFolder, config, this).show();
+            if (!fileWorker.isContainProperOriginalFolder(outputPreparedFolder)) {
+                getLog().info("prepare output folder " + outputPreparedFolder);
+                new PrepareWindow(originalFolder, outputPreparedFolder, config, this).show();
+            } else {
+                getLog().info("!!! " + outputPreparedFolder
+                        + " already contains proper original project folder, choose another one!");
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Wrong folder!");
+                alert.setHeaderText(outputPreparedFolder.toString());
+                alert.setContentText("already contains proper original project folder, " + System.lineSeparator()
+                        + "choose another one");
+                alert.showAndWait();
+            }
         });
         stripOriginalProjectFilesButton.setOnAction(event -> {
             directoryChooser.setTitle("Select base work folder");
@@ -229,8 +255,6 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             if (baseFolder != null) {
                 if (fileWorker.isContainProperOriginalFolder(baseFolder)) {
                     getLog().info("+++ strip files according to config " + configFile.getAbsolutePath());
-                    // System.out.println(fileWorker.isContainProperOriginalFolder(baseFolder));
-                    // System.out.println(fileWorker.getProperOriginalFolderName(baseFolder));
                     new StripWindow(
                             new File(fileWorker.getProperOriginalFolderName(baseFolder)), new File(fileWorker
                                     .getProperOriginalFolderName(baseFolder).replaceAll(ORIG_SUFFIX, STRIP_SUFFIX)),
@@ -244,8 +268,19 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             }
         });
         undoStrippedProjectFilesButton.setOnAction(event -> {
-            getLog().info("select undo stage");
-            new UndoSelectWindow().show();
+            directoryChooser.setTitle("Select base work folder");
+            baseFolder = directoryChooser.showDialog(stage);
+            if (baseFolder != null) {
+                if (fileWorker.isContainProperOriginalFolder(baseFolder)
+                        && fileWorker.isContainProperStripFolder(baseFolder)) {
+                    getLog().info("*** start undo operations in " + baseFolder);
+                    new UndoSelectWindow().show();
+                } else {
+                    getLog().info("--- no proper original and strip project folder found at " + baseFolder);
+                }
+            } else {
+                getLog().info("--- undo cancelled");
+            }
         });
         editConfigButton.setOnAction(event -> {
             ConfigEditorWindow configEditor;
