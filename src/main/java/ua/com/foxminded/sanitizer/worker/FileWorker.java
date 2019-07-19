@@ -18,6 +18,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -134,6 +135,16 @@ public class FileWorker extends SharedTextAreaLog {
             s += "-";
         }
         return s;
+    }
+
+    public String getProperOriginalFolderName(File dir) {
+        return Arrays.stream(dir.listFiles()).filter(d -> d.getName().endsWith(ISanitizerWindow.ORIG_SUFFIX))
+                .findFirst().get().getAbsolutePath();
+    }
+
+    public boolean isContainProperOriginalFolder(File dir) {
+        return Arrays.stream(dir.listFiles())
+                .anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ISanitizerWindow.ORIG_SUFFIX)));
     }
 
     public boolean isMatchFilePatterns(File file, Config config) {

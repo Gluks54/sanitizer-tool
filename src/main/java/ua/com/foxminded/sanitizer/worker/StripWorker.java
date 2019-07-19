@@ -44,19 +44,20 @@ public class StripWorker extends Task<List<Path>> {
             for (Path path : result) {
                 if (path.toFile().isDirectory()) {
                     try {
-                        Path targetDir = outputFolder.toPath()
-                                .resolve(originalFolder.toPath().getParent().relativize(path));
+                        Path targetDir = outputFolder.toPath().resolve(originalFolder.toPath().relativize(path));
                         Files.createDirectory(targetDir);
                     } catch (FileAlreadyExistsException e) {
                         // пропускаем
                     }
                 } else {
                     Path modifiedOriginalProjectFile = outputFolder.toPath()
-                            .resolve(originalFolder.toPath().getParent().relativize(path));
+                            .resolve(originalFolder.toPath().relativize(path));
 
                     Files.copy(path, modifiedOriginalProjectFile, StandardCopyOption.REPLACE_EXISTING);
-                    Path copyOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".original");
-                    Path patchForOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ".patch.xml");
+                    Path copyOriginalProjectFile = Paths
+                            .get(modifiedOriginalProjectFile.toString() + ISanitizerWindow.ORIGINAL_EXT);
+                    Path patchForOriginalProjectFile = Paths
+                            .get(modifiedOriginalProjectFile.toString() + ISanitizerWindow.PATCH_EXT);
 
                     fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
                             modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());
@@ -107,7 +108,9 @@ public class StripWorker extends Task<List<Path>> {
                 this.updateMessage("strip: " + filesCounter + "/" + filesQuantity + " files");
             }
             return result;
-        } catch (IOException e) {
+        } catch (
+
+        IOException e) {
             e.printStackTrace();
             logFeature.getLog().severe("!!! error during file strip process");
             return null;

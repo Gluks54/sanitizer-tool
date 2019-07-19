@@ -29,6 +29,10 @@ public interface ISanitizerWindow {
     public static final int PROCESS_H = 100;
     public static final int UNDO_W = 480;
     public static final int UNDO_H = 600;
+    public static final String ORIG_SUFFIX = "orig";
+    public static final String STRIP_SUFFIX = "strip";
+    public static final String ORIGINAL_EXT = ".original";
+    public static final String PATCH_EXT = ".patch.xml";
     public static final OSWorker.OS ENV = new OSWorker().getOs();
 
     public void setMessages();

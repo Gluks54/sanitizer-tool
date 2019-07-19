@@ -51,8 +51,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private File originalFolder;
     @Setter
     private File configFile;
-    private File outputFolder;
-    private File stripFolder;
+    private File outputPreparedFolder;
+    private File baseFolder;
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button prepareOutputFolderButton = new Button();
     private Button stripOriginalProjectFilesButton = new Button();
@@ -81,8 +81,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected));
         prepareOutputFolderButton
                 .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
-        stripOriginalProjectFilesButton
-                .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderPrepared));
+        stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected);
     }
 
     @Override
@@ -97,7 +96,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setText("Explore original project");
         prepareOutputFolderButton.setText("Prepare output folder");
         stripOriginalProjectFilesButton.setText("Strip original project");
-        undoStrippedProjectFilesButton.setText("Undo stripped steps");
+        undoStrippedProjectFilesButton.setText("Undo strip steps");
         editConfigButton.setText("Edit or new config");
     }
 
@@ -180,9 +179,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         selectOutputFolderButton.setOnAction(event -> {
             getLog().info("trying select output project folder...");
             directoryChooser.setTitle("Select output project root folder");
-            outputFolder = directoryChooser.showDialog(stage);
-            if (outputFolder != null) {
-                if (outputFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
+            outputPreparedFolder = directoryChooser.showDialog(stage);
+            if (outputPreparedFolder != null) {
+                if (outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
                     getLog().info("wrong output project folder selected!");
                     isOutputFolderSelected = false;
                     Alert alert = new Alert(AlertType.ERROR);
@@ -191,19 +190,19 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.setContentText("Choose another output project folder");
                     alert.showAndWait();
                 } else {
-                    if (outputFolder.getFreeSpace() > size) {
-                        outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
+                    if (outputPreparedFolder.getFreeSpace() > size) {
+                        outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
                         outputFolderStatusLabel.setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                        getLog().info("select output project folder " + outputFolder.getAbsolutePath());
-                        outputInfoLabel
-                                .setText("Free space: " + fileWorker.turnFileSizeToString(outputFolder.getFreeSpace()));
+                        getLog().info("select output project folder " + outputPreparedFolder.getAbsolutePath());
+                        outputInfoLabel.setText(
+                                "Free space: " + fileWorker.turnFileSizeToString(outputPreparedFolder.getFreeSpace()));
                         isOutputFolderSelected = true;
                     } else {
-                        outputFolderStatusLabel.setText(outputFolder.getAbsolutePath());
+                        outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
                         outputFolderStatusLabel.setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                        getLog().info("!!! not enough space in " + outputFolder.getAbsolutePath());
+                        getLog().info("!!! not enough space in " + outputPreparedFolder.getAbsolutePath());
                         outputInfoLabel.setText("Not enough space!");
                         isOutputFolderSelected = false;
                     }
@@ -221,12 +220,28 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         prepareOutputFolderButton.setOnAction(event -> {
-            getLog().info("prepare output folder " + outputFolder);
-            new PrepareWindow(originalFolder, outputFolder, config, this).show();
+            getLog().info("prepare output folder " + outputPreparedFolder);
+            new PrepareWindow(originalFolder, outputPreparedFolder, config, this).show();
         });
         stripOriginalProjectFilesButton.setOnAction(event -> {
-            getLog().info("strip files according to config " + configFile.getAbsolutePath());
-            new StripWindow(originalFolder, outputFolder, config).show();
+            directoryChooser.setTitle("Select base work folder");
+            baseFolder = directoryChooser.showDialog(stage);
+            if (baseFolder != null) {
+                if (fileWorker.isContainProperOriginalFolder(baseFolder)) {
+                    getLog().info("+++ strip files according to config " + configFile.getAbsolutePath());
+                    // System.out.println(fileWorker.isContainProperOriginalFolder(baseFolder));
+                    // System.out.println(fileWorker.getProperOriginalFolderName(baseFolder));
+                    new StripWindow(
+                            new File(fileWorker.getProperOriginalFolderName(baseFolder)), new File(fileWorker
+                                    .getProperOriginalFolderName(baseFolder).replaceAll(ORIG_SUFFIX, STRIP_SUFFIX)),
+                            config).show();
+                } else {
+                    getLog().info("--- no proper original project folder found at " + baseFolder
+                            + ". prepare project in advance");
+                }
+            } else {
+                getLog().info("--- strip files cancelled");
+            }
         });
         undoStrippedProjectFilesButton.setOnAction(event -> {
             getLog().info("select undo stage");

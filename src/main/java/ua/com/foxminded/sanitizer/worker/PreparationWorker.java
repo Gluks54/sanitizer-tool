@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -36,25 +37,22 @@ public class PreparationWorker extends Task<List<Path>> {
             String snapshotTimeString = new FileWorker().getCurrentDateTimeString();
             String projectName = Paths.get(outputFolder.toString(), originalFolder.getName()).toString();
             String projectNameWithSnapshot = projectName + "-v" + snapshotTimeString + "-";
-            logFeature.getLog().info("### current time snapshot: " + snapshotTimeString);
 
+            logFeature.getLog().info("### current time snapshot: " + snapshotTimeString);
             for (Path path : paths) {
                 String basePathString = outputFolder.toPath()
                         .resolve(originalFolder.getParentFile().toPath().relativize(path)).toString();
 
-                Path origPath = Paths.get(basePathString.replaceFirst(projectName, projectNameWithSnapshot + "orig"));
-                Path stripPath = Paths.get(basePathString.replaceFirst(projectName, projectNameWithSnapshot + "strip"));
-
+                Path origPath = Paths.get(basePathString.replaceFirst(projectName,
+                        projectNameWithSnapshot + ISanitizerWindow.ORIG_SUFFIX));
                 if (path.toFile().isDirectory()) {
                     try {
                         Files.createDirectory(origPath);
-                        Files.createDirectory(stripPath);
                     } catch (FileAlreadyExistsException e) {
                         // пропускаем
                     }
                 } else {
                     Files.copy(path, origPath, StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(path, stripPath, StandardCopyOption.REPLACE_EXISTING);
                 }
                 filesCounter++;
                 this.updateProgress(filesCounter, filesQuantity);

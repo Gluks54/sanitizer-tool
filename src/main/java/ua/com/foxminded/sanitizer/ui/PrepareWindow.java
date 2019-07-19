@@ -60,7 +60,6 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
 
             preparationWorker.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED,
                     new EventHandler<WorkerStateEvent>() {
-
                         @Override
                         public void handle(WorkerStateEvent t) {
                             closePreparationWindowButton.setDisable(false);
