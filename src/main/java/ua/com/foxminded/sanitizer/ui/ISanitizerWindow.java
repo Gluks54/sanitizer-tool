@@ -27,7 +27,7 @@ public interface ISanitizerWindow {
     public static final int CONFIGEDITOR_H = 600;
     public static final int PROCESS_W = 320;
     public static final int PROCESS_H = 100;
-    public static final int UNDO_W = 480;
+    public static final int UNDO_W = 640;
     public static final int UNDO_H = 600;
     public static final String ORIG_SUFFIX = "orig";
     public static final String STRIP_SUFFIX = "strip";

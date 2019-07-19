@@ -56,12 +56,12 @@ public class ReplacementPane extends TitledPane {
         }
     }
 
-    private ColumnConstraints mainColumn = new ColumnConstraints();
     @Getter
     private GridPane mainPane = new GridPane();
-    private ScrollPane scrollPane = new ScrollPane();
 
     public ReplacementPane() {
+        ColumnConstraints mainColumn = new ColumnConstraints();
+        ScrollPane scrollPane = new ScrollPane();
         mainColumn.setPercentWidth(100);
         mainPane.getColumnConstraints().add(mainColumn);
         scrollPane.setContent(mainPane);

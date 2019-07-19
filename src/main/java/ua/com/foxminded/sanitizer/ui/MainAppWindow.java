@@ -31,13 +31,15 @@ import lombok.Getter;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
-import ua.com.foxminded.sanitizer.worker.ConfigWorker;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
+import ua.com.foxminded.sanitizer.worker.IConfigWorker;
+import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
 
 public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow, FileVisitor<Path> {
     private FileWorker fileWorker;
     @Setter
     private Config config;
+    private IConfigWorker configWorker = new XMLConfigWorker();
     private Button selectOriginalFolderButton = new Button();
     private Button selectConfigFileButton = new Button();
     private Button selectOutputFolderButton = new Button();
@@ -78,10 +80,10 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     }
 
     protected void toggleBottomButtons() {
-        exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected));
-        prepareOutputFolderButton
-                .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
+        exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected));
+        prepareOutputFolderButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
         stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected);
+        undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected);
     }
 
     @Override
@@ -113,13 +115,12 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 if (outputPreparedFolder != null
                         && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
                     getLog().info("wrong original project folder selected!");
-                    isOutputFolderSelected = false;
+                    isOriginalFolderSelected = false;
                     Alert alert = new Alert(AlertType.ERROR);
                     alert.setTitle("Wrong folder selected!");
                     alert.setHeaderText("Original and output folder couldn't be the same");
                     alert.setContentText("Choose another output or original project folder");
                     alert.showAndWait();
-                    isOriginalFolderSelected = false;
                 } else {
                     getLog().info("select original project root folder");
                     if (fileWorker.isMavenProject(originalFolder)) {
@@ -163,7 +164,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 configFileStatusLabel.setText(configFile.getAbsolutePath());
                 getLog().info("select config file " + configFile.getAbsolutePath());
 
-                config = new ConfigWorker().readConfigData(configFile, Config.class);
+                config = configWorker.readConfigData(configFile, Config.class);
                 if (config != null) {
                     configFileStatusLabel
                             .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
@@ -172,6 +173,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 } else {
                     configFileStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                    isProperConfigFileSelected = false;
                     Alert alert = new Alert(AlertType.ERROR);
                     alert.setTitle("Config error");
                     alert.setHeaderText(configFile.getName() + " doesn't looks like proper sanitizer config");
@@ -203,7 +205,6 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.setHeaderText("Original and output folder couldn't be the same");
                     alert.setContentText("Choose another output or original project folder");
                     alert.showAndWait();
-                    isOutputFolderSelected = false;
                 } else {
                     if (outputPreparedFolder.getFreeSpace() > size) {
                         outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
@@ -273,10 +274,16 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             if (baseFolder != null) {
                 if (fileWorker.isContainProperOriginalFolder(baseFolder)
                         && fileWorker.isContainProperStripFolder(baseFolder)) {
-                    getLog().info("*** start undo operations in " + baseFolder);
-                    new UndoSelectWindow().show();
+                    getLog().info("*** start undo operations in " + baseFolder + " using config " + configFile);
+                    new UndoSelectWindow(baseFolder, config).show();
                 } else {
                     getLog().info("--- no proper original and strip project folder found at " + baseFolder);
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Wrong folder!");
+                    alert.setHeaderText(baseFolder.toString());
+                    alert.setContentText("no proper original and strip project here " + System.lineSeparator()
+                            + "choose another one");
+                    alert.showAndWait();
                 }
             } else {
                 getLog().info("--- undo cancelled");
@@ -286,8 +293,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             ConfigEditorWindow configEditor;
             if (configFile != null) {
                 getLog().info("load " + configFile.getAbsolutePath() + " to config editor");
-                config = new ConfigWorker().readConfigData(configFile, Config.class);
-
+                config = configWorker.readConfigData(configFile, Config.class);
                 if (config != null) {
                     configEditor = new ConfigEditorWindow(config, configFile);
                     configEditor.setMainAppWindow(this);
@@ -348,7 +354,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         exploreOriginalProjectFilesButton.setDisable(true);
         prepareOutputFolderButton.setDisable(true);
         stripOriginalProjectFilesButton.setDisable(true);
-        undoStrippedProjectFilesButton.setDisable(false);
+        undoStrippedProjectFilesButton.setDisable(true);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");

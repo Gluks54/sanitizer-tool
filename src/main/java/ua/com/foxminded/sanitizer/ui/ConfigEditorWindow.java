@@ -31,7 +31,8 @@ import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
-import ua.com.foxminded.sanitizer.worker.ConfigWorker;
+import ua.com.foxminded.sanitizer.worker.IConfigWorker;
+import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
 
 @RequiredArgsConstructor
 @NoArgsConstructor
@@ -39,6 +40,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     @Getter
     @NonNull
     private Config config;
+    private IConfigWorker configWorker = new XMLConfigWorker();
     @NonNull
     private File file;
     private ISanitizerWindow.Status operationStatus;
@@ -284,7 +286,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     }
                     getLog().info("...save project structure replacements: " + operationStatus.getStatus());
 
-                    if (new ConfigWorker().writeConfigData(file, config)) {
+                    if (configWorker.writeConfigData(file, config)) {
                         // записали, обновили статус, проверили кнопки снизу
                         mainAppWindow.setConfigFile(file);
                         mainAppWindow.setProperConfigFileSelected(true);

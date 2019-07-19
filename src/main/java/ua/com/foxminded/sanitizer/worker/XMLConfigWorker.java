@@ -11,7 +11,8 @@ import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class ConfigWorker extends SharedTextAreaLog {
+public class XMLConfigWorker extends SharedTextAreaLog implements IConfigWorker {
+    @Override
     public Config readConfigData(File file, Class<?> c) {
         Config config = null;
         try {
@@ -29,6 +30,7 @@ public class ConfigWorker extends SharedTextAreaLog {
         }
     }
 
+    @Override
     public boolean writeConfigData(File file, Config config) {
         try {
             JAXBContext context = JAXBContext.newInstance(config.getClass());
