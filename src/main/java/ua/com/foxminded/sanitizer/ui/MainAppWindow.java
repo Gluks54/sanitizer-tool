@@ -30,6 +30,8 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.project.IProject;
+import ua.com.foxminded.sanitizer.project.MavenProject;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.IConfigWorker;
@@ -106,6 +108,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     public void setButtonsActions(Stage stage) {
         fileWorker = new FileWorker();
         DirectoryChooser directoryChooser = new DirectoryChooser();
+        IProject project = new MavenProject();
         FileChooser fileChooser = new FileChooser();
         selectOriginalFolderButton.setOnAction(event -> {
             getLog().info("trying select original project root folder...");
@@ -123,7 +126,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.showAndWait();
                 } else {
                     getLog().info("select original project root folder");
-                    if (fileWorker.isMavenProject(originalFolder)) {
+                    if (project.isProperProject(originalFolder)) {
                         processDirectory(originalFolder);
                         originalInfoLabel
                                 .setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);

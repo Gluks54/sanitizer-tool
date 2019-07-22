@@ -27,14 +27,7 @@ import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
-import javax.xml.XMLConstants;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
-
 import org.apache.tika.Tika;
-import org.xml.sax.SAXException;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
@@ -187,47 +180,6 @@ public class FileWorker extends SharedTextAreaLog {
     private String format(long value, long divider, String unit) {
         double result = divider > 1 ? (double) value / (double) divider : (double) value;
         return new DecimalFormat("#,##0.#").format(result) + " " + unit;
-    }
-
-    private boolean validatePomXml(File mavenPomFile) {
-        try {
-            if (mavenPomFile != null) {
-                SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-                Schema schema = schemaFactory
-                        .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
-                Validator validator = schema.newValidator();
-                validator.validate(new StreamSource(mavenPomFile));
-                getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
-                return true;
-            }
-        } catch (SAXException e) {
-            getLog().severe("SAX error in " + mavenPomFile);
-            e.printStackTrace();
-        } catch (IOException e) {
-            getLog().severe("IO error " + mavenPomFile);
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public boolean isMavenProject(File projectRootFolder) {
-        File mavenPomFile = new File(projectRootFolder.getAbsoluteFile() + "/pom.xml");
-        boolean hasPomXml = mavenPomFile.exists();
-        getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
-                : mavenPomFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
-        boolean isProperPomXml = validatePomXml(mavenPomFile);
-
-        File srcFolder = new File(projectRootFolder.getAbsoluteFile() + "/src");
-        boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
-                : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
-
-        return projectRootFolder.isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
-    }
-
-    // TODO!
-    public boolean isAngularProject(File projectRootFolder) {
-        return true;
     }
 
     public String fileToCodeString(Path path) { // fast file reader
