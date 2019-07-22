@@ -30,7 +30,8 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.project.IProject;
+import ua.com.foxminded.sanitizer.project.AbstractProject;
+import ua.com.foxminded.sanitizer.project.AngularProject;
 import ua.com.foxminded.sanitizer.project.MavenProject;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
@@ -108,7 +109,6 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     public void setButtonsActions(Stage stage) {
         fileWorker = new FileWorker();
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        IProject project = new MavenProject();
         FileChooser fileChooser = new FileChooser();
         selectOriginalFolderButton.setOnAction(event -> {
             getLog().info("trying select original project root folder...");
@@ -126,16 +126,21 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.showAndWait();
                 } else {
                     getLog().info("select original project root folder");
-                    if (project.isProperProject(originalFolder)) {
+
+                    // выясняем, что за проект
+                    AbstractProject project = new MavenProject(originalFolder).isProperProject()
+                            ? new MavenProject(originalFolder)
+                            : (new AngularProject(originalFolder).isProperProject() ? new AngularProject(originalFolder)
+                                    : null);
+
+                    if (project != null) {
                         processDirectory(originalFolder);
                         originalInfoLabel
                                 .setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
                         getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
                         originalFolderStatusLabel.setText("project at " + originalFolder.getName() + " "
                                 + ISanitizerWindow.Status.OK.getStatus());
-                        originalFolderStatusLabel.setGraphic(
-                                new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png"))));
-                        getLog().info("+++ maven project found at " + originalFolder);
+                        originalFolderStatusLabel.setGraphic(project.getProjectLabelIcon());
                         stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
                         isOriginalFolderSelected = true;
                     } else {

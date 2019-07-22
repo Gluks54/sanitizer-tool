@@ -1,6 +1,7 @@
 package ua.com.foxminded.sanitizer.project;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.xml.XMLConstants;
@@ -11,15 +12,16 @@ import javax.xml.validation.Validator;
 
 import org.xml.sax.SAXException;
 
-import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class MavenProject implements IProject {
-    private SharedTextAreaLog logFeature = new SharedTextAreaLog() {
-    };
+public class MavenProject extends AbstractProject {
+    public MavenProject(File dir) {
+        super(dir);
+    }
 
-    private boolean validatePomXml(File mavenPomFile) {
+    private boolean isValidPomXml(File mavenPomFile) {
         try {
             if (mavenPomFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -27,40 +29,41 @@ public class MavenProject implements IProject {
                         .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(mavenPomFile));
-                logFeature.getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
+                getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
-            logFeature.getLog().severe("SAX error in " + mavenPomFile);
+            getLog().severe("SAX error in " + mavenPomFile);
             e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            getLog().severe("no " + mavenPomFile);
         } catch (IOException e) {
-            logFeature.getLog().severe("IO error " + mavenPomFile);
+            getLog().severe("IO error " + mavenPomFile);
             e.printStackTrace();
         }
         return false;
     }
 
     @Override
-    public boolean isProperProject(File dir) {
-        File mavenPomFile = new File(dir.getAbsoluteFile() + "/pom.xml");
+    public boolean isProperProject() {
+        File mavenPomFile = new File(getDir().getAbsoluteFile() + "/pom.xml");
         boolean hasPomXml = mavenPomFile.exists();
-        logFeature.getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
+        getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
                 : mavenPomFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
-        boolean isProperPomXml = validatePomXml(mavenPomFile);
+        boolean isProperPomXml = isValidPomXml(mavenPomFile);
 
-        File srcFolder = new File(dir.getAbsoluteFile() + "/src");
+        File srcFolder = new File(getDir().getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        logFeature.getLog()
-                .info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
-                        : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
+        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
+                : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
+        getLog().info("+++ maven project found at " + getDir());
 
-        return dir.isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
+        return getDir().isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
     }
 
     @Override
-    public Label getProjectLabel() {
-        // TODO Auto-generated method stub
-        return null;
+    public ImageView getProjectLabelIcon() {
+        return new ImageView(new Image(getClass().getResourceAsStream("/img/project/maven.png")));
     }
 
 }
