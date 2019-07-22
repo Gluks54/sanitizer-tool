@@ -26,7 +26,8 @@ public class MavenProject extends AbstractProject {
             if (mavenPomFile != null) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
                 Schema schema = schemaFactory
-                        .newSchema(new StreamSource(getClass().getResourceAsStream("/xsd/maven-4.0.0.xsd")));
+                        .newSchema(new StreamSource(getClass().getResourceAsStream("/schema/maven-4.0.0.xsd")));
+                // проверяем через JAXB
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(mavenPomFile));
                 getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
@@ -36,7 +37,6 @@ public class MavenProject extends AbstractProject {
             getLog().severe("SAX error in " + mavenPomFile);
             e.printStackTrace();
         } catch (FileNotFoundException e) {
-            getLog().severe("no " + mavenPomFile);
         } catch (IOException e) {
             getLog().severe("IO error " + mavenPomFile);
             e.printStackTrace();
@@ -51,14 +51,16 @@ public class MavenProject extends AbstractProject {
         getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
                 : mavenPomFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
         boolean isProperPomXml = isValidPomXml(mavenPomFile);
-
         File srcFolder = new File(getDir().getAbsoluteFile() + "/src");
-        boolean hasSrcFolder = srcFolder.exists() && (!srcFolder.isFile());
-        getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
-                : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
-        getLog().info("+++ maven project found at " + getDir());
+        boolean hasSrcFolder = srcFolder.exists() && (srcFolder.isDirectory());
 
-        return getDir().isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
+        boolean resultOK = getDir().isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
+        if (resultOK) {
+            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
+                    : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
+            getLog().info("+++ maven project found at " + getDir());
+        }
+        return resultOK;
     }
 
     @Override

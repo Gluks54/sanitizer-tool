@@ -30,6 +30,12 @@
    <artifactId>tika-core</artifactId>
    <version>1.21</version>
   </dependency>
+  <!-- https://mvnrepository.com/artifact/com.networknt/json-schema-validator -->
+  <dependency>
+   <groupId>com.networknt</groupId>
+   <artifactId>json-schema-validator</artifactId>
+   <version>1.0.17</version>
+  </dependency>
   <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
   <dependency>
    <groupId>javax.xml.bind</groupId>
@@ -62,6 +68,7 @@
     <includes>
      <include>**/*.png</include>
      <include>**/*.xsd</include>
+     <include>**/*.json</include>
      <include>**/*.css</include>
     </includes>
    </resource>
