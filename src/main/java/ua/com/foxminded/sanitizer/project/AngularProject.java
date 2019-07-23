@@ -1,9 +1,13 @@
 package ua.com.foxminded.sanitizer.project;
 
 import java.io.File;
-import java.io.InputStream;
+import java.io.IOException;
 
-import com.networknt.schema.JsonSchemaFactory;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -16,9 +20,18 @@ public class AngularProject extends AbstractProject {
     }
 
     private boolean isValidJson(File jsonFile) {
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
-        InputStream is = getClass().getResourceAsStream("/schema/schema.json");
-        return true;
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+        JsonFactory factory = mapper.getFactory();
+        JsonParser parser;
+        try {
+            parser = factory.createParser(jsonFile);
+            JsonNode jsonObj = mapper.readTree(parser);
+
+            return jsonObj != null;
+        } catch (IOException e) {
+        }
+        return false;
     }
 
     @Override
