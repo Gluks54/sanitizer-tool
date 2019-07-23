@@ -27,7 +27,6 @@ public class AngularProject extends AbstractProject {
         try {
             parser = factory.createParser(jsonFile);
             JsonNode jsonObj = mapper.readTree(parser);
-
             return jsonObj != null;
         } catch (IOException e) {
         }

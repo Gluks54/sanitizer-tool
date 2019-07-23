@@ -2,13 +2,13 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +38,7 @@ import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
 
-public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow, FileVisitor<Path> {
+public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow {
     private FileWorker fileWorker;
     @Setter
     private Config config;
@@ -51,7 +51,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private Label configFileStatusLabel = new Label();
     private Label outputFolderStatusLabel = new Label();
     private Label originalInfoLabel = new Label();
-    private Button editConfigButton = new Button();
+    private Button editOrNewConfigButton = new Button();
     private Label outputInfoLabel = new Label();
     private File originalFolder;
     @Setter
@@ -87,6 +87,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         prepareOutputFolderButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
         stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected);
         undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected);
+        editOrNewConfigButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
     }
 
     @Override
@@ -102,7 +103,61 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         prepareOutputFolderButton.setText("Prepare output folder");
         stripOriginalProjectFilesButton.setText("Strip original project");
         undoStrippedProjectFilesButton.setText("Undo strip steps");
-        editConfigButton.setText("Edit or new config");
+        editOrNewConfigButton.setText("Edit or new config");
+    }
+
+    private void fillOriginalFolderLine(Stage stage) {
+        // выясняем, что за проект
+        AbstractProject project = new MavenProject(originalFolder).isProperProject() ? new MavenProject(originalFolder)
+                : (new AngularProject(originalFolder).isProperProject() ? new AngularProject(originalFolder) : null);
+
+        if (project != null) {
+            processDirectory(originalFolder);
+            originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
+            getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
+            originalFolderStatusLabel
+                    .setText("project at " + originalFolder.getName() + " " + ISanitizerWindow.Status.OK.getStatus());
+            originalFolderStatusLabel.setGraphic(project.getProjectLabelIcon());
+            stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
+            isOriginalFolderSelected = true;
+        } else {
+            originalFolderStatusLabel.setText("ordinary directory");
+            originalFolderStatusLabel
+                    .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+            getLog().info("no proper projects here: " + originalFolder.toString());
+            isOriginalFolderSelected = false;
+            stage.setTitle(title);
+        }
+    }
+
+    private void fillOutputFolderLine() {
+        // обрабатываем выходную папку
+        if (originalFolder != null && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
+            getLog().info("wrong output project folder selected!");
+            isOutputFolderSelected = false;
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Wrong folder selected!");
+            alert.setHeaderText("Original and output folder couldn't be the same");
+            alert.setContentText("Choose another output or original project folder");
+            alert.showAndWait();
+        } else {
+            if (outputPreparedFolder.getFreeSpace() > size) {
+                outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
+                outputFolderStatusLabel
+                        .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+                getLog().info("select output project folder " + outputPreparedFolder.getAbsolutePath());
+                outputInfoLabel
+                        .setText("Free space: " + fileWorker.turnFileSizeToString(outputPreparedFolder.getFreeSpace()));
+                isOutputFolderSelected = true;
+            } else {
+                outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
+                outputFolderStatusLabel
+                        .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+                getLog().info("!!! not enough space in " + outputPreparedFolder.getAbsolutePath());
+                outputInfoLabel.setText("Not enough space!");
+                isOutputFolderSelected = false;
+            }
+        }
     }
 
     @Override
@@ -126,31 +181,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.showAndWait();
                 } else {
                     getLog().info("select original project root folder");
-
-                    // выясняем, что за проект
-                    AbstractProject project = new MavenProject(originalFolder).isProperProject()
-                            ? new MavenProject(originalFolder)
-                            : (new AngularProject(originalFolder).isProperProject() ? new AngularProject(originalFolder)
-                                    : null);
-
-                    if (project != null) {
-                        processDirectory(originalFolder);
-                        originalInfoLabel
-                                .setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
-                        getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
-                        originalFolderStatusLabel.setText("project at " + originalFolder.getName() + " "
-                                + ISanitizerWindow.Status.OK.getStatus());
-                        originalFolderStatusLabel.setGraphic(project.getProjectLabelIcon());
-                        stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
-                        isOriginalFolderSelected = true;
-                    } else {
-                        originalFolderStatusLabel.setText("ordinary directory");
-                        originalFolderStatusLabel.setGraphic(
-                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                        getLog().info("no proper projects here: " + originalFolder.toString());
-                        isOriginalFolderSelected = false;
-                        stage.setTitle(title);
-                    }
+                    fillOriginalFolderLine(stage);
                 }
             } else {
                 originalFolderStatusLabel.setText("cancel select");
@@ -178,6 +209,27 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                             .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                     isProperConfigFileSelected = true;
                     getLog().info("+++ " + configFile.getName() + " is proper sanitizer config");
+
+                    // проверяем пути исходной и выходной папок
+                    if (originalFolder == null || outputPreparedFolder == null) {
+                        originalFolder = config.getOriginalProject();
+                        outputPreparedFolder = config.getOutputProject();
+                        fillOriginalFolderLine(stage);
+                        fillOutputFolderLine();
+                    } else if (!config.getOriginalProject().getAbsolutePath()
+                            .equalsIgnoreCase(originalFolder.getAbsolutePath())
+                            || !config.getOutputProject().getAbsolutePath()
+                                    .equalsIgnoreCase(outputPreparedFolder.getAbsolutePath())) {
+                        Alert alert = new Alert(AlertType.ERROR);
+                        alert.setTitle("Folders error");
+                        alert.setHeaderText("Original or output folders doesn't match saved properties");
+                        alert.setContentText("Folders you've chose will be replaced ones from config file!");
+                        alert.showAndWait();
+                        originalFolder = config.getOriginalProject();
+                        outputPreparedFolder = config.getOutputProject();
+                        fillOriginalFolderLine(stage);
+                        fillOutputFolderLine();
+                    }
                 } else {
                     configFileStatusLabel.setGraphic(
                             new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
@@ -204,33 +256,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             directoryChooser.setTitle("Select output project root folder");
             outputPreparedFolder = directoryChooser.showDialog(stage);
             if (outputPreparedFolder != null) {
-                if (originalFolder != null
-                        && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
-                    getLog().info("wrong output project folder selected!");
-                    isOutputFolderSelected = false;
-                    Alert alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Wrong folder selected!");
-                    alert.setHeaderText("Original and output folder couldn't be the same");
-                    alert.setContentText("Choose another output or original project folder");
-                    alert.showAndWait();
-                } else {
-                    if (outputPreparedFolder.getFreeSpace() > size) {
-                        outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
-                        outputFolderStatusLabel.setGraphic(
-                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                        getLog().info("select output project folder " + outputPreparedFolder.getAbsolutePath());
-                        outputInfoLabel.setText(
-                                "Free space: " + fileWorker.turnFileSizeToString(outputPreparedFolder.getFreeSpace()));
-                        isOutputFolderSelected = true;
-                    } else {
-                        outputFolderStatusLabel.setText(outputPreparedFolder.getAbsolutePath());
-                        outputFolderStatusLabel.setGraphic(
-                                new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                        getLog().info("!!! not enough space in " + outputPreparedFolder.getAbsolutePath());
-                        outputInfoLabel.setText("Not enough space!");
-                        isOutputFolderSelected = false;
-                    }
-                }
+                fillOutputFolderLine();
             } else {
                 outputFolderStatusLabel.setText("cancel select");
                 outputFolderStatusLabel
@@ -244,7 +270,20 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         prepareOutputFolderButton.setOnAction(event -> {
-            if (!fileWorker.isContainProperOriginalFolder(outputPreparedFolder)) {
+            if (!outputPreparedFolder.getAbsolutePath().equalsIgnoreCase(config.getOutputProject().getAbsolutePath())) {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Folders mismatch!");
+                alert.setHeaderText("Chosen output folder doesn't match saved to config");
+                alert.setContentText("Fix before continue...");
+                alert.showAndWait();
+            } else if (!originalFolder.getAbsolutePath()
+                    .equalsIgnoreCase(config.getOriginalProject().getAbsolutePath())) {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Folders mismatch!");
+                alert.setHeaderText("Chosen original folder doesn't match saved to config");
+                alert.setContentText("Fix before continue...");
+                alert.showAndWait();
+            } else if (!fileWorker.isContainProperOriginalFolder(outputPreparedFolder)) {
                 getLog().info("prepare output folder " + outputPreparedFolder);
                 new PrepareWindow(originalFolder, outputPreparedFolder, config, this).show();
             } else {
@@ -297,13 +336,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 getLog().info("--- undo cancelled");
             }
         });
-        editConfigButton.setOnAction(event -> {
+        editOrNewConfigButton.setOnAction(event -> {
             ConfigEditorWindow configEditor;
             if (configFile != null) {
                 getLog().info("load " + configFile.getAbsolutePath() + " to config editor");
                 config = configWorker.readConfigData(configFile, Config.class);
                 if (config != null) {
-                    configEditor = new ConfigEditorWindow(config, configFile);
+                    configEditor = new ConfigEditorWindow(config, configFile, originalFolder, outputPreparedFolder);
                     configEditor.setMainAppWindow(this);
                     configEditor.show();
                 } else {
@@ -311,7 +350,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                             ButtonType.YES, ButtonType.NO);
                     Optional<ButtonType> option = alert.showAndWait();
                     if (option.get() == ButtonType.YES) {
-                        configEditor = new ConfigEditorWindow();
+                        configEditor = new ConfigEditorWindow(originalFolder, outputPreparedFolder);
                         configEditor.setMainAppWindow(this);
                         configEditor.show();
                     } else {
@@ -319,7 +358,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     }
                 }
             } else {
-                configEditor = new ConfigEditorWindow();
+                configEditor = new ConfigEditorWindow(originalFolder, outputPreparedFolder);
                 configEditor.setMainAppWindow(this);
                 configEditor.show();
             }
@@ -347,7 +386,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         topPane.add(configFileStatusLabel, 1, 1);
         topPane.add(outputFolderStatusLabel, 1, 2);
         topPane.add(originalInfoLabel, 2, 0);
-        topPane.add(editConfigButton, 2, 1);
+        topPane.add(editOrNewConfigButton, 2, 1);
         topPane.add(outputInfoLabel, 2, 2);
 
         topPane.getChildren().forEach(element -> {
@@ -363,6 +402,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         prepareOutputFolderButton.setDisable(true);
         stripOriginalProjectFilesButton.setDisable(true);
         undoStrippedProjectFilesButton.setDisable(true);
+        editOrNewConfigButton.setDisable(true);
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
@@ -391,39 +431,17 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private void processDirectory(File dir) {
         size = 0;
         files = 0;
-        try {
-            getLog().info("process " + dir.toString());
-            Files.walkFileTree(Paths.get(dir.getAbsolutePath()), this);
+
+        try (Stream<Path> walk = Files.walk(Paths.get(dir.toURI()))) {
+            List<Path> result = walk.collect(Collectors.toList());
+            for (Path path : result) {
+                if (path.toFile().isFile()) {
+                    files++;
+                    size += path.toFile().length();
+                }
+            }
         } catch (IOException e) {
-            getLog().severe("error in " + dir.toString());
-            e.printStackTrace();
+            getLog().severe("IO error during process file tree in " + dir);
         }
-    }
-
-    @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-        // TODO Auto-generated method stub
-        return FileVisitResult.CONTINUE;
-    }
-
-    @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (!file.toFile().isDirectory()) {
-            size += file.toFile().length();
-            files++;
-        }
-        return FileVisitResult.CONTINUE;
-    }
-
-    @Override
-    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-        // TODO Auto-generated method stub
-        return FileVisitResult.CONTINUE;
-    }
-
-    @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        // TODO Auto-generated method stub
-        return FileVisitResult.CONTINUE;
     }
 }

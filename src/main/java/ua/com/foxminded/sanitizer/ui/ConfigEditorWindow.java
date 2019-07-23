@@ -19,12 +19,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -35,15 +36,20 @@ import ua.com.foxminded.sanitizer.worker.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
 
 @RequiredArgsConstructor
-@NoArgsConstructor
 public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerWindow {
     @Getter
     @NonNull
     private Config config;
     private IConfigWorker configWorker = new XMLConfigWorker();
     @NonNull
-    private File file;
+    private File configFile;
+    @NonNull
+    private File originalProject;
+    @NonNull
+    private File outputProject;
     private ISanitizerWindow.Status operationStatus;
+    private Label originalProjectLabel = new Label();
+    private Label outputProjectLabel = new Label();
     private Button newConfigButton = new Button();
     private Button saveConfigButton = new Button();
     private Button cancelButton = new Button();
@@ -60,9 +66,20 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     @Setter
     private MainAppWindow mainAppWindow;
 
+    public ConfigEditorWindow(File originalProject, File outputProject) {
+        super();
+        this.originalProject = originalProject;
+        this.outputProject = outputProject;
+    }
+
     @Override
     public void show() {
         setMessages();
+        GridPane topPane = new GridPane();
+        topPane.setId("topPane");
+        ColumnConstraints mainColumn = new ColumnConstraints();
+        mainColumn.setPercentWidth(100);
+        topPane.getColumnConstraints().add(mainColumn);
         FlowPane extensionsPane = new FlowPane();
         extensionsPane.getChildren().add(new Label("Files pattern:"));
         extensions.forEach(extension -> extension.setSelected(
@@ -76,6 +93,12 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         extensionsPane.setAlignment(Pos.CENTER);
         extensionsPane.setId("topPane");
         extensionsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+
+        topPane.add(extensionsPane, 0, 1);
+        GridPane.setMargin(originalProjectLabel, new Insets(ISanitizerWindow.INSET));
+        topPane.add(originalProjectLabel, 0, 2);
+        GridPane.setMargin(outputProjectLabel, new Insets(ISanitizerWindow.INSET));
+        topPane.add(outputProjectLabel, 0, 3);
 
         BorderPane centerPane = new BorderPane();
         FlowPane centerTopButtonsPane = new FlowPane();
@@ -96,7 +119,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         bottomButtonsPane.getChildren().addAll(newConfigButton, saveConfigButton, cancelButton);
         bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
 
-        getRoot().setTop(extensionsPane);
+        getRoot().setTop(topPane);
         getRoot().setCenter(centerPane);
         getRoot().setBottom(bottomButtonsPane);
         Stage stage = new Stage();
@@ -108,10 +131,10 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(getRoot(), ISanitizerWindow.CONFIGEDITOR_W, ISanitizerWindow.CONFIGEDITOR_H));
 
-        if (config != null && file != null) {
+        if (config != null && configFile != null) {
             loadConfigData();
-            stage.setTitle("Edit config " + file.getAbsolutePath());
-            getLog().info("edit config " + file.getAbsolutePath());
+            stage.setTitle("Edit config " + configFile.getAbsolutePath());
+            getLog().info("edit config " + configFile.getAbsolutePath());
         } else {
             stage.setTitle("New config file");
             getLog().info("new config file started");
@@ -169,6 +192,11 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             operationStatus = ISanitizerWindow.Status.FAIL;
         }
         getLog().info("...load project structure replacements: " + operationStatus.getStatus());
+
+        operationStatus = (config.getOriginalProject() != null && config.getOutputProject() != null)
+                ? ISanitizerWindow.Status.OK
+                : ISanitizerWindow.Status.FAIL;
+        getLog().info("...load original and output project folders: " + operationStatus.getStatus());
     }
 
     public void clearConfig() {
@@ -192,6 +220,8 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         contentReplacementPane.setText("Per-file replacements");
         filesystemReplacementPane.setText("Project structure replacements");
         filePatternTextField.setText("custom pattern");
+        originalProjectLabel.setText("Original project folder: " + originalProject);
+        outputProjectLabel.setText("Output project folder: " + outputProject);
     }
 
     @Override
@@ -234,9 +264,9 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             } else {
                 FileChooser fc = new FileChooser();
                 fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
-                file = fc.showSaveDialog(stage);
-                if (file != null) {
-                    getLog().info("save current config to " + file.getAbsolutePath());
+                configFile = fc.showSaveDialog(stage);
+                if (configFile != null) {
+                    getLog().info("save current config to " + configFile.getAbsolutePath());
                     // считать все расширения файлов
                     List<String> patterns = new ArrayList<String>();
                     extensions.forEach(extension -> {
@@ -286,11 +316,20 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     }
                     getLog().info("...save project structure replacements: " + operationStatus.getStatus());
 
-                    if (configWorker.writeConfigData(file, config)) {
+                    if (originalProject != null && outputProject != null) {
+                        config.setOriginalProject(originalProject);
+                        config.setOutputProject(outputProject);
+                        operationStatus = ISanitizerWindow.Status.OK;
+                    } else {
+                        operationStatus = ISanitizerWindow.Status.FAIL;
+                    }
+                    getLog().info("...save original and output folder: " + operationStatus.getStatus());
+
+                    if (configWorker.writeConfigData(configFile, config)) {
                         // записали, обновили статус, проверили кнопки снизу
-                        mainAppWindow.setConfigFile(file);
+                        mainAppWindow.setConfigFile(configFile);
                         mainAppWindow.setProperConfigFileSelected(true);
-                        mainAppWindow.getConfigFileStatusLabel().setText(file.getAbsolutePath());
+                        mainAppWindow.getConfigFileStatusLabel().setText(configFile.getAbsolutePath());
                         mainAppWindow.getConfigFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
                         mainAppWindow.toggleBottomButtons();
@@ -317,4 +356,5 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             filesystemReplacementPane.addReplacementItem(null);
         });
     }
+
 }
