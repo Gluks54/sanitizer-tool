@@ -263,6 +263,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                 alert.showAndWait();
             } else {
                 FileChooser fc = new FileChooser();
+                fc.getExtensionFilters().clear();
                 fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
                 configFile = fc.showSaveDialog(stage);
                 if (configFile != null) {
@@ -332,7 +333,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                         mainAppWindow.getConfigFileStatusLabel().setText(configFile.getAbsolutePath());
                         mainAppWindow.getConfigFileStatusLabel().setGraphic(
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                        mainAppWindow.toggleBottomButtons();
+                        mainAppWindow.checkAndToggleButtons();
                         mainAppWindow.setConfig(config);
                     } else {
                         mainAppWindow.getConfigFileStatusLabel().setText("cancel select");

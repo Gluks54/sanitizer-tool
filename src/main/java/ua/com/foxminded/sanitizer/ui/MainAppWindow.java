@@ -30,12 +30,14 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.data.MasterProject;
 import ua.com.foxminded.sanitizer.project.AbstractProject;
 import ua.com.foxminded.sanitizer.project.AngularProject;
 import ua.com.foxminded.sanitizer.project.MavenProject;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.IConfigWorker;
+import ua.com.foxminded.sanitizer.worker.MasterProjectWorker;
 import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
 
 public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow {
@@ -43,6 +45,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     @Setter
     private Config config;
     private IConfigWorker configWorker = new XMLConfigWorker();
+    private MasterProject masterProject = new MasterProject();
+    private Button openMasterProjectButton = new Button();
+    private Button saveMasterProjectButton = new Button();
     private Button selectOriginalFolderButton = new Button();
     private Button selectConfigFileButton = new Button();
     private Button selectOutputFolderButton = new Button();
@@ -58,6 +63,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private File configFile;
     private File outputPreparedFolder;
     private File baseFolder;
+    private File masterProjectFile;
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button prepareOutputFolderButton = new Button();
     private Button stripOriginalProjectFilesButton = new Button();
@@ -74,6 +80,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
 
     public MainAppWindow() {
         super();
+        title = "sanitizer";
         originalFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
         configFileStatusLabel
@@ -82,17 +89,20 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
     }
 
-    protected void toggleBottomButtons() {
+    protected void checkAndToggleButtons() {
         exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected));
         prepareOutputFolderButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
         stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected);
         undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected);
         editOrNewConfigButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
+        saveMasterProjectButton
+                .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
     }
 
     @Override
     public void setMessages() {
-        title = "sanitizer";
+        openMasterProjectButton.setText("Open master project");
+        saveMasterProjectButton.setText("Save master project");
         selectOriginalFolderButton.setText("Original project folder");
         selectConfigFileButton.setText("Select config file");
         selectOutputFolderButton.setText("Output project folder");
@@ -106,7 +116,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         editOrNewConfigButton.setText("Edit or new config");
     }
 
-    private void fillOriginalFolderLine(Stage stage) {
+    private void fillOriginalFolderLabelsLine(Stage stage) {
         // выясняем, что за проект
         AbstractProject project = new MavenProject(originalFolder).isProperProject() ? new MavenProject(originalFolder)
                 : (new AngularProject(originalFolder).isProperProject() ? new AngularProject(originalFolder) : null);
@@ -130,7 +140,11 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         }
     }
 
-    private void fillOutputFolderLine() {
+    private void fillConfigFileLabelsLine() {
+
+    }
+
+    private void fillOutputFolderLabelsLine() {
         // обрабатываем выходную папку
         if (originalFolder != null && outputPreparedFolder.getAbsolutePath().equals(originalFolder.getAbsolutePath())) {
             getLog().info("wrong output project folder selected!");
@@ -165,6 +179,30 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         fileWorker = new FileWorker();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         FileChooser fileChooser = new FileChooser();
+
+        openMasterProjectButton.setOnAction(event -> {
+            getLog().info("trying open master project meta-file...");
+            fileChooser.setTitle("Select master project meta-file");
+            fileChooser.getExtensionFilters().clear();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
+            masterProjectFile = fileChooser.showOpenDialog(stage);
+        });
+        saveMasterProjectButton.setOnAction(event -> {
+            getLog().info("trying save master project meta-file...");
+            fileChooser.setTitle("Select master project meta-file");
+            fileChooser.getExtensionFilters().clear();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
+            masterProjectFile = fileChooser.showSaveDialog(stage);
+            if (masterProjectFile != null) {
+                masterProject.setOriginalProjectFolder(originalFolder);
+                masterProject.setOutputPreparedFolder(outputPreparedFolder);
+                masterProject.setConfigFile(configFile);
+                new MasterProjectWorker().writeMasterProject(masterProjectFile, masterProject);
+                getLog().info("master project meta-file saved to " + masterProjectFile);
+            } else {
+                getLog().info("master project meta-file save cancelled");
+            }
+        });
         selectOriginalFolderButton.setOnAction(event -> {
             getLog().info("trying select original project root folder...");
             directoryChooser.setTitle("Select original project root folder");
@@ -181,7 +219,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     alert.showAndWait();
                 } else {
                     getLog().info("select original project root folder");
-                    fillOriginalFolderLine(stage);
+                    fillOriginalFolderLabelsLine(stage);
                 }
             } else {
                 originalFolderStatusLabel.setText("cancel select");
@@ -192,11 +230,12 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     isOriginalFolderSelected = false;
                 }
             }
-            toggleBottomButtons();
+            checkAndToggleButtons();
         });
         selectConfigFileButton.setOnAction(event -> {
             getLog().info("trying select config file...");
             fileChooser.setTitle("Select project config file");
+            fileChooser.getExtensionFilters().clear();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
             configFile = fileChooser.showOpenDialog(stage);
             if (configFile != null) {
@@ -214,8 +253,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     if (originalFolder == null || outputPreparedFolder == null) {
                         originalFolder = config.getOriginalProject();
                         outputPreparedFolder = config.getOutputProject();
-                        fillOriginalFolderLine(stage);
-                        fillOutputFolderLine();
+                        fillOriginalFolderLabelsLine(stage);
+                        fillOutputFolderLabelsLine();
                     } else if (!config.getOriginalProject().getAbsolutePath()
                             .equalsIgnoreCase(originalFolder.getAbsolutePath())
                             || !config.getOutputProject().getAbsolutePath()
@@ -227,8 +266,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                         alert.showAndWait();
                         originalFolder = config.getOriginalProject();
                         outputPreparedFolder = config.getOutputProject();
-                        fillOriginalFolderLine(stage);
-                        fillOutputFolderLine();
+                        fillOriginalFolderLabelsLine(stage);
+                        fillOutputFolderLabelsLine();
                     }
                 } else {
                     configFileStatusLabel.setGraphic(
@@ -249,14 +288,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     isProperConfigFileSelected = false;
                 }
             }
-            toggleBottomButtons();
+            checkAndToggleButtons();
         });
         selectOutputFolderButton.setOnAction(event -> {
             getLog().info("trying select output project folder...");
             directoryChooser.setTitle("Select output project root folder");
             outputPreparedFolder = directoryChooser.showDialog(stage);
             if (outputPreparedFolder != null) {
-                fillOutputFolderLine();
+                fillOutputFolderLabelsLine();
             } else {
                 outputFolderStatusLabel.setText("cancel select");
                 outputFolderStatusLabel
@@ -266,7 +305,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                     isOutputFolderSelected = false;
                 }
             }
-            toggleBottomButtons();
+            checkAndToggleButtons();
         });
         exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
         prepareOutputFolderButton.setOnAction(event -> {
@@ -367,34 +406,52 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
 
     @Override
     public void show() {
-        GridPane topPane = new GridPane();
+        FlowPane topMasterProjectButtonsPane = new FlowPane();
+        topMasterProjectButtonsPane.setId("topPane");
+        topMasterProjectButtonsPane.setAlignment(Pos.BASELINE_RIGHT);
+        openMasterProjectButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/code.png"))));
+        topMasterProjectButtonsPane.getChildren().add(openMasterProjectButton);
+        saveMasterProjectButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/code.png"))));
+        topMasterProjectButtonsPane.getChildren().add(saveMasterProjectButton);
+        topMasterProjectButtonsPane.getChildren()
+                .forEach(element -> FlowPane.setMargin(element, new Insets(ISanitizerWindow.INSET)));
+
+        GridPane topProjectConfigPane = new GridPane();
         ColumnConstraints buttonsLeftColumn = new ColumnConstraints();
         buttonsLeftColumn.setPercentWidth(25);
-        topPane.getColumnConstraints().add(buttonsLeftColumn);
+        topProjectConfigPane.getColumnConstraints().add(buttonsLeftColumn);
         ColumnConstraints statusLabelColumn = new ColumnConstraints();
         statusLabelColumn.setPercentWidth(50);
-        topPane.getColumnConstraints().add(statusLabelColumn);
+        topProjectConfigPane.getColumnConstraints().add(statusLabelColumn);
         ColumnConstraints buttonsRightColumn = new ColumnConstraints();
         buttonsRightColumn.setPercentWidth(25);
-        topPane.getColumnConstraints().add(buttonsRightColumn);
+        topProjectConfigPane.getColumnConstraints().add(buttonsRightColumn);
 
-        topPane.setGridLinesVisible(false);
-        topPane.add(selectOriginalFolderButton, 0, 0);
-        topPane.add(selectConfigFileButton, 0, 1);
-        topPane.add(selectOutputFolderButton, 0, 2);
-        topPane.add(originalFolderStatusLabel, 1, 0);
-        topPane.add(configFileStatusLabel, 1, 1);
-        topPane.add(outputFolderStatusLabel, 1, 2);
-        topPane.add(originalInfoLabel, 2, 0);
-        topPane.add(editOrNewConfigButton, 2, 1);
-        topPane.add(outputInfoLabel, 2, 2);
+        topProjectConfigPane.setGridLinesVisible(false);
+        topProjectConfigPane.add(selectOriginalFolderButton, 0, 0);
+        topProjectConfigPane.add(selectConfigFileButton, 0, 1);
+        topProjectConfigPane.add(selectOutputFolderButton, 0, 2);
+        topProjectConfigPane.add(originalFolderStatusLabel, 1, 0);
+        topProjectConfigPane.add(configFileStatusLabel, 1, 1);
+        topProjectConfigPane.add(outputFolderStatusLabel, 1, 2);
+        topProjectConfigPane.add(originalInfoLabel, 2, 0);
+        topProjectConfigPane.add(editOrNewConfigButton, 2, 1);
+        topProjectConfigPane.add(outputInfoLabel, 2, 2);
 
-        topPane.getChildren().forEach(element -> {
+        topProjectConfigPane.getChildren().forEach(element -> {
             GridPane.setMargin(element, new Insets(ISanitizerWindow.INSET));
             if (element instanceof Button) {
                 ((Button) element).setMaxWidth(220);
             }
         });
+
+        GridPane topPane = new GridPane();
+        ColumnConstraints mainColumn = new ColumnConstraints();
+        mainColumn.setPercentWidth(100);
+        topPane.getColumnConstraints().add(mainColumn);
+        topPane.add(topMasterProjectButtonsPane, 0, 0);
+        topPane.add(topProjectConfigPane, 0, 1);
+
         StackPane logPane = new StackPane();
         logPane.getChildren().add(getLogTextArea());
 
@@ -403,6 +460,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         stripOriginalProjectFilesButton.setDisable(true);
         undoStrippedProjectFilesButton.setDisable(true);
         editOrNewConfigButton.setDisable(true);
+        saveMasterProjectButton.setDisable(true);
+
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");

@@ -69,7 +69,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
                             stage.titleProperty().unbind();
                             stage.setTitle("Job successfully completed");
                             mainAppWindow.setOutputFolderPrepared(true);
-                            mainAppWindow.toggleBottomButtons();
+                            mainAppWindow.checkAndToggleButtons();
                         }
                     });
             getLog().info("*** start preparation process");
@@ -85,7 +85,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
             stage.titleProperty().unbind();
             preparationProgressBar.setProgress(0);
             mainAppWindow.setOutputFolderPrepared(false);
-            mainAppWindow.toggleBottomButtons();
+            mainAppWindow.checkAndToggleButtons();
         });
 
     }
@@ -116,7 +116,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
                 preparationWorker.cancel(true);
                 getLog().info("!!! user interrupt preparation process");
                 mainAppWindow.setOutputFolderPrepared(false);
-                mainAppWindow.toggleBottomButtons();
+                mainAppWindow.checkAndToggleButtons();
             }
             stage.close();
         });
