@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.tika.Tika;
 
 import com.github.difflib.DiffUtils;
@@ -146,19 +147,9 @@ public class FileWorker extends SharedTextAreaLog {
     }
 
     public boolean isMatchFilePatterns(File file, Config config) {
-        // boolean isMatchPattern = true;
-        boolean isMatchFileExtension = true;
-
-        isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        // System.out.println(file.getName());
-
-        // PathMatcher matcher =
-        // FileSystems.getDefault().getPathMatcher(config.getCustomPattern());
-        // isMatchPattern = matcher.matches(file.toPath());
-        // Pattern pattern = Pattern.compile(config.getCustomPattern(),
-        // Pattern.CASE_INSENSITIVE);
-        // isMatchPattern = Pattern.matches(config.getCustomPattern(), file.getName());
-        return isMatchFileExtension;
+        boolean isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
+        boolean isMatchPattern = new WildcardFileFilter(config.getCustomPattern()).accept(file);
+        return isMatchFileExtension | isMatchPattern;
     }
 
     public String turnFileSizeToString(final long value) {
