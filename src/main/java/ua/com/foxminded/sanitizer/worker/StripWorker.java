@@ -15,13 +15,13 @@ import java.util.stream.Stream;
 import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.Replacement;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
-public class StripWorker extends Task<List<Path>> {
+public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironment {
     private class LogFeature extends SharedTextAreaLog {
     }
 
@@ -54,11 +54,9 @@ public class StripWorker extends Task<List<Path>> {
                             .resolve(originalFolder.toPath().relativize(path));
 
                     Files.copy(path, modifiedOriginalProjectFile, StandardCopyOption.REPLACE_EXISTING);
-                    Path copyOriginalProjectFile = Paths
-                            .get(modifiedOriginalProjectFile.toString() + ISanitizerWindow.ORIGINAL_EXT);
-                    Path patchForOriginalProjectFile = Paths
-                            .get(modifiedOriginalProjectFile.toString().replaceAll(ISanitizerWindow.STRIP_SUFFIX,
-                                    ISanitizerWindow.ORIG_SUFFIX) + ISanitizerWindow.PATCH_EXT);
+                    Path copyOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ORIGINAL_EXT);
+                    Path patchForOriginalProjectFile = Paths.get(
+                            modifiedOriginalProjectFile.toString().replaceAll(STRIP_SUFFIX, ORIG_SUFFIX) + PATCH_EXT);
 
                     fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
                             modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());
@@ -98,8 +96,8 @@ public class StripWorker extends Task<List<Path>> {
                                         entry.getKey() + ": " + fileWorker.getCurrentDateTimeString());
                             }
                         }
-                        logFeature.getLog().info("Process " + modifiedOriginalProjectFile + " "
-                                + ISanitizerWindow.Status.OK.getStatus());
+                        logFeature.getLog()
+                                .info("Process " + modifiedOriginalProjectFile + " " + Status.OK.getStatus());
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
                         Files.delete(copyOriginalProjectFile);
                     }

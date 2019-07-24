@@ -31,12 +31,13 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @RequiredArgsConstructor
-public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
     @NonNull
     private String fileName;
     private String modifiedFileString;
@@ -92,7 +93,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
-        getRoot().setPadding(new Insets(ISanitizerWindow.INSET));
+        getRoot().setPadding(new Insets(INSET));
 
         textArea.setCache(true);
         textArea.setEditable(false);
@@ -107,7 +108,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
                 textArea.appendText(line + System.lineSeparator());
             }
         } catch (IOException e) {
-            getLog().severe("count content lines for " + file + ": " + ISanitizerWindow.Status.FAIL);
+            getLog().severe("count content lines for " + file + ": " + Status.FAIL);
         }
         getRoot().setCenter(new StackPane(new VirtualizedScrollPane<CodeArea>(textArea)));
 
@@ -117,20 +118,18 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
             getLog().severe("read file modification time fail");
         }
 
-        if ((ISanitizerWindow.ENV == OS.MAC) || (ISanitizerWindow.ENV == OS.UNIX)
-                || (ISanitizerWindow.ENV == OS.SOLARIS)) {
+        if ((ENV == OS.MAC) || (ENV == OS.UNIX) || (ENV == OS.SOLARIS)) {
             try {
                 bottomPane.getChildren()
                         .add(new Label(ownerFileString + Files.getOwner(file, LinkOption.NOFOLLOW_LINKS)));
                 bottomPane.getChildren().add(new Label(permissionsFileString
                         + fileWorker.getPermissions(Files.getPosixFilePermissions(file, LinkOption.NOFOLLOW_LINKS))));
             } catch (IOException e) {
-                getLog().severe(
-                        "read file owner and permissions info for " + file + ": " + ISanitizerWindow.Status.FAIL);
+                getLog().severe("read file owner and permissions info for " + file + ": " + Status.FAIL);
             }
         }
         bottomPane.getChildren().add(new Label("Size: " + file.toFile().length() + " bytes"));
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
         getRoot().setBottom(bottomPane);
 
         try {
@@ -139,7 +138,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
             stage.setTitle(file.getFileName().toString());
         }
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.VIEWER_W, ISanitizerWindow.VIEWER_H));
+        stage.setScene(new Scene(getRoot(), VIEWER_W, VIEWER_H));
         stage.show();
     }
 }

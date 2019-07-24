@@ -1,4 +1,4 @@
-package ua.com.foxminded.sanitizer.worker;
+package ua.com.foxminded.sanitizer.worker.config;
 
 import java.io.File;
 
@@ -7,11 +7,11 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class XMLConfigWorker extends SharedTextAreaLog implements IConfigWorker {
+public class XMLConfigWorker extends SharedTextAreaLog implements IConfigWorker, ISanitizerEnvironment {
     @Override
     public Config readConfigData(File file, Class<?> c) {
         Config config = null;
@@ -19,12 +19,12 @@ public class XMLConfigWorker extends SharedTextAreaLog implements IConfigWorker 
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             config = (Config) unmarshaller.unmarshal(file);
-            getLog().info("read config " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
+            getLog().info("read config " + file.getAbsolutePath() + " " + Status.OK.getStatus());
             return config;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
-                    + ISanitizerWindow.Status.FAIL.getStatus());
+            getLog().severe(
+                    "failure at JAXB in " + file.getAbsolutePath() + ", read config: " + Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return null;
         }
@@ -38,12 +38,12 @@ public class XMLConfigWorker extends SharedTextAreaLog implements IConfigWorker 
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.marshal(config, System.out);
             marshaller.marshal(config, file);
-            getLog().info("write config " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
+            getLog().info("write config " + file.getAbsolutePath() + " " + Status.OK.getStatus());
             return true;
         } catch (JAXBException e) {
             e.printStackTrace();
-            getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read config: "
-                    + ISanitizerWindow.Status.FAIL.getStatus());
+            getLog().severe(
+                    "failure at JAXB in " + file.getAbsolutePath() + ", read config: " + Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like config file");
             return false;
         }

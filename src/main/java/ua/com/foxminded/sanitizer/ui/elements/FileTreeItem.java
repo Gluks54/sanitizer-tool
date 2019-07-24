@@ -25,15 +25,15 @@ import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.NoArgsConstructor;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
 import ua.com.foxminded.sanitizer.ui.FileViewWindow;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @NoArgsConstructor
-public class FileTreeItem extends TreeItem<File> {
+public class FileTreeItem extends TreeItem<File> implements ISanitizerEnvironment {
     public class CustomFileTreeCell extends TextFieldTreeCell<File> {
         @Override
         public void updateItem(File item, boolean empty) {
@@ -106,8 +106,7 @@ public class FileTreeItem extends TreeItem<File> {
         try {
             result += contentFileString + " " + fileWorker.getFileContentType(file) + System.lineSeparator();
             result += modifiedFileString + " " + fileWorker.getFileTime(file) + System.lineSeparator();
-            if ((ISanitizerWindow.ENV == OS.MAC) || (ISanitizerWindow.ENV == OS.UNIX)
-                    || (ISanitizerWindow.ENV == OS.SOLARIS)) {
+            if ((ENV == OS.MAC) || (ENV == OS.UNIX) || (ENV == OS.SOLARIS)) {
                 Path currentFilePath = Paths.get(file.getAbsolutePath());
                 result += ownerFileString + " " + Files.getOwner(currentFilePath, LinkOption.NOFOLLOW_LINKS)
                         + System.lineSeparator();

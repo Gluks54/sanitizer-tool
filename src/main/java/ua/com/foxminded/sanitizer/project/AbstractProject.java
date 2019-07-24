@@ -6,10 +6,11 @@ import javafx.scene.image.ImageView;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
-public abstract class AbstractProject extends SharedTextAreaLog {
+public abstract class AbstractProject extends SharedTextAreaLog implements ISanitizerEnvironment {
     @NonNull
     @Getter
     private File dir;

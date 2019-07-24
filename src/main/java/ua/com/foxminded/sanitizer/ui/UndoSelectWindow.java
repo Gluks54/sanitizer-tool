@@ -18,12 +18,13 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.UndoWorker;
 
 @RequiredArgsConstructor
-public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
     @NonNull
     private File baseFolder;
     @NonNull
@@ -31,7 +32,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
     private String title;
     private Button closeButton = new Button();
     private UndoWorker undoWorker;
-    private ISanitizerWindow.Status operationStatus;
+    private Status operationStatus;
 
     public HBox getExtensionsHBox() {
         HBox extensionsBox = new HBox();
@@ -45,7 +46,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
                 extensionsBox.getChildren().add(extensionCheckBox);
             }
         }
-        operationStatus = config.getPatterns() != null ? ISanitizerWindow.Status.OK : ISanitizerWindow.Status.FAIL;
+        operationStatus = config.getPatterns() != null ? Status.OK : Status.FAIL;
         getLog().info("...load file extensions: " + operationStatus.getStatus());
         if (config.getCustomPattern() != null) {
             CheckBox customPatternCheckBox = new CheckBox(config.getCustomPattern());
@@ -54,8 +55,8 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
             extensionsBox.getChildren().add(customPatternCheckBox);
         }
         operationStatus = config.getCustomPattern() != null && (!config.getCustomPattern().equalsIgnoreCase(""))
-                ? ISanitizerWindow.Status.OK
-                : ISanitizerWindow.Status.FAIL;
+                ? Status.OK
+                : Status.FAIL;
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
         extensionsBox.getChildren().forEach(node -> HBox.setMargin(node, new Insets(ISanitizerWindow.INSET)));
         return extensionsBox;
@@ -69,7 +70,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         commentsRemoverCheckBox.setDisable(true);
         commentsRemoverBox.getChildren().add(commentsRemoverCheckBox);
         commentsRemoverBox.getChildren().forEach(node -> HBox.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        operationStatus = config.isRemoveComments() ? ISanitizerWindow.Status.OK : ISanitizerWindow.Status.FAIL;
+        operationStatus = config.isRemoveComments() ? Status.OK : Status.FAIL;
         getLog().info("...load remove comments feature: " + operationStatus.getStatus());
         return commentsRemoverBox;
     }
@@ -151,7 +152,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
 
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(closeButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
         getRoot().setCenter(scrollPane);
         getRoot().setBottom(bottomPane);
         Stage stage = new Stage();
@@ -159,7 +160,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.UNDO_W, ISanitizerWindow.UNDO_H));
+        stage.setScene(new Scene(getRoot(), UNDO_W, UNDO_H));
         stage.setTitle(title);
         stage.show();
     }

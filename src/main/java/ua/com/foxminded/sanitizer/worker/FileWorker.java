@@ -39,16 +39,17 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
+import ua.com.foxminded.sanitizer.worker.patch.XMLPatchWorker;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
-public class FileWorker extends SharedTextAreaLog {
+public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
     private final String tabReplacer = "    ";
     private final char tab = '\u0009';
     @NonNull
@@ -132,18 +133,16 @@ public class FileWorker extends SharedTextAreaLog {
     }
 
     public String getProperOriginalFolderName(File dir) {
-        return Arrays.stream(dir.listFiles()).filter(d -> d.getName().endsWith(ISanitizerWindow.ORIG_SUFFIX))
-                .findFirst().get().getAbsolutePath();
+        return Arrays.stream(dir.listFiles()).filter(d -> d.getName().endsWith(ORIG_SUFFIX)).findFirst().get()
+                .getAbsolutePath();
     }
 
     public boolean isContainProperOriginalFolder(File dir) {
-        return Arrays.stream(dir.listFiles())
-                .anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ISanitizerWindow.ORIG_SUFFIX)));
+        return Arrays.stream(dir.listFiles()).anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ORIG_SUFFIX)));
     }
 
     public boolean isContainProperStripFolder(File dir) {
-        return Arrays.stream(dir.listFiles())
-                .anyMatch(d -> (d.isDirectory() && d.getName().endsWith(ISanitizerWindow.STRIP_SUFFIX)));
+        return Arrays.stream(dir.listFiles()).anyMatch(d -> (d.isDirectory() && d.getName().endsWith(STRIP_SUFFIX)));
     }
 
     public boolean isMatchFilePatterns(File file, Config config) {

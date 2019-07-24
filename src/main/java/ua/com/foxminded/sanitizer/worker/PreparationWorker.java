@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -44,7 +44,7 @@ public class PreparationWorker extends Task<List<Path>> {
                         .resolve(originalFolder.getParentFile().toPath().relativize(path)).toString();
 
                 Path origPath = Paths.get(basePathString.replaceFirst(projectName,
-                        projectNameWithSnapshot + ISanitizerWindow.ORIG_SUFFIX));
+                        projectNameWithSnapshot + ISanitizerEnvironment.ORIG_SUFFIX));
                 if (path.toFile().isDirectory()) {
                     try {
                         Files.createDirectory(origPath);

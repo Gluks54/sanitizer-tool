@@ -1,21 +1,8 @@
 package ua.com.foxminded.sanitizer.ui;
 
 import javafx.stage.Stage;
-import lombok.Getter;
-import ua.com.foxminded.sanitizer.worker.OSWorker;
 
 public interface ISanitizerWindow {
-    public enum Status {
-        OK("ok"), FAIL("none");
-
-        @Getter
-        private final String status;
-
-        private Status(String status) {
-            this.status = status;
-        }
-    }
-
     public static final int INSET = 10;
     public static final int MAIN_W = 800;
     public static final int MAIN_H = 600;
@@ -29,11 +16,6 @@ public interface ISanitizerWindow {
     public static final int PROCESS_H = 100;
     public static final int UNDO_W = 640;
     public static final int UNDO_H = 600;
-    public static final String ORIG_SUFFIX = "orig";
-    public static final String STRIP_SUFFIX = "strip";
-    public static final String ORIGINAL_EXT = ".original";
-    public static final String PATCH_EXT = ".patch.xml";
-    public static final OSWorker.OS ENV = new OSWorker().getOs();
 
     public void setMessages();
 

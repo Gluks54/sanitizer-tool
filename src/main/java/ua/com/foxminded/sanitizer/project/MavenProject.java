@@ -14,7 +14,6 @@ import org.xml.sax.SAXException;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
 public class MavenProject extends AbstractProject {
     public MavenProject(File dir) {
@@ -30,7 +29,7 @@ public class MavenProject extends AbstractProject {
                 // проверяем через JAXB
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(mavenPomFile));
-                getLog().info("validate " + mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus());
+                getLog().info("validate " + mavenPomFile + " " + Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
@@ -48,16 +47,16 @@ public class MavenProject extends AbstractProject {
     public boolean isProperProject() {
         File mavenPomFile = new File(getDir().getAbsoluteFile() + "/pom.xml");
         boolean hasPomXml = mavenPomFile.exists();
-        getLog().info(hasPomXml ? mavenPomFile + " " + ISanitizerWindow.Status.OK.getStatus()
-                : mavenPomFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
+        getLog().info(
+                hasPomXml ? mavenPomFile + " " + Status.OK.getStatus() : mavenPomFile + " " + Status.FAIL.getStatus());
         boolean isProperPomXml = isValidPomXml(mavenPomFile);
         File srcFolder = new File(getDir().getAbsoluteFile() + "/src");
         boolean hasSrcFolder = srcFolder.exists() && (srcFolder.isDirectory());
 
         boolean resultOK = getDir().isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
         if (resultOK) {
-            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
-                    : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
+            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
+                    : "src folder: " + Status.FAIL.getStatus());
             getLog().info("+++ maven project found at " + getDir());
         }
         return resultOK;

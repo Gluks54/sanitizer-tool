@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.application.Application.Parameters;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -29,18 +30,24 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.MasterProject;
 import ua.com.foxminded.sanitizer.project.AbstractProject;
 import ua.com.foxminded.sanitizer.project.AngularProject;
 import ua.com.foxminded.sanitizer.project.MavenProject;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
+import ua.com.foxminded.sanitizer.worker.CommandLineWorker;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
-import ua.com.foxminded.sanitizer.worker.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.MasterProjectWorker;
-import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
+import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
+import ua.com.foxminded.sanitizer.worker.commandshell.AbstractCommandShell;
+import ua.com.foxminded.sanitizer.worker.commandshell.UnixCommandShell;
+import ua.com.foxminded.sanitizer.worker.commandshell.WindowsCommandShell;
+import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
+import ua.com.foxminded.sanitizer.worker.config.XMLConfigWorker;
 
-public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public final class MainAppWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
     private FileWorker fileWorker;
     @Setter
     private Config config;
@@ -79,9 +86,11 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private String title;
     private long size;
     private int files;
+    private Parameters parameters;
 
-    public MainAppWindow() {
+    public MainAppWindow(Parameters parameters) {
         super();
+        this.parameters = parameters;
         title = "sanitizer";
         originalFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
@@ -135,8 +144,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             processDirectory(originalFolder);
             originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
             getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
-            originalFolderStatusLabel
-                    .setText("project at " + originalFolder.getName() + " " + ISanitizerWindow.Status.OK.getStatus());
+            originalFolderStatusLabel.setText("project at " + originalFolder.getName() + " " + Status.OK.getStatus());
             originalFolderStatusLabel.setGraphic(project.getProjectLabelIcon());
             stage.setTitle(stage.getTitle() + " " + originalFolder.getAbsolutePath());
             isOriginalFolderSelected = true;
@@ -219,6 +227,25 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         }
     }
 
+    public void loadMasterProject(Stage stage) {
+        if (masterProjectFile != null) {
+            masterProject = new MasterProjectWorker().readMasterProject(masterProjectFile, MasterProject.class);
+            originalFolder = masterProject.getOriginalProjectFolder();
+            configFile = masterProject.getConfigFile();
+            outputPreparedFolder = masterProject.getOutputPreparedFolder();
+            config = configWorker.readConfigData(configFile, Config.class);
+
+            fillOriginalFolderLabelsLine(stage);
+            fillConfigFileLabelsLine(stage);
+            fillOutputFolderLabelsLine();
+            getLog().info("*** opened master project meta-file " + masterProjectFile);
+            isMasterProjectFileUsed = true;
+        } else {
+            getLog().info("!!! open master project meta-file cancelled");
+            isMasterProjectFileUsed = false;
+        }
+    }
+
     @Override
     public void setButtonsActions(Stage stage) {
         fileWorker = new FileWorker();
@@ -235,27 +262,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             fileChooser.getExtensionFilters().clear();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
             masterProjectFile = fileChooser.showOpenDialog(stage);
-            if (masterProjectFile != null) {
-                masterProject = new MasterProjectWorker().readMasterProject(masterProjectFile, MasterProject.class);
-                originalFolder = masterProject.getOriginalProjectFolder();
-                configFile = masterProject.getConfigFile();
-                outputPreparedFolder = masterProject.getOutputPreparedFolder();
-                config = configWorker.readConfigData(configFile, Config.class);
-
-                fillOriginalFolderLabelsLine(stage);
-                fillConfigFileLabelsLine(stage);
-                fillOutputFolderLabelsLine();
-
-                System.out.println(originalFolder);
-                System.out.println(configFile);
-                System.out.println(outputPreparedFolder);
-
-                getLog().info("*** opened master project meta-file " + masterProjectFile);
-                isMasterProjectFileUsed = true;
-            } else {
-                getLog().info("!!! open master project meta-file cancelled");
-                isMasterProjectFileUsed = false;
-            }
+            loadMasterProject(stage);
             checkAndToggleButtons();
         });
         saveMasterProjectButton.setOnAction(event -> {
@@ -474,7 +481,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         topProjectConfigPane.add(outputInfoLabel, 2, 2);
 
         topProjectConfigPane.getChildren().forEach(element -> {
-            GridPane.setMargin(element, new Insets(ISanitizerWindow.INSET));
+            GridPane.setMargin(element, new Insets(INSET));
             if (element instanceof Button) {
                 ((Button) element).setMaxWidth(220);
             }
@@ -503,7 +510,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         bottomPane.setId("bottomPane");
         bottomPane.getChildren().addAll(exploreOriginalProjectFilesButton, prepareOutputFolderButton,
                 stripOriginalProjectFilesButton, undoStrippedProjectFilesButton, stripUnstripButton);
-        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
 
         getRoot().setTop(topPane);
         getRoot().setCenter(logPane);
@@ -512,13 +519,25 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         getLog().addHandler(getTextAreaHandler());
         getLog().info("sanitizer started");
 
+        AbstractCommandShell commandShell = null;
+        if (ENV == OS.UNIX) {
+            commandShell = new UnixCommandShell();
+            // commandShell.runCommand("ls");
+        } else if (ENV == OS.WINDOWS) {
+            commandShell = new WindowsCommandShell();
+            // commandShell.runCommand("cmd /c dir");
+        }
+        CommandLineWorker commandLine = new CommandLineWorker(parameters);
+        System.out.println(commandShell.isSystemEnvironmentOK());
+        System.out.println(commandLine.getMasterProjectFile());
+
         setMessages();
         Stage stage = new Stage();
         stage.setOnCloseRequest(event -> getLog().info("bye!"));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.MAIN_W, ISanitizerWindow.MAIN_H));
+        stage.setScene(new Scene(getRoot(), MAIN_W, MAIN_H));
         stage.setTitle(title);
         stage.show();
     }

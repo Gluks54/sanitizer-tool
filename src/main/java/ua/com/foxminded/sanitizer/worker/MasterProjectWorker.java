@@ -7,24 +7,23 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.MasterProject;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
-public class MasterProjectWorker extends SharedTextAreaLog {
+public class MasterProjectWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
     public MasterProject readMasterProject(File file, Class<?> c) {
         MasterProject masterProject = null;
         try {
             JAXBContext context = JAXBContext.newInstance(c);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             masterProject = (MasterProject) unmarshaller.unmarshal(file);
-            getLog().info(
-                    "read master project " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
+            getLog().info("read master project " + file.getAbsolutePath() + " " + Status.OK.getStatus());
             return masterProject;
         } catch (JAXBException e) {
             e.printStackTrace();
             getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read master project: "
-                    + ISanitizerWindow.Status.FAIL.getStatus());
+                    + Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like master project meta-file");
             return null;
         }
@@ -37,13 +36,12 @@ public class MasterProjectWorker extends SharedTextAreaLog {
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.marshal(masterProject, System.out);
             marshaller.marshal(masterProject, file);
-            getLog().info(
-                    "write master project " + file.getAbsolutePath() + " " + ISanitizerWindow.Status.OK.getStatus());
+            getLog().info("write master project " + file.getAbsolutePath() + " " + Status.OK.getStatus());
             return true;
         } catch (JAXBException e) {
             e.printStackTrace();
             getLog().severe("failure at JAXB in " + file.getAbsolutePath() + ", read master project: "
-                    + ISanitizerWindow.Status.FAIL.getStatus());
+                    + Status.FAIL.getStatus());
             getLog().info("--- " + file.getAbsolutePath() + " doesn't looks like master project meta-file");
             return false;
         }

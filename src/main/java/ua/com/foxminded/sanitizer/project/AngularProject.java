@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
 public class AngularProject extends AbstractProject {
 
@@ -37,8 +36,8 @@ public class AngularProject extends AbstractProject {
     public boolean isProperProject() {
         File angularJsonFile = new File(getDir().getAbsoluteFile() + "/angular.json");
         boolean hasAngularJsonFile = angularJsonFile.exists();
-        getLog().info(hasAngularJsonFile ? angularJsonFile + " " + ISanitizerWindow.Status.OK.getStatus()
-                : angularJsonFile + " " + ISanitizerWindow.Status.FAIL.getStatus());
+        getLog().info(hasAngularJsonFile ? angularJsonFile + " " + Status.OK.getStatus()
+                : angularJsonFile + " " + Status.FAIL.getStatus());
         boolean isProperAngularJson = isValidJson(angularJsonFile);
 
         File srcFolder = new File(getDir().getAbsoluteFile() + "/src");
@@ -51,8 +50,8 @@ public class AngularProject extends AbstractProject {
         boolean resultOK = getDir().isDirectory() && hasSrcFolder && hasE2eFolder && hasNode_modulesFolder
                 && hasAngularJsonFile && isProperAngularJson;
         if (resultOK) {
-            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + ISanitizerWindow.Status.OK.getStatus()
-                    : "src folder: " + ISanitizerWindow.Status.FAIL.getStatus());
+            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
+                    : "src folder: " + Status.FAIL.getStatus());
             getLog().info("+++ angular project found at " + getDir());
         }
         return resultOK;

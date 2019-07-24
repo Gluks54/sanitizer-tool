@@ -29,14 +29,15 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
-import ua.com.foxminded.sanitizer.worker.IConfigWorker;
-import ua.com.foxminded.sanitizer.worker.XMLConfigWorker;
+import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
+import ua.com.foxminded.sanitizer.worker.config.XMLConfigWorker;
 
 @RequiredArgsConstructor
-public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
     @Getter
     @NonNull
     private Config config;
@@ -47,7 +48,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private File originalProject;
     @NonNull
     private File outputProject;
-    private ISanitizerWindow.Status operationStatus;
+    private Status operationStatus;
     private Label originalProjectLabel = new Label();
     private Label outputProjectLabel = new Label();
     private Button newConfigButton = new Button();
@@ -117,7 +118,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         bottomButtonsPane.setAlignment(Pos.CENTER);
         bottomButtonsPane.setId("bottomPane");
         bottomButtonsPane.getChildren().addAll(newConfigButton, saveConfigButton, cancelButton);
-        bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        bottomButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
 
         getRoot().setTop(topPane);
         getRoot().setCenter(centerPane);
@@ -129,7 +130,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         });
 
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.CONFIGEDITOR_W, ISanitizerWindow.CONFIGEDITOR_H));
+        stage.setScene(new Scene(getRoot(), CONFIGEDITOR_W, CONFIGEDITOR_H));
 
         if (config != null && configFile != null) {
             loadConfigData();
@@ -150,9 +151,9 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                                 ? true
                                 : false);
             });
-            operationStatus = ISanitizerWindow.Status.OK;
+            operationStatus = Status.OK;
         } else {
-            operationStatus = ISanitizerWindow.Status.FAIL;
+            operationStatus = Status.FAIL;
         }
         getLog().info("...load file extensions: " + operationStatus.getStatus());
 
@@ -160,14 +161,14 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             filePatternCheckBox.setSelected(true);
             filePatternTextField.setEditable(true);
             filePatternTextField.setText(config.getCustomPattern());
-            operationStatus = ISanitizerWindow.Status.OK;
+            operationStatus = Status.OK;
         } else {
-            operationStatus = ISanitizerWindow.Status.FAIL;
+            operationStatus = Status.FAIL;
         }
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
 
         removeCommentsCheckBox.setSelected(config.isRemoveComments());
-        getLog().info("...load remove comments feature: " + ISanitizerWindow.Status.OK.getStatus());
+        getLog().info("...load remove comments feature: " + Status.OK.getStatus());
 
         if (config.getReplacementInFileContent() != null
                 && config.getReplacementInFileContent().entrySet().size() > 0) {
@@ -175,9 +176,9 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     .forEach(entry -> contentReplacementPane.addReplacementItem(
                             contentReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
                                     entry.getValue().getTarget(), contentReplacementPane)));
-            operationStatus = ISanitizerWindow.Status.OK;
+            operationStatus = Status.OK;
         } else {
-            operationStatus = ISanitizerWindow.Status.FAIL;
+            operationStatus = Status.FAIL;
         }
         getLog().info("...load per-file replacements: " + operationStatus.getStatus());
 
@@ -187,15 +188,14 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     .forEach(entry -> filesystemReplacementPane.addReplacementItem(
                             filesystemReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
                                     entry.getValue().getTarget(), filesystemReplacementPane)));
-            operationStatus = ISanitizerWindow.Status.OK;
+            operationStatus = Status.OK;
         } else {
-            operationStatus = ISanitizerWindow.Status.FAIL;
+            operationStatus = Status.FAIL;
         }
         getLog().info("...load project structure replacements: " + operationStatus.getStatus());
 
-        operationStatus = (config.getOriginalProject() != null && config.getOutputProject() != null)
-                ? ISanitizerWindow.Status.OK
-                : ISanitizerWindow.Status.FAIL;
+        operationStatus = (config.getOriginalProject() != null && config.getOutputProject() != null) ? Status.OK
+                : Status.FAIL;
         getLog().info("...load original and output project folders: " + operationStatus.getStatus());
     }
 
@@ -282,28 +282,28 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                         config = new Config();
                     }
                     config.setPatterns(patterns);
-                    getLog().info("...save file extensions: " + ISanitizerWindow.Status.OK.getStatus());
+                    getLog().info("...save file extensions: " + Status.OK.getStatus());
 
                     if (contentReplacementPane.getReplacementsMap() != null
                             && contentReplacementPane.getReplacementsMap().size() > 0) {
                         config.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
-                        operationStatus = ISanitizerWindow.Status.OK;
+                        operationStatus = Status.OK;
                     } else {
-                        operationStatus = ISanitizerWindow.Status.FAIL;
+                        operationStatus = Status.FAIL;
                     }
                     getLog().info("...save per-file replacements: " + operationStatus.getStatus());
 
                     config.setRemoveComments(removeCommentsCheckBox.isSelected());
-                    getLog().info("...save remove comments feature: " + ISanitizerWindow.Status.OK.getStatus());
+                    getLog().info("...save remove comments feature: " + Status.OK.getStatus());
 
                     // добавляем regexp из поля
                     if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
                             && (!filePatternTextField.getText().equals(null))) {
                         config.setCustomPattern(filePatternTextField.getText());
-                        operationStatus = ISanitizerWindow.Status.OK;
+                        operationStatus = Status.OK;
                     } else {
                         config.setCustomPattern(null);
-                        operationStatus = ISanitizerWindow.Status.FAIL;
+                        operationStatus = Status.FAIL;
                     }
                     System.out.println("=" + filePatternTextField.getText() + "=");
                     getLog().info("...save custom file regexp: " + operationStatus.getStatus());
@@ -311,18 +311,18 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     if (filesystemReplacementPane.getReplacementsMap() != null
                             && filesystemReplacementPane.getReplacementsMap().size() > 0) {
                         config.setReplacementInProjectStructure(filesystemReplacementPane.getReplacementsMap());
-                        operationStatus = ISanitizerWindow.Status.OK;
+                        operationStatus = Status.OK;
                     } else {
-                        operationStatus = ISanitizerWindow.Status.FAIL;
+                        operationStatus = Status.FAIL;
                     }
                     getLog().info("...save project structure replacements: " + operationStatus.getStatus());
 
                     if (originalProject != null && outputProject != null) {
                         config.setOriginalProject(originalProject);
                         config.setOutputProject(outputProject);
-                        operationStatus = ISanitizerWindow.Status.OK;
+                        operationStatus = Status.OK;
                     } else {
-                        operationStatus = ISanitizerWindow.Status.FAIL;
+                        operationStatus = Status.FAIL;
                     }
                     getLog().info("...save original and output folder: " + operationStatus.getStatus());
 
