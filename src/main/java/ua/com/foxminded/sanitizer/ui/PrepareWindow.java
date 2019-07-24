@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import lombok.NonNull;
@@ -94,20 +95,20 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
     public void show() {
         setMessages();
         cancelPreparationButton.setDisable(true);
-
         FlowPane topPane = new FlowPane();
         FlowPane bottomPane = new FlowPane();
+        BorderPane root = new BorderPane();
 
         preparationProgressBar.setMinWidth(0.8 * ISanitizerWindow.PROCESS_W);
         topPane.setAlignment(Pos.BASELINE_CENTER);
         topPane.getChildren().add(preparationProgressBar);
         topPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        getRoot().setTop(topPane);
+        root.setTop(topPane);
 
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().addAll(startPreparationButton, cancelPreparationButton, closePreparationWindowButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        getRoot().setBottom(bottomPane);
+        root.setBottom(bottomPane);
 
         Stage stage = new Stage();
         setButtonsActions(stage);
@@ -123,7 +124,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
+        stage.setScene(new Scene(root, ISanitizerWindow.PROCESS_W, ISanitizerWindow.PROCESS_H));
         stage.setTitle(title);
         stage.show();
     }

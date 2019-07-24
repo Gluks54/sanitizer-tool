@@ -10,6 +10,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -48,6 +49,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitize
         setMessages();
         FlowPane bottomPane = new FlowPane();
         SplitPane splitPane = new SplitPane();
+        BorderPane root = new BorderPane();
         FileTreeItem fileItem = new FileTreeItem(selectedDirectory, config);
         TreeView<File> fileView = new TreeView<File>(fileItem);
 
@@ -63,17 +65,17 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitize
 
         splitPane.getItems().addAll(fileView, fileItem.getTableView());
         splitPane.setDividerPositions(0.3);
-        getRoot().setCenter(splitPane);
+        root.setCenter(splitPane);
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(okButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        getRoot().setBottom(bottomPane);
+        root.setBottom(bottomPane);
         Stage stage = new Stage();
         stage.setOnCloseRequest(
                 event -> getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath()));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-        stage.setScene(new Scene(getRoot(), ISanitizerWindow.EXPLORE_W, ISanitizerWindow.EXPLORE_H));
+        stage.setScene(new Scene(root, ISanitizerWindow.EXPLORE_W, ISanitizerWindow.EXPLORE_H));
         stage.setTitle(title);
         stage.show();
 

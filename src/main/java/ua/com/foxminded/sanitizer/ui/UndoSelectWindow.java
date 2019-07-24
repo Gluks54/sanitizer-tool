@@ -11,6 +11,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -144,6 +145,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         GridPane mainPane = new GridPane();
         ScrollPane scrollPane = new ScrollPane(mainPane);
         FlowPane bottomPane = new FlowPane();
+        BorderPane root = new BorderPane();
 
         mainColumn.setPercentWidth(100);
         mainPane.getColumnConstraints().add(mainColumn);
@@ -153,14 +155,14 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.getChildren().add(closeButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
-        getRoot().setCenter(scrollPane);
-        getRoot().setBottom(bottomPane);
+        root.setCenter(scrollPane);
+        root.setBottom(bottomPane);
         Stage stage = new Stage();
         stage.setOnCloseRequest(event -> getLog().info("undo stopped"));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(getRoot(), UNDO_W, UNDO_H));
+        stage.setScene(new Scene(root, UNDO_W, UNDO_H));
         stage.setTitle(title);
         stage.show();
     }

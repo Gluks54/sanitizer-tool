@@ -1,6 +1,9 @@
 package ua.com.foxminded.sanitizer.worker.commandshell;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -25,6 +28,21 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
         javaHome = System.getProperty("java.home");
         fileDivider = System.getProperty("file.separator");
         userHome = System.getProperty("user.home");
+    }
+
+    public void runCommand(String command) {
+        Process process;
+        try {
+            process = Runtime.getRuntime().exec(command);
+            process.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private String getRunningJarExecutable() {

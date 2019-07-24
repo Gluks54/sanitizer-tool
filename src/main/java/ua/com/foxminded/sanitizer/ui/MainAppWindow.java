@@ -21,6 +21,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -242,7 +243,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             isMasterProjectFileUsed = true;
         } else {
             getLog().info("!!! open master project meta-file cancelled");
-            isMasterProjectFileUsed = false;
+            isMasterProjectFileUsed = isMasterProjectFileUsed ? true : false;
         }
     }
 
@@ -512,32 +513,43 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 stripOriginalProjectFilesButton, undoStrippedProjectFilesButton, stripUnstripButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
 
-        getRoot().setTop(topPane);
-        getRoot().setCenter(logPane);
-        getRoot().setBottom(bottomPane);
+        BorderPane root = new BorderPane();
+        root.setTop(topPane);
+        root.setCenter(logPane);
+        root.setBottom(bottomPane);
 
         getLog().addHandler(getTextAreaHandler());
         getLog().info("sanitizer started");
 
         AbstractCommandShell commandShell = null;
-        if (ENV == OS.UNIX) {
-            commandShell = new UnixCommandShell();
-            // commandShell.runCommand("ls");
-        } else if (ENV == OS.WINDOWS) {
+        if (ENV == OS.WINDOWS) {
             commandShell = new WindowsCommandShell();
             // commandShell.runCommand("cmd /c dir");
+        } else {
+            commandShell = new UnixCommandShell();
+            // commandShell.runCommand("ls -la");
         }
-        CommandLineWorker commandLine = new CommandLineWorker(parameters);
         System.out.println(commandShell.isSystemEnvironmentOK());
-        System.out.println(commandLine.getMasterProjectFile());
 
         setMessages();
         Stage stage = new Stage();
         stage.setOnCloseRequest(event -> getLog().info("bye!"));
         setButtonsActions(stage);
+
+        String masterProjectFromCommandLine = new CommandLineWorker(parameters).getMasterProjectFile();
+        if (masterProjectFromCommandLine != null) {
+            masterProjectFile = new File(masterProjectFromCommandLine);
+            if (masterProjectFile.exists()) {
+                getLog().info("open master project " + masterProjectFile.getAbsolutePath());
+                loadMasterProject(stage);
+            } else {
+                getLog().severe("fail load master project " + masterProjectFile.getAbsolutePath());
+            }
+            checkAndToggleButtons();
+        }
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
 
-        stage.setScene(new Scene(getRoot(), MAIN_W, MAIN_H));
+        stage.setScene(new Scene(root, MAIN_W, MAIN_H));
         stage.setTitle(title);
         stage.show();
     }
