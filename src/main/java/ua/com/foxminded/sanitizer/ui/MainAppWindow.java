@@ -261,7 +261,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             getLog().info("trying open master project meta-file...");
             fileChooser.setTitle("Select master project meta-file");
             fileChooser.getExtensionFilters().clear();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(MASTER_DIALOG_NAME, MASTER_PATTERN));
             masterProjectFile = fileChooser.showOpenDialog(stage);
             loadMasterProject(stage);
             checkAndToggleButtons();
@@ -270,7 +270,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             getLog().info("trying save master project meta-file...");
             fileChooser.setTitle("Select master project meta-file");
             fileChooser.getExtensionFilters().clear();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(MASTER_DIALOG_NAME, MASTER_PATTERN));
             fileChooser.setInitialFileName(
                     originalFolder.getName() + "-" + fileWorker.getCurrentDateTimeString() + ".stz");
             masterProjectFile = fileChooser.showSaveDialog(stage);
@@ -317,7 +317,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             getLog().info("trying select config file...");
             fileChooser.setTitle("Select project config file");
             fileChooser.getExtensionFilters().clear();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(XML_DIALOG_NAME, XML_PATTERN));
             configFile = fileChooser.showOpenDialog(stage);
             if (configFile != null) {
                 config = configWorker.readConfigData(configFile, Config.class);

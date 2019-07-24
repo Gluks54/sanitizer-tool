@@ -265,7 +265,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             } else {
                 FileChooser fc = new FileChooser();
                 fc.getExtensionFilters().clear();
-                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
+                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(XML_DIALOG_NAME, XML_PATTERN));
                 configFile = fc.showSaveDialog(stage);
                 if (configFile != null) {
                     getLog().info("save current config to " + configFile.getAbsolutePath());

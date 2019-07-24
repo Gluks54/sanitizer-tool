@@ -21,5 +21,9 @@ public interface ISanitizerEnvironment {
     public final String ORIGINAL_EXT = ".original";
     public final String PATCH_EXT = ".patch.xml";
     public final String MASTER_EXT = ".stz";
+    public final String MASTER_PATTERN = "*.stz";
+    public final String MASTER_DIALOG_NAME = "Sanitizer files (*.stz)";
+    public final String XML_DIALOG_NAME = "XML files (*.xml)";
+    public final String XML_PATTERN = "*.xml";
     public final OS ENV = new OSWorker().getOs();
 }
