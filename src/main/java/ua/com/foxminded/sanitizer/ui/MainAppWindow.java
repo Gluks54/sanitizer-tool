@@ -68,12 +68,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private Button prepareOutputFolderButton = new Button();
     private Button stripOriginalProjectFilesButton = new Button();
     private Button undoStrippedProjectFilesButton = new Button();
+    private Button stripUnstripButton = new Button();
     private boolean isOriginalFolderSelected;
     @Setter
     private boolean isProperConfigFileSelected;
     @Setter
     private boolean isOutputFolderPrepared;
     private boolean isOutputFolderSelected;
+    private boolean isMasterProjectFileUsed;
     private String title;
     private long size;
     private int files;
@@ -90,13 +92,20 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     }
 
     protected void checkAndToggleButtons() {
-        exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected));
-        prepareOutputFolderButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
-        stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected);
-        undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected);
-        editOrNewConfigButton.setDisable(!(isOriginalFolderSelected && isOutputFolderSelected));
+        selectOriginalFolderButton.setDisable(isMasterProjectFileUsed);
+        selectConfigFileButton.setDisable(isMasterProjectFileUsed);
+        selectOutputFolderButton.setDisable(isMasterProjectFileUsed);
+
+        exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected) | isMasterProjectFileUsed);
+        prepareOutputFolderButton
+                .setDisable(!(isOriginalFolderSelected && isOutputFolderSelected) | isMasterProjectFileUsed);
+        stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected | isMasterProjectFileUsed);
+        undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected | isMasterProjectFileUsed);
+        editOrNewConfigButton
+                .setDisable(!(isOriginalFolderSelected && isOutputFolderSelected) | isMasterProjectFileUsed);
         saveMasterProjectButton
                 .setDisable(!(isOriginalFolderSelected && isProperConfigFileSelected && isOutputFolderSelected));
+        stripUnstripButton.setDisable(!isMasterProjectFileUsed);
     }
 
     @Override
@@ -114,6 +123,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         stripOriginalProjectFilesButton.setText("Strip original project");
         undoStrippedProjectFilesButton.setText("Undo strip steps");
         editOrNewConfigButton.setText("Edit or new config");
+        stripUnstripButton.setText("Strip");
     }
 
     private void fillOriginalFolderLabelsLine(Stage stage) {
@@ -140,8 +150,43 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         }
     }
 
-    private void fillConfigFileLabelsLine() {
+    private void fillConfigFileLabelsLine(Stage stage) {
+        if (config != null) {
+            configFileStatusLabel
+                    .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
+            configFileStatusLabel.setText(configFile.getAbsolutePath());
+            isProperConfigFileSelected = true;
+            getLog().info("+++ " + configFile.getName() + " is proper sanitizer config");
 
+            // проверяем пути исходной и выходной папок
+            if (originalFolder == null || outputPreparedFolder == null) {
+                originalFolder = config.getOriginalProject();
+                outputPreparedFolder = config.getOutputProject();
+                fillOriginalFolderLabelsLine(stage);
+                fillOutputFolderLabelsLine();
+            } else if (!config.getOriginalProject().getAbsolutePath().equalsIgnoreCase(originalFolder.getAbsolutePath())
+                    || !config.getOutputProject().getAbsolutePath()
+                            .equalsIgnoreCase(outputPreparedFolder.getAbsolutePath())) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Folders error");
+                alert.setHeaderText("Original or output folders doesn't match saved properties");
+                alert.setContentText("Folders you've chose will be replaced ones from config file!");
+                alert.showAndWait();
+                originalFolder = config.getOriginalProject();
+                outputPreparedFolder = config.getOutputProject();
+                fillOriginalFolderLabelsLine(stage);
+                fillOutputFolderLabelsLine();
+            }
+        } else {
+            configFileStatusLabel
+                    .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
+            isProperConfigFileSelected = false;
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Config error");
+            alert.setHeaderText(configFile.getName() + " doesn't looks like proper sanitizer config");
+            alert.setContentText("Use editor");
+            alert.showAndWait();
+        }
     }
 
     private void fillOutputFolderLabelsLine() {
@@ -180,27 +225,55 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         DirectoryChooser directoryChooser = new DirectoryChooser();
         FileChooser fileChooser = new FileChooser();
 
+        stripUnstripButton.setOnAction(event -> {
+
+        });
+
         openMasterProjectButton.setOnAction(event -> {
             getLog().info("trying open master project meta-file...");
             fileChooser.setTitle("Select master project meta-file");
             fileChooser.getExtensionFilters().clear();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
             masterProjectFile = fileChooser.showOpenDialog(stage);
+            if (masterProjectFile != null) {
+                masterProject = new MasterProjectWorker().readMasterProject(masterProjectFile, MasterProject.class);
+                originalFolder = masterProject.getOriginalProjectFolder();
+                configFile = masterProject.getConfigFile();
+                outputPreparedFolder = masterProject.getOutputPreparedFolder();
+                config = configWorker.readConfigData(configFile, Config.class);
+
+                fillOriginalFolderLabelsLine(stage);
+                fillConfigFileLabelsLine(stage);
+                fillOutputFolderLabelsLine();
+
+                System.out.println(originalFolder);
+                System.out.println(configFile);
+                System.out.println(outputPreparedFolder);
+
+                getLog().info("*** opened master project meta-file " + masterProjectFile);
+                isMasterProjectFileUsed = true;
+            } else {
+                getLog().info("!!! open master project meta-file cancelled");
+                isMasterProjectFileUsed = false;
+            }
+            checkAndToggleButtons();
         });
         saveMasterProjectButton.setOnAction(event -> {
             getLog().info("trying save master project meta-file...");
             fileChooser.setTitle("Select master project meta-file");
             fileChooser.getExtensionFilters().clear();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sanitizer files (*.stz)", "*.stz"));
+            fileChooser.setInitialFileName(
+                    originalFolder.getName() + "-" + fileWorker.getCurrentDateTimeString() + ".stz");
             masterProjectFile = fileChooser.showSaveDialog(stage);
             if (masterProjectFile != null) {
                 masterProject.setOriginalProjectFolder(originalFolder);
                 masterProject.setOutputPreparedFolder(outputPreparedFolder);
                 masterProject.setConfigFile(configFile);
                 new MasterProjectWorker().writeMasterProject(masterProjectFile, masterProject);
-                getLog().info("master project meta-file saved to " + masterProjectFile);
+                getLog().info("*** master project meta-file saved to " + masterProjectFile);
             } else {
-                getLog().info("master project meta-file save cancelled");
+                getLog().info("!!! open master project meta-file cancelled");
             }
         });
         selectOriginalFolderButton.setOnAction(event -> {
@@ -239,46 +312,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml"));
             configFile = fileChooser.showOpenDialog(stage);
             if (configFile != null) {
-                configFileStatusLabel.setText(configFile.getAbsolutePath());
-                getLog().info("select config file " + configFile.getAbsolutePath());
-
                 config = configWorker.readConfigData(configFile, Config.class);
-                if (config != null) {
-                    configFileStatusLabel
-                            .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/ok.png"))));
-                    isProperConfigFileSelected = true;
-                    getLog().info("+++ " + configFile.getName() + " is proper sanitizer config");
-
-                    // проверяем пути исходной и выходной папок
-                    if (originalFolder == null || outputPreparedFolder == null) {
-                        originalFolder = config.getOriginalProject();
-                        outputPreparedFolder = config.getOutputProject();
-                        fillOriginalFolderLabelsLine(stage);
-                        fillOutputFolderLabelsLine();
-                    } else if (!config.getOriginalProject().getAbsolutePath()
-                            .equalsIgnoreCase(originalFolder.getAbsolutePath())
-                            || !config.getOutputProject().getAbsolutePath()
-                                    .equalsIgnoreCase(outputPreparedFolder.getAbsolutePath())) {
-                        Alert alert = new Alert(AlertType.ERROR);
-                        alert.setTitle("Folders error");
-                        alert.setHeaderText("Original or output folders doesn't match saved properties");
-                        alert.setContentText("Folders you've chose will be replaced ones from config file!");
-                        alert.showAndWait();
-                        originalFolder = config.getOriginalProject();
-                        outputPreparedFolder = config.getOutputProject();
-                        fillOriginalFolderLabelsLine(stage);
-                        fillOutputFolderLabelsLine();
-                    }
-                } else {
-                    configFileStatusLabel.setGraphic(
-                            new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
-                    isProperConfigFileSelected = false;
-                    Alert alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Config error");
-                    alert.setHeaderText(configFile.getName() + " doesn't looks like proper sanitizer config");
-                    alert.setContentText("Use editor");
-                    alert.showAndWait();
-                }
+                fillConfigFileLabelsLine(stage);
             } else {
                 configFileStatusLabel.setText("cancel select");
                 configFileStatusLabel
@@ -461,12 +496,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         undoStrippedProjectFilesButton.setDisable(true);
         editOrNewConfigButton.setDisable(true);
         saveMasterProjectButton.setDisable(true);
+        stripUnstripButton.setDisable(true);
 
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
         bottomPane.getChildren().addAll(exploreOriginalProjectFilesButton, prepareOutputFolderButton,
-                stripOriginalProjectFilesButton, undoStrippedProjectFilesButton);
+                stripOriginalProjectFilesButton, undoStrippedProjectFilesButton, stripUnstripButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
 
         getRoot().setTop(topPane);
