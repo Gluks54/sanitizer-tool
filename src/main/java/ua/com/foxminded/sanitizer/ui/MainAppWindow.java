@@ -18,6 +18,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -54,6 +55,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private Config config;
     private IConfigWorker configWorker = new XMLConfigWorker();
     private MasterProject masterProject = new MasterProject();
+    private CheckBox stzFileAssiciationCheckBox = new CheckBox();
     private Button openMasterProjectButton = new Button();
     private Button saveMasterProjectButton = new Button();
     private Button selectOriginalFolderButton = new Button();
@@ -88,11 +90,20 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private long size;
     private int files;
     private Parameters parameters;
+    private AbstractCommandShell commandShell;
 
     public MainAppWindow(Parameters parameters) {
         super();
         this.parameters = parameters;
         title = "sanitizer";
+
+        if (ENV == OS.WINDOWS) {
+            commandShell = new WindowsCommandShell();
+        } else if (ENV == OS.UNIX) {
+            commandShell = new UnixCommandShell();
+        } else {
+            commandShell = null;
+        } // determine operating system
         originalFolderStatusLabel
                 .setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
         configFileStatusLabel
@@ -253,8 +264,18 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         DirectoryChooser directoryChooser = new DirectoryChooser();
         FileChooser fileChooser = new FileChooser();
 
-        stripUnstripButton.setOnAction(event -> {
+        stzFileAssiciationCheckBox.setOnAction(event -> {
+            if (stzFileAssiciationCheckBox.isSelected()) {
+                stzFileAssiciationCheckBox.setText("STZ master project files associated with sanitizer");
+                commandShell.associateSTZFileInOS();
+            } else {
+                stzFileAssiciationCheckBox.setText("STZ master project files not associated with sanitizer");
+                commandShell.deAssociateSTZFileInOS();
+            }
+        });
 
+        stripUnstripButton.setOnAction(event -> {
+            System.out.println("click strip unstrip");
         });
 
         openMasterProjectButton.setOnAction(event -> {
@@ -449,8 +470,13 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
 
     @Override
     public void show() {
+        FlowPane stzCheckBoxPane = new FlowPane();
+        stzCheckBoxPane.setAlignment(Pos.BASELINE_LEFT);
+        stzCheckBoxPane.getChildren().add(stzFileAssiciationCheckBox);
+        stzCheckBoxPane.getChildren()
+                .forEach(element -> FlowPane.setMargin(element, new Insets(ISanitizerWindow.INSET)));
+
         FlowPane topMasterProjectButtonsPane = new FlowPane();
-        topMasterProjectButtonsPane.setId("topPane");
         topMasterProjectButtonsPane.setAlignment(Pos.BASELINE_RIGHT);
         openMasterProjectButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/img/code.png"))));
         topMasterProjectButtonsPane.getChildren().add(openMasterProjectButton);
@@ -458,6 +484,11 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         topMasterProjectButtonsPane.getChildren().add(saveMasterProjectButton);
         topMasterProjectButtonsPane.getChildren()
                 .forEach(element -> FlowPane.setMargin(element, new Insets(ISanitizerWindow.INSET)));
+
+        GridPane topMasterProjectPane = new GridPane();
+        topMasterProjectPane.add(stzCheckBoxPane, 0, 0);
+        topMasterProjectPane.add(topMasterProjectButtonsPane, 1, 0);
+        topMasterProjectPane.setId("topPane");
 
         GridPane topProjectConfigPane = new GridPane();
         ColumnConstraints buttonsLeftColumn = new ColumnConstraints();
@@ -492,7 +523,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         ColumnConstraints mainColumn = new ColumnConstraints();
         mainColumn.setPercentWidth(100);
         topPane.getColumnConstraints().add(mainColumn);
-        topPane.add(topMasterProjectButtonsPane, 0, 0);
+        topPane.add(topMasterProjectPane, 0, 0);
         topPane.add(topProjectConfigPane, 0, 1);
 
         StackPane logPane = new StackPane();
@@ -521,15 +552,19 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         getLog().addHandler(getTextAreaHandler());
         getLog().info("sanitizer started");
 
-        AbstractCommandShell commandShell = null;
-        if (ENV == OS.WINDOWS) {
-            commandShell = new WindowsCommandShell();
-            // commandShell.runCommand("cmd /c dir");
+        if (commandShell != null & commandShell.isSystemEnvironmentOK()) { // ассоциации файлов в поддерживаемых ОС
+            if (commandShell.isSTZFileAssociated()) {
+                stzFileAssiciationCheckBox.setSelected(true);
+                stzFileAssiciationCheckBox.setText("STZ master project files associated with sanitizer");
+            } else {
+                stzFileAssiciationCheckBox.setSelected(false);
+                stzFileAssiciationCheckBox.setText("STZ master project files not associated with sanitizer");
+            }
         } else {
-            commandShell = new UnixCommandShell();
-            // commandShell.runCommand("ls -la");
+            stzFileAssiciationCheckBox.setDisable(true);
+            stzFileAssiciationCheckBox.setSelected(false);
+            stzFileAssiciationCheckBox.setText("check file associations environment failure!");
         }
-        System.out.println(commandShell.isSystemEnvironmentOK());
 
         setMessages();
         Stage stage = new Stage();
@@ -548,7 +583,6 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             checkAndToggleButtons();
         }
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
-
         stage.setScene(new Scene(root, MAIN_W, MAIN_H));
         stage.setTitle(title);
         stage.show();

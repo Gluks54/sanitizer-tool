@@ -21,6 +21,7 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
     private String fileDivider;
     private String runningJarExecutable;
     private String userHome;
+    private String defaultEncoding;
     private Status operationStatus;
 
     public AbstractCommandShell() {
@@ -28,21 +29,31 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
         javaHome = System.getProperty("java.home");
         fileDivider = System.getProperty("file.separator");
         userHome = System.getProperty("user.home");
+        defaultEncoding = System.getProperty("file.encoding");
     }
 
-    public void runCommand(String command) {
+    public abstract boolean isSTZFileAssociated();
+
+    public abstract void associateSTZFileInOS();
+
+    public abstract void deAssociateSTZFileInOS();
+
+    protected String runCommand(String command) {
         Process process;
+        String responce = "";
         try {
             process = Runtime.getRuntime().exec(command);
             process.waitFor();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "Cp1251"));
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                System.out.println(">> " + line);
+                getLog().info(">> " + line);
+                responce += line + System.lineSeparator();
             }
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
         }
+        return responce;
     }
 
     private String getRunningJarExecutable() {
@@ -60,12 +71,13 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
         return javaHome + fileDivider + "bin" + fileDivider + javaExecutable;
     }
 
-    public boolean isSystemEnvironmentOK() {
+    public final boolean isSystemEnvironmentOK() {
         File javaExecFile = new File(getJavaFullPathExecutable());
         File jarJavaFile = new File(getRunningJarExecutable());
         File userHomeDir = new File(userHome);
 
         getLog().info("*** check system environment...");
+        getLog().info("default system encoding... " + defaultEncoding);
         boolean isJavaExecFileOK = javaExecFile.exists() && javaExecFile.isFile();
         operationStatus = isJavaExecFileOK ? Status.OK : Status.FAIL;
         getLog().info("check main JAVA executable... " + javaExecFile + " " + operationStatus);
@@ -78,7 +90,8 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
         operationStatus = isUserHomeDirOK ? Status.OK : Status.FAIL;
         getLog().info("check user home folder... " + userHomeDir + " " + operationStatus);
 
-        return isJarJavaFileOK && isJavaExecFileOK && isUserHomeDirOK;
+        // return isJarJavaFileOK && isJavaExecFileOK && isUserHomeDirOK;
+        return isJavaExecFileOK && isUserHomeDirOK;
     }
 
 }
