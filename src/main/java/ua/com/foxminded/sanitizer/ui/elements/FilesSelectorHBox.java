@@ -10,18 +10,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
 @Getter
 @Setter
 public class FilesSelectorHBox extends HBox {
-    @NonNull
     private List<CheckBox> extensions = Arrays.asList(new CheckBox(".java"), new CheckBox(".xml"), new CheckBox(".ts"));
-    @NonNull
     private CheckBox filePatternCheckBox = new CheckBox();
-    @NonNull
     private TextField filePatternTextField = new TextField();
 
     public FilesSelectorHBox() {
@@ -34,6 +30,7 @@ public class FilesSelectorHBox extends HBox {
         HBox filePatternHBox = new HBox();
         filePatternHBox.setAlignment(Pos.BASELINE_CENTER);
         filePatternTextField.setEditable(false);
+        filePatternTextField.setText("custom pattern");
         filePatternCheckBox.setOnAction(event -> {
             if (filePatternCheckBox.isSelected()) {
                 filePatternTextField.setText("");

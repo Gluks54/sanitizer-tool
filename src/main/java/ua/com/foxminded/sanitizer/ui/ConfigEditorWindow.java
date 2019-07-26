@@ -31,7 +31,7 @@ import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.FilesSelectorHBox;
-import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
+import ua.com.foxminded.sanitizer.ui.elements.RefactorReplacePane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.config.XMLConfigWorker;
@@ -55,8 +55,8 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private Button cancelButton = new Button();
     private Button addContentReplacementButton = new Button();
     private Button addFileSystemReplacementButton = new Button();
-    private ReplacementPane contentReplacementPane = new ReplacementPane();
-    private ReplacementPane filesystemReplacementPane = new ReplacementPane();
+    private RefactorReplacePane contentReplacementPane = new RefactorReplacePane();
+    private RefactorReplacePane filesystemReplacementPane = new RefactorReplacePane();
     private CheckBox removeCommentsCheckBox = new CheckBox();
     private CheckBox ifCommentContainCheckBox = new CheckBox();
     private TextField ifCommentContainTextField = new TextField();
@@ -82,6 +82,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
         HBox ifContainHBox = new HBox();
         ifContainHBox.setAlignment(Pos.BASELINE_CENTER);
+        ifCommentContainTextField.setEditable(false);
         ifContainHBox.getChildren().addAll(ifCommentContainCheckBox, ifCommentContainTextField);
 
         FlowPane removeCommentsPane = new FlowPane();
@@ -99,6 +100,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
         BorderPane centerPane = new BorderPane();
         FlowPane centerTopButtonsPane = new FlowPane();
+        centerTopButtonsPane.setAlignment(Pos.BASELINE_CENTER);
         centerTopButtonsPane.getChildren().addAll(addContentReplacementButton, addFileSystemReplacementButton);
         centerTopButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
         centerPane.setTop(centerTopButtonsPane);
@@ -169,7 +171,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                 && config.getReplacementInFileContent().entrySet().size() > 0) {
             config.getReplacementInFileContent().entrySet().stream()
                     .forEach(entry -> contentReplacementPane.addReplacementItem(
-                            contentReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
+                            contentReplacementPane.new RefactorReplaceItem(entry.getKey(), entry.getValue().getSource(),
                                     entry.getValue().getTarget(), contentReplacementPane)));
             operationStatus = Status.OK;
         } else {
@@ -179,10 +181,9 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
         if (config.getReplacementInProjectStructure() != null
                 && config.getReplacementInProjectStructure().entrySet().size() > 0) {
-            config.getReplacementInProjectStructure().entrySet().stream()
-                    .forEach(entry -> filesystemReplacementPane.addReplacementItem(
-                            filesystemReplacementPane.new ReplacementItem(entry.getKey(), entry.getValue().getSource(),
-                                    entry.getValue().getTarget(), filesystemReplacementPane)));
+            config.getReplacementInProjectStructure().entrySet().stream().forEach(entry -> filesystemReplacementPane
+                    .addReplacementItem(filesystemReplacementPane.new RefactorReplaceItem(entry.getKey(),
+                            entry.getValue().getSource(), entry.getValue().getTarget(), filesystemReplacementPane)));
             operationStatus = Status.OK;
         } else {
             operationStatus = Status.FAIL;
@@ -197,6 +198,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     public void clearConfig() {
         removeCommentsCheckBox.setSelected(false);
         ifCommentContainCheckBox.setSelected(false);
+        ifCommentContainTextField.setEditable(false);
         ifCommentContainTextField.setText("if contain");
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
@@ -273,23 +275,54 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                 fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(XML_DIALOG_NAME, XML_PATTERN));
                 configFile = fc.showSaveDialog(stage);
                 if (configFile != null) {
-                    getLog().info("save current config to " + configFile.getAbsolutePath());
-                    // считать все расширения файлов
-                    List<String> patterns = new ArrayList<String>();
-                    filePatternSelectorBox.getExtensions().forEach(extension -> {
-                        if (extension.isSelected()) {
-                            patterns.add(extension.getText());
-                        }
-                    });
-                    // читаем показатели из полей
-                    // если config не проинжекчен конструктором,
-                    // создаем новый
                     if (config == null) {
                         config = new Config();
                     }
-                    config.getRemoveComment().setRemoveCommentFilenameFilters(patterns);
-                    getLog().info("...save file extensions: " + Status.OK.getStatus());
+                    getLog().info("save current config to " + configFile.getAbsolutePath());
 
+                    // работаем с удалением каментов
+                    if (removeCommentsCheckBox.isSelected()) {
+                        config.getRemoveComment().setToRemove(true);
+                        getLog().info("...save remove comments feature: " + Status.OK.getStatus());
+
+                        // if contain
+                        if (ifCommentContainCheckBox.isSelected() && !ifCommentContainTextField.getText().equals(null)
+                                && !ifCommentContainTextField.getText().equalsIgnoreCase("")) {
+                            config.getRemoveComment().setContain(ifCommentContainTextField.getText());
+                            getLog().info("...save remove comments contain text feature: " + Status.OK.getStatus());
+                        } else {
+                            getLog().info("...save remove comments contain text feature: " + Status.FAIL.getStatus());
+                        }
+
+                        // считать все расширения файлов для коментов
+                        List<String> patterns = new ArrayList<String>();
+                        filePatternSelectorBox.getExtensions().forEach(extension -> {
+                            if (extension.isSelected()) {
+                                patterns.add(extension.getText());
+                            }
+                        });
+                        config.getRemoveComment().setRemoveCommentFilenameFilters(patterns);
+                        getLog().info("...save file extensions for comments removal: " + Status.OK.getStatus());
+
+                        // добавляем regexp из поля для коментов
+                        if (filePatternSelectorBox.getFilePatternCheckBox().isSelected()
+                                && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(""))
+                                && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(null))) {
+                            config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(
+                                    filePatternSelectorBox.getFilePatternTextField().getText());
+                            operationStatus = Status.OK;
+                        } else {
+                            config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(null);
+                            operationStatus = Status.FAIL;
+                        }
+                        getLog().info(
+                                "...save custom file regexp for comments removal: " + operationStatus.getStatus());
+                    } else {
+                        getLog().info(
+                                "...save remove comments feature: " + Status.FAIL.getStatus() + ", nothing to do");
+                    }
+
+                    // работаем с рефактором внутри файлов
                     if (contentReplacementPane.getReplacementsMap() != null
                             && contentReplacementPane.getReplacementsMap().size() > 0) {
                         config.setReplacementInFileContent(contentReplacementPane.getReplacementsMap());
@@ -299,22 +332,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     }
                     getLog().info("...save per-file replacements: " + operationStatus.getStatus());
 
-                    config.getRemoveComment().setToRemove(removeCommentsCheckBox.isSelected());
-                    getLog().info("...save remove comments feature: " + Status.OK.getStatus());
-
-                    // добавляем regexp из поля
-                    if (filePatternSelectorBox.getFilePatternCheckBox().isSelected()
-                            && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(""))
-                            && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(null))) {
-                        config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(
-                                filePatternSelectorBox.getFilePatternTextField().getText());
-                        operationStatus = Status.OK;
-                    } else {
-                        config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(null);
-                        operationStatus = Status.FAIL;
-                    }
-                    getLog().info("...save custom file regexp: " + operationStatus.getStatus());
-
+                    // работаем с ребилдом структуры проекта
                     if (filesystemReplacementPane.getReplacementsMap() != null
                             && filesystemReplacementPane.getReplacementsMap().size() > 0) {
                         config.setReplacementInProjectStructure(filesystemReplacementPane.getReplacementsMap());

@@ -18,9 +18,11 @@ import lombok.Getter;
 import ua.com.foxminded.sanitizer.data.Replacement;
 import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
-public class ReplacementPane extends TitledPane {
+public class RefactorReplacePane extends TitledPane {
     // строки, добавляемые в панель
-    public class ReplacementItem extends HBox {
+    public class RefactorReplaceItem extends GridPane {
+        private HBox refactorReplaceHBox = new HBox();
+        private FilesSelectorHBox filesSelectorBox = new FilesSelectorHBox();
         private Label descriptionLabel = new Label();
         private Label sourceLabel = new Label();
         private Label targetLabel = new Label();
@@ -28,20 +30,30 @@ public class ReplacementPane extends TitledPane {
         private TextField sourceTextField = new TextField();
         private TextField targetTextField = new TextField();
         private Button deleteReplacementItemButton = new Button();
-        private ReplacementPane replacementPane;
+        private RefactorReplacePane replacementPane;
 
-        public ReplacementItem(String description, String source, String target, ReplacementPane replacementPane) {
+        public RefactorReplaceItem(String description, String source, String target,
+                RefactorReplacePane replacementPane) {
             super();
             setMessages();
             setButtonActions();
+            setId("topPane");
+
             this.replacementPane = replacementPane;
             descriptionTextField.setText(description);
             sourceTextField.setText(source);
             targetTextField.setText(target);
-            getChildren().addAll(descriptionLabel, descriptionTextField, sourceLabel, sourceTextField, targetLabel,
-                    targetTextField, deleteReplacementItemButton);
-            setAlignment(Pos.BASELINE_CENTER);
-            getChildren().forEach(node -> setMargin(node, new Insets(ISanitizerWindow.INSET)));
+
+            refactorReplaceHBox.getChildren().addAll(descriptionLabel, descriptionTextField, sourceLabel,
+                    sourceTextField, targetLabel, targetTextField, deleteReplacementItemButton);
+            refactorReplaceHBox.setAlignment(Pos.BASELINE_CENTER);
+            refactorReplaceHBox.getChildren().forEach(
+                    node -> HBox.setMargin(node, new Insets(0, ISanitizerWindow.INSET, 0, ISanitizerWindow.INSET)));
+            filesSelectorBox.setAlignment(Pos.BASELINE_LEFT);
+            add(refactorReplaceHBox, 0, 0);
+            add(filesSelectorBox, 0, 1);
+            getChildren().forEach(node -> GridPane.setMargin(node,
+                    new Insets(ISanitizerWindow.INSET / 2, 0, ISanitizerWindow.INSET / 2, 0)));
         }
 
         private void setMessages() {
@@ -59,19 +71,20 @@ public class ReplacementPane extends TitledPane {
     @Getter
     private GridPane mainPane = new GridPane();
 
-    public ReplacementPane() {
+    public RefactorReplacePane() {
         ColumnConstraints mainColumn = new ColumnConstraints();
-        ScrollPane scrollPane = new ScrollPane();
         mainColumn.setPercentWidth(100);
         mainPane.getColumnConstraints().add(mainColumn);
-        scrollPane.setContent(mainPane);
+
+        ScrollPane scrollPane = new ScrollPane(mainPane);
+        // scrollPane.setContent(mainPane);
         setContent(scrollPane);
     }
 
     public Map<String, Replacement> getReplacementsMap() {
         Map<String, Replacement> result = new HashMap<String, Replacement>();
         mainPane.getChildren().stream().forEach(node -> {
-            ReplacementItem item = (ReplacementItem) node;
+            RefactorReplaceItem item = (RefactorReplaceItem) node;
             Replacement replacement = new Replacement(item.sourceTextField.getText(), item.targetTextField.getText());
             result.put(item.descriptionTextField.getText(), replacement);
         });
@@ -84,33 +97,33 @@ public class ReplacementPane extends TitledPane {
 
     public boolean isWrongSourceInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).sourceTextField.getText().equals("")
-                        || ((ReplacementItem) node).sourceTextField.getText().equals(null));
+                .anyMatch(node -> ((RefactorReplaceItem) node).sourceTextField.getText().equals("")
+                        || ((RefactorReplaceItem) node).sourceTextField.getText().equals(null));
     }
 
     public boolean isWrongTargetInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).targetTextField.getText().equals("")
-                        || ((ReplacementItem) node).targetTextField.getText().equals(null));
+                .anyMatch(node -> ((RefactorReplaceItem) node).targetTextField.getText().equals("")
+                        || ((RefactorReplaceItem) node).targetTextField.getText().equals(null));
     }
 
     public boolean isWrongDescriptionInReplacementItems() {
         return mainPane.getChildren().stream()
-                .anyMatch(node -> ((ReplacementItem) node).descriptionTextField.getText().equals("")
-                        || ((ReplacementItem) node).descriptionTextField.getText().equals(null));
+                .anyMatch(node -> ((RefactorReplaceItem) node).descriptionTextField.getText().equals("")
+                        || ((RefactorReplaceItem) node).descriptionTextField.getText().equals(null));
     }
 
     public boolean isDuplicateDescriptionsInReplacementItems() {
-        return mainPane.getChildren().stream().map(node -> ((ReplacementItem) node).descriptionTextField.getText())
+        return mainPane.getChildren().stream().map(node -> ((RefactorReplaceItem) node).descriptionTextField.getText())
                 .collect(Collectors.toSet()).size() < mainPane.getChildren().size();
     }
 
-    public void addReplacementItem(ReplacementItem replacementItem) {
-        mainPane.add((replacementItem == null) ? new ReplacementItem("", "", "", this) : replacementItem, 0,
+    public void addReplacementItem(RefactorReplaceItem replacementItem) {
+        mainPane.add((replacementItem == null) ? new RefactorReplaceItem("", "", "", this) : replacementItem, 0,
                 mainPane.getChildren().size());
     }
 
-    public void removeReplacementItem(ReplacementItem replacementItem) {
+    public void removeReplacementItem(RefactorReplaceItem replacementItem) {
         mainPane.getChildren().remove(replacementItem);
     }
 }
