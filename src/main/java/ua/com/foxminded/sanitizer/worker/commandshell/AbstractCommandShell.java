@@ -77,7 +77,7 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
         File userHomeDir = new File(userHome);
 
         getLog().info("*** check system environment...");
-        getLog().info("default system encoding... " + defaultEncoding);
+        getLog().info("check default system encoding... " + defaultEncoding);
         boolean isJavaExecFileOK = javaExecFile.exists() && javaExecFile.isFile();
         operationStatus = isJavaExecFileOK ? Status.OK : Status.FAIL;
         getLog().info("check main JAVA executable... " + javaExecFile + " " + operationStatus);

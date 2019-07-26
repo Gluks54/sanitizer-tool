@@ -146,8 +146,10 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
     }
 
     public boolean isMatchFilePatterns(File file, Config config) {
-        boolean isMatchFileExtension = config.getPatterns().stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        boolean isMatchPattern = new WildcardFileFilter(config.getCustomPattern()).accept(file);
+        boolean isMatchFileExtension = config.getRemoveComment().getRemoveCommentFilenameFilters().stream()
+                .anyMatch(e -> file.getAbsolutePath().endsWith(e));
+        boolean isMatchPattern = new WildcardFileFilter(
+                config.getRemoveComment().getRemoveCommentFilenameFilterRegexp()).accept(file);
         return isMatchFileExtension | isMatchPattern;
     }
 

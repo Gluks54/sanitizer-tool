@@ -2,7 +2,6 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javafx.geometry.Insets;
@@ -31,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.ui.elements.FilesSelectorHBox;
 import ua.com.foxminded.sanitizer.ui.elements.ReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
@@ -49,8 +49,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     @NonNull
     private File outputProject;
     private Status operationStatus;
-    private Label originalProjectLabel = new Label();
-    private Label outputProjectLabel = new Label();
+    private Label projectFoldersLabel = new Label();
     private Button newConfigButton = new Button();
     private Button saveConfigButton = new Button();
     private Button cancelButton = new Button();
@@ -59,11 +58,10 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private ReplacementPane contentReplacementPane = new ReplacementPane();
     private ReplacementPane filesystemReplacementPane = new ReplacementPane();
     private CheckBox removeCommentsCheckBox = new CheckBox();
-    private final List<CheckBox> extensions = Arrays.asList(new CheckBox(".java"), new CheckBox(".xml"),
-            new CheckBox(".sql"), new CheckBox(".ts"));
-    private final HBox filePatternHBox = new HBox();
-    private final CheckBox filePatternCheckBox = new CheckBox();
-    private final TextField filePatternTextField = new TextField();
+    private CheckBox ifCommentContainCheckBox = new CheckBox();
+    private TextField ifCommentContainTextField = new TextField();
+    private HBox removeCommentsFileSettingsBox = new HBox();
+    private FilesSelectorHBox filePatternSelectorBox = new FilesSelectorHBox();
     @Setter
     private MainAppWindow mainAppWindow;
 
@@ -81,37 +79,32 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         ColumnConstraints mainColumn = new ColumnConstraints();
         mainColumn.setPercentWidth(100);
         topPane.getColumnConstraints().add(mainColumn);
-        FlowPane extensionsPane = new FlowPane();
-        extensionsPane.getChildren().add(new Label("Files pattern:"));
-        extensions.forEach(extension -> extension.setSelected(
-                (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
-        extensionsPane.getChildren().addAll(extensions);
 
-        filePatternTextField.setEditable(false);
-        filePatternHBox.setAlignment(Pos.BASELINE_CENTER);
-        filePatternHBox.getChildren().addAll(filePatternCheckBox, filePatternTextField);
-        extensionsPane.getChildren().add(filePatternHBox);
-        extensionsPane.setAlignment(Pos.CENTER);
-        extensionsPane.setId("topPane");
-        extensionsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        HBox ifContainHBox = new HBox();
+        ifContainHBox.setAlignment(Pos.BASELINE_CENTER);
+        ifContainHBox.getChildren().addAll(ifCommentContainCheckBox, ifCommentContainTextField);
 
-        topPane.add(extensionsPane, 0, 1);
-        GridPane.setMargin(originalProjectLabel, new Insets(ISanitizerWindow.INSET));
-        topPane.add(originalProjectLabel, 0, 2);
-        GridPane.setMargin(outputProjectLabel, new Insets(ISanitizerWindow.INSET));
-        topPane.add(outputProjectLabel, 0, 3);
+        FlowPane removeCommentsPane = new FlowPane();
+        removeCommentsFileSettingsBox.getChildren().addAll(ifContainHBox, filePatternSelectorBox);
+        removeCommentsPane.getChildren().addAll(removeCommentsCheckBox, removeCommentsFileSettingsBox);
+        removeCommentsPane.setAlignment(Pos.CENTER);
+        removeCommentsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(0, INSET, 0, INSET)));
+
+        HBox projectFolderBox = new HBox();
+        projectFolderBox.setAlignment(Pos.BASELINE_CENTER);
+        projectFolderBox.getChildren().add(projectFoldersLabel);
+        topPane.add(projectFolderBox, 0, 0);
+        topPane.add(removeCommentsPane, 0, 1);
+        topPane.getChildren().forEach(node -> GridPane.setMargin(node, new Insets(INSET / 2, 0, INSET / 2, 0)));
 
         BorderPane centerPane = new BorderPane();
         FlowPane centerTopButtonsPane = new FlowPane();
-        centerTopButtonsPane.getChildren().addAll(removeCommentsCheckBox, addContentReplacementButton,
-                addFileSystemReplacementButton);
-        centerTopButtonsPane.getChildren()
-                .forEach(node -> FlowPane.setMargin(node, new Insets(ISanitizerWindow.INSET)));
+        centerTopButtonsPane.getChildren().addAll(addContentReplacementButton, addFileSystemReplacementButton);
+        centerTopButtonsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
         centerPane.setTop(centerTopButtonsPane);
         SplitPane splitCenterPane = new SplitPane();
         splitCenterPane.setOrientation(Orientation.VERTICAL);
         splitCenterPane.getItems().addAll(contentReplacementPane, filesystemReplacementPane);
-
         centerPane.setCenter(splitCenterPane);
 
         FlowPane bottomButtonsPane = new FlowPane();
@@ -133,6 +126,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, CONFIGEDITOR_W, CONFIGEDITOR_H));
 
+        removeCommentsFileSettingsBox.setDisable(true);
         if (config != null && configFile != null) {
             loadConfigData();
             stage.setTitle("Edit config " + configFile.getAbsolutePath());
@@ -145,12 +139,10 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     }
 
     public void loadConfigData() {
-        if (config.getPatterns() != null) {
-            extensions.stream().forEach(extension -> {
-                extension.setSelected(
-                        config.getPatterns().stream().anyMatch(config -> config.equalsIgnoreCase(extension.getText()))
-                                ? true
-                                : false);
+        if (config.getRemoveComment().getRemoveCommentFilenameFilters() != null) {
+            filePatternSelectorBox.getExtensions().stream().forEach(extension -> {
+                extension.setSelected(config.getRemoveComment().getRemoveCommentFilenameFilters().stream()
+                        .anyMatch(config -> config.equalsIgnoreCase(extension.getText())) ? true : false);
             });
             operationStatus = Status.OK;
         } else {
@@ -158,17 +150,19 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         }
         getLog().info("...load file extensions: " + operationStatus.getStatus());
 
-        if (config.getCustomPattern() != null) {
-            filePatternCheckBox.setSelected(true);
-            filePatternTextField.setEditable(true);
-            filePatternTextField.setText(config.getCustomPattern());
+        if (config.getRemoveComment().getRemoveCommentFilenameFilterRegexp() != null) {
+            filePatternSelectorBox.getFilePatternCheckBox().setSelected(true);
+            filePatternSelectorBox.getFilePatternTextField().setEditable(true);
+            filePatternSelectorBox.getFilePatternTextField()
+                    .setText(config.getRemoveComment().getRemoveCommentFilenameFilterRegexp());
             operationStatus = Status.OK;
         } else {
             operationStatus = Status.FAIL;
         }
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
 
-        removeCommentsCheckBox.setSelected(config.isRemoveComments());
+        removeCommentsCheckBox.setSelected(config.getRemoveComment().isToRemove());
+        removeCommentsFileSettingsBox.setDisable(!config.getRemoveComment().isToRemove());
         getLog().info("...load remove comments feature: " + Status.OK.getStatus());
 
         if (config.getReplacementInFileContent() != null
@@ -202,12 +196,15 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
     public void clearConfig() {
         removeCommentsCheckBox.setSelected(false);
+        ifCommentContainCheckBox.setSelected(false);
+        ifCommentContainTextField.setText("if contain");
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
-        extensions.stream().forEach(extension -> extension.setSelected(
+        filePatternSelectorBox.getExtensions().stream().forEach(extension -> extension.setSelected(
                 (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
-        filePatternCheckBox.setSelected(false);
-        filePatternTextField.setText("custom pattern");
+        filePatternSelectorBox.getFilePatternCheckBox().setSelected(false);
+        filePatternSelectorBox.getFilePatternTextField().setText("custom pattern");
+        removeCommentsFileSettingsBox.setDisable(true);
     }
 
     @Override
@@ -220,20 +217,28 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         removeCommentsCheckBox.setText("Remove comments");
         contentReplacementPane.setText("Per-file replacements");
         filesystemReplacementPane.setText("Project structure replacements");
-        filePatternTextField.setText("custom pattern");
-        originalProjectLabel.setText("Original project folder: " + originalProject);
-        outputProjectLabel.setText("Output project folder: " + outputProject);
+        filePatternSelectorBox.getFilePatternTextField().setText("custom pattern");
+        ifCommentContainTextField.setText("if contain");
+        projectFoldersLabel
+                .setText("Original project folder: " + originalProject + " | output project folder: " + outputProject);
     }
 
     @Override
     public void setButtonsActions(Stage stage) {
-        filePatternCheckBox.setOnAction(event -> {
-            if (filePatternCheckBox.isSelected()) {
-                filePatternTextField.setText("");
-                filePatternTextField.setEditable(true);
+        removeCommentsCheckBox.setOnAction(event -> {
+            if (removeCommentsCheckBox.isSelected()) {
+                removeCommentsFileSettingsBox.setDisable(false);
             } else {
-                filePatternTextField.setText("custom pattern");
-                filePatternTextField.setEditable(false);
+                removeCommentsFileSettingsBox.setDisable(true);
+            }
+        });
+        ifCommentContainCheckBox.setOnAction(event -> {
+            if (ifCommentContainCheckBox.isSelected()) {
+                ifCommentContainTextField.setText("");
+                ifCommentContainTextField.setEditable(true);
+            } else {
+                ifCommentContainTextField.setText("if contain");
+                ifCommentContainTextField.setEditable(false);
             }
         });
         newConfigButton.setOnAction(event -> {
@@ -271,7 +276,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     getLog().info("save current config to " + configFile.getAbsolutePath());
                     // считать все расширения файлов
                     List<String> patterns = new ArrayList<String>();
-                    extensions.forEach(extension -> {
+                    filePatternSelectorBox.getExtensions().forEach(extension -> {
                         if (extension.isSelected()) {
                             patterns.add(extension.getText());
                         }
@@ -282,7 +287,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     if (config == null) {
                         config = new Config();
                     }
-                    config.setPatterns(patterns);
+                    config.getRemoveComment().setRemoveCommentFilenameFilters(patterns);
                     getLog().info("...save file extensions: " + Status.OK.getStatus());
 
                     if (contentReplacementPane.getReplacementsMap() != null
@@ -294,19 +299,20 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     }
                     getLog().info("...save per-file replacements: " + operationStatus.getStatus());
 
-                    config.setRemoveComments(removeCommentsCheckBox.isSelected());
+                    config.getRemoveComment().setToRemove(removeCommentsCheckBox.isSelected());
                     getLog().info("...save remove comments feature: " + Status.OK.getStatus());
 
                     // добавляем regexp из поля
-                    if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
-                            && (!filePatternTextField.getText().equals(null))) {
-                        config.setCustomPattern(filePatternTextField.getText());
+                    if (filePatternSelectorBox.getFilePatternCheckBox().isSelected()
+                            && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(""))
+                            && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(null))) {
+                        config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(
+                                filePatternSelectorBox.getFilePatternTextField().getText());
                         operationStatus = Status.OK;
                     } else {
-                        config.setCustomPattern(null);
+                        config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(null);
                         operationStatus = Status.FAIL;
                     }
-                    System.out.println("=" + filePatternTextField.getText() + "=");
                     getLog().info("...save custom file regexp: " + operationStatus.getStatus());
 
                     if (filesystemReplacementPane.getReplacementsMap() != null
@@ -327,8 +333,8 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     }
                     getLog().info("...save original and output folder: " + operationStatus.getStatus());
 
-                    if (configWorker.writeConfigData(configFile, config)) {
-                        // записали, обновили статус, проверили кнопки снизу
+                    if (configWorker.writeConfigData(configFile, config)) { // записали, обновили
+                        // статус, проверили кнопки снизу
                         mainAppWindow.setConfigFile(configFile);
                         mainAppWindow.setProperConfigFileSelected(true);
                         mainAppWindow.getConfigFileStatusLabel().setText(configFile.getAbsolutePath());

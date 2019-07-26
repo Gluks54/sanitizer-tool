@@ -71,7 +71,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         String modifiedCode = originalCode;
 
                         // убираем коменты
-                        if (config.isRemoveComments()) {
+                        if (config.getRemoveComment().isToRemove()) {
                             if (modifiedOriginalProjectFile.toString().endsWith(".java")) {
                                 modifiedCode = fileWorker.removeCommentsFromJava(modifiedCode);
                             } else if (modifiedOriginalProjectFile.toString().endsWith(".xml")) {

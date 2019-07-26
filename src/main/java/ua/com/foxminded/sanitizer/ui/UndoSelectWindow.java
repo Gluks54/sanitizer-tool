@@ -39,25 +39,26 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         HBox extensionsBox = new HBox();
         extensionsBox.getChildren().add(new Label("files pattern: "));
 
-        if (config.getPatterns() != null) {
-            for (String pattern : config.getPatterns()) {
+        if (config.getRemoveComment().getRemoveCommentFilenameFilters() != null) {
+            for (String pattern : config.getRemoveComment().getRemoveCommentFilenameFilters()) {
                 CheckBox extensionCheckBox = new CheckBox(pattern);
                 extensionCheckBox.setSelected(true);
                 extensionCheckBox.setDisable(true);
                 extensionsBox.getChildren().add(extensionCheckBox);
             }
         }
-        operationStatus = config.getPatterns() != null ? Status.OK : Status.FAIL;
+        operationStatus = config.getRemoveComment().getRemoveCommentFilenameFilters() != null ? Status.OK : Status.FAIL;
         getLog().info("...load file extensions: " + operationStatus.getStatus());
-        if (config.getCustomPattern() != null) {
-            CheckBox customPatternCheckBox = new CheckBox(config.getCustomPattern());
+        if (config.getRemoveComment().getRemoveCommentFilenameFilterRegexp() != null) {
+            CheckBox customPatternCheckBox = new CheckBox(
+                    config.getRemoveComment().getRemoveCommentFilenameFilterRegexp());
             customPatternCheckBox.setSelected(true);
             customPatternCheckBox.setDisable(true);
             extensionsBox.getChildren().add(customPatternCheckBox);
         }
-        operationStatus = config.getCustomPattern() != null && (!config.getCustomPattern().equalsIgnoreCase(""))
-                ? Status.OK
-                : Status.FAIL;
+        operationStatus = config.getRemoveComment().getRemoveCommentFilenameFilterRegexp() != null
+                && (!config.getRemoveComment().getRemoveCommentFilenameFilterRegexp().equalsIgnoreCase("")) ? Status.OK
+                        : Status.FAIL;
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
         extensionsBox.getChildren().forEach(node -> HBox.setMargin(node, new Insets(ISanitizerWindow.INSET)));
         return extensionsBox;
@@ -67,11 +68,11 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         HBox commentsRemoverBox = new HBox();
         commentsRemoverBox.getChildren().add(new Label("remove comments: "));
         CheckBox commentsRemoverCheckBox = new CheckBox();
-        commentsRemoverCheckBox.setSelected(config.isRemoveComments());
+        commentsRemoverCheckBox.setSelected(config.getRemoveComment().isToRemove());
         commentsRemoverCheckBox.setDisable(true);
         commentsRemoverBox.getChildren().add(commentsRemoverCheckBox);
         commentsRemoverBox.getChildren().forEach(node -> HBox.setMargin(node, new Insets(ISanitizerWindow.INSET)));
-        operationStatus = config.isRemoveComments() ? Status.OK : Status.FAIL;
+        operationStatus = config.getRemoveComment().isToRemove() ? Status.OK : Status.FAIL;
         getLog().info("...load remove comments feature: " + operationStatus.getStatus());
         return commentsRemoverBox;
     }

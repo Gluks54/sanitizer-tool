@@ -27,10 +27,10 @@ public class WindowsCommandShell extends AbstractCommandShell {
     public boolean isSTZFileAssociated() {
         String responce = runCommand("cmd /c assoc " + MASTER_EXT);
         if (responce.isEmpty()) {
-            getLog().info("STZ files not associated with application");
+            getLog().info("STZ files not associated with sanitizer");
             return false;
         } else if (!responce.contains(STZ_MIME_DESCRIPTION)) {
-            getLog().info("STZ files not associated with application");
+            getLog().info("STZ files not associated with sanitizer");
             return false;
         } else {
             // action

@@ -2,6 +2,7 @@ package ua.com.foxminded.sanitizer.patch;
 
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import lombok.Getter;
@@ -13,7 +14,9 @@ import lombok.ToString;
 @ToString
 @XmlRootElement(name = "diff-data")
 public class Template {
+    @XmlElement(name = "original-checksum")
     private long originalCRC32; // original file checksum
+    @XmlElement(name = "modified-checksum")
     private long modifiedCRC32; // modified file checksum
     private Map<Long, Delta> patches;
 }
