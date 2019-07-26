@@ -119,7 +119,8 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
 
         exploreOriginalProjectFilesButton.setDisable(!(isOriginalFolderSelected) | isMasterProjectFileUsed);
         prepareOutputFolderButton
-                .setDisable(!(isOriginalFolderSelected && isOutputFolderSelected) | isMasterProjectFileUsed);
+                .setDisable(!(isOriginalFolderSelected && isOutputFolderSelected && isProperConfigFileSelected)
+                        | isMasterProjectFileUsed);
         stripOriginalProjectFilesButton.setDisable(!isProperConfigFileSelected | isMasterProjectFileUsed);
         undoStrippedProjectFilesButton.setDisable(!isProperConfigFileSelected | isMasterProjectFileUsed);
         editOrNewConfigButton
@@ -371,7 +372,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             }
             checkAndToggleButtons();
         });
-        exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder, config).show());
+        exploreOriginalProjectFilesButton.setOnAction(event -> new ExploreProjectWindow(originalFolder).show());
         prepareOutputFolderButton.setOnAction(event -> {
             if (!outputPreparedFolder.getAbsolutePath().equalsIgnoreCase(config.getOutputProject().getAbsolutePath())) {
                 Alert alert = new Alert(AlertType.WARNING);

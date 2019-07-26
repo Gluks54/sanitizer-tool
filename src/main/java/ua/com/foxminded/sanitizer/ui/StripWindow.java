@@ -49,7 +49,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
         closeStripWindowButton.setOnAction(event -> stage.close());
         exploreStripFolderButton.setOnAction(event -> {
             stage.close();
-            new ExploreProjectWindow(outputFolder, config).show();
+            new ExploreProjectWindow(outputFolder).show();
         });
         startStripButton.setOnAction(event -> {
             startStripButton.setDisable(true);

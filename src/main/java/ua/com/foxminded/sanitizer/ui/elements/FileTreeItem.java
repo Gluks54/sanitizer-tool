@@ -26,7 +26,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.NoArgsConstructor;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
-import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.FileData;
 import ua.com.foxminded.sanitizer.ui.FileViewWindow;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
@@ -66,12 +65,10 @@ public class FileTreeItem extends TreeItem<File> implements ISanitizerEnvironmen
     private ObservableList<FileData> dataView;
     private ArrayList<FileData> fileList = new ArrayList<FileData>();
     private TableView<FileData> tableView = new TableView<FileData>();
-    private Config config = new Config();
     private FileWorker fileWorker = new FileWorker();
 
-    public FileTreeItem(File file, Config config) {
+    public FileTreeItem(File file) {
         super(file);
-        this.config = config;
         setMessages();
         setGraphic(file.isDirectory() ? new ImageView(folderCollapsedImage) : new ImageView(fileImage));
 
@@ -193,7 +190,7 @@ public class FileTreeItem extends TreeItem<File> implements ISanitizerEnvironmen
 
             if (files != null) {
                 ObservableList<TreeItem<File>> children = FXCollections.observableArrayList();
-                Arrays.stream(files).forEach(f -> children.add(new FileTreeItem(f, config)));
+                Arrays.stream(files).forEach(f -> children.add(new FileTreeItem(f)));
                 return children;
             }
         }
@@ -203,8 +200,7 @@ public class FileTreeItem extends TreeItem<File> implements ISanitizerEnvironmen
     public void processDirectory(Path dir) {
         fileList.clear();
         File[] files = dir.toFile().listFiles(pathname -> {
-            return (!pathname.isHidden()) && (!pathname.isDirectory())
-                    && fileWorker.isMatchFilePatterns(pathname, config);
+            return !pathname.isHidden() && (!pathname.isDirectory());
         });
 
         for (File file : files) {

@@ -167,6 +167,13 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         removeCommentsFileSettingsBox.setDisable(!config.getRemoveComment().isToRemove());
         getLog().info("...load remove comments feature: " + Status.OK.getStatus());
 
+        if (config.getRemoveComment().getContain() != null
+                && !config.getRemoveComment().getContain().equalsIgnoreCase("")) {
+            ifCommentContainCheckBox.setSelected(true);
+            ifCommentContainTextField.setText(config.getRemoveComment().getContain());
+            getLog().info("...load remove comments if contain feature: " + Status.OK.getStatus());
+        }
+
         if (config.getReplacementInFileContent() != null
                 && config.getReplacementInFileContent().entrySet().size() > 0) {
             config.getReplacementInFileContent().entrySet().stream()

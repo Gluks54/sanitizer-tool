@@ -16,7 +16,6 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
@@ -24,8 +23,6 @@ import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitizerWindow {
     @NonNull
     private File selectedDirectory;
-    @NonNull
-    private Config config;
     private String title;
     private Button okButton = new Button();
 
@@ -50,7 +47,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitize
         FlowPane bottomPane = new FlowPane();
         SplitPane splitPane = new SplitPane();
         BorderPane root = new BorderPane();
-        FileTreeItem fileItem = new FileTreeItem(selectedDirectory, config);
+        FileTreeItem fileItem = new FileTreeItem(selectedDirectory);
         TreeView<File> fileView = new TreeView<File>(fileItem);
 
         fileView.setCellFactory(new Callback<TreeView<File>, TreeCell<File>>() {
