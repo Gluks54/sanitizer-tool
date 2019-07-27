@@ -28,8 +28,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
+import ua.com.foxminded.sanitizer.data.RefactorReplacement;
 import ua.com.foxminded.sanitizer.ui.elements.FilesSelectorHBox;
-import ua.com.foxminded.sanitizer.ui.elements.RefactorReplacePane;
+import ua.com.foxminded.sanitizer.ui.elements.RefactorReplacementPane;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.config.XMLConfigWorker;
@@ -53,8 +54,8 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private Button cancelButton = new Button();
     private Button addContentReplacementButton = new Button();
     private Button addFileSystemReplacementButton = new Button();
-    private RefactorReplacePane contentReplacementPane = new RefactorReplacePane();
-    private RefactorReplacePane filesystemReplacementPane = new RefactorReplacePane();
+    private RefactorReplacementPane contentReplacementPane = new RefactorReplacementPane();
+    private RefactorReplacementPane filesystemReplacementPane = new RefactorReplacementPane();
     private CheckBox removeCommentsCheckBox = new CheckBox();
     private CheckBox ifCommentContainCheckBox = new CheckBox();
     private TextField ifCommentContainTextField = new TextField();
@@ -153,10 +154,14 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
         if (config.getReplacementInFileContent() != null
                 && config.getReplacementInFileContent().entrySet().size() > 0) {
-            config.getReplacementInFileContent().entrySet().stream()
-                    .forEach(entry -> contentReplacementPane.addReplacementItem(
-                            contentReplacementPane.new RefactorReplaceItem(entry.getKey(), entry.getValue().getSource(),
-                                    entry.getValue().getTarget(), contentReplacementPane)));
+            config.getReplacementInFileContent().entrySet().stream().forEach(entry -> {
+                RefactorReplacement refactorReplacement = new RefactorReplacement();
+                refactorReplacement.setSource(entry.getValue().getSource());
+                refactorReplacement.setTarget(entry.getValue().getTarget());
+                refactorReplacement.setFileMask(entry.getValue().getFileMask());
+                contentReplacementPane.addReplacementItem(contentReplacementPane.new RefactorReplacementItem(
+                        entry.getKey(), refactorReplacement, contentReplacementPane));
+            });
             operationStatus = Status.OK;
         } else {
             operationStatus = Status.FAIL;
@@ -165,9 +170,15 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
 
         if (config.getReplacementInProjectStructure() != null
                 && config.getReplacementInProjectStructure().entrySet().size() > 0) {
-            config.getReplacementInProjectStructure().entrySet().stream().forEach(entry -> filesystemReplacementPane
-                    .addReplacementItem(filesystemReplacementPane.new RefactorReplaceItem(entry.getKey(),
-                            entry.getValue().getSource(), entry.getValue().getTarget(), filesystemReplacementPane)));
+            config.getReplacementInProjectStructure().entrySet().stream().forEach(entry -> {
+                RefactorReplacement refactorReplacement = new RefactorReplacement();
+                refactorReplacement.setSource(entry.getValue().getSource());
+                refactorReplacement.setTarget(entry.getValue().getTarget());
+                refactorReplacement.setFileMask(entry.getValue().getFileMask());
+
+                filesystemReplacementPane.addReplacementItem(filesystemReplacementPane.new RefactorReplacementItem(
+                        entry.getKey(), refactorReplacement, filesystemReplacementPane));
+            });
             operationStatus = Status.OK;
         } else {
             operationStatus = Status.FAIL;

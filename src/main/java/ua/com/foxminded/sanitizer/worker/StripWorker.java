@@ -17,7 +17,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.data.Replacement;
+import ua.com.foxminded.sanitizer.data.RefactorReplacement;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -87,7 +87,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
 
                         // замены в файле в соотв с конфигом
                         if (config.getReplacementInFileContent() != null) {
-                            for (Map.Entry<String, Replacement> entry : config.getReplacementInFileContent()
+                            for (Map.Entry<String, RefactorReplacement> entry : config.getReplacementInFileContent()
                                     .entrySet()) {
                                 modifiedCode = fileWorker.replaceInCodeString(modifiedCode,
                                         entry.getValue().getSource(), entry.getValue().getTarget());

@@ -25,7 +25,7 @@ public class Config {
     @XmlElement(name = "remove-comment")
     private RemoveComment removeComment = new RemoveComment();
     @XmlElementWrapper(name = "refactor-replace-code")
-    private Map<String, Replacement> replacementInFileContent = new HashMap<String, Replacement>();
+    private Map<String, RefactorReplacement> replacementInFileContent = new HashMap<String, RefactorReplacement>();
     @XmlElementWrapper(name = "refactor-replace-structure")
-    private Map<String, Replacement> replacementInProjectStructure = new HashMap<String, Replacement>();
+    private Map<String, RefactorReplacement> replacementInProjectStructure = new HashMap<String, RefactorReplacement>();
 }

@@ -15,7 +15,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Replacement {
+public class RefactorReplacement {
     @NonNull
     private String source;
     @NonNull

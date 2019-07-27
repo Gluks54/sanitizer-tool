@@ -21,7 +21,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ProjectFileMask {
-    @XmlAttribute(name = "regexp")
+    @XmlAttribute(name = "mask")
     private String filenameFilterRegexp;
     @XmlElementWrapper(name = "filters")
     @XmlElement(name = "filter")
