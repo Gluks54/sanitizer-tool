@@ -1,8 +1,6 @@
 package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -61,7 +59,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private CheckBox ifCommentContainCheckBox = new CheckBox();
     private TextField ifCommentContainTextField = new TextField();
     private HBox removeCommentsFileSettingsBox = new HBox();
-    private FilesSelectorHBox filePatternSelectorBox = new FilesSelectorHBox();
+    private FilesSelectorHBox removeCommentsFilePatternSelectorBox = new FilesSelectorHBox();
     @Setter
     private MainAppWindow mainAppWindow;
 
@@ -86,7 +84,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         ifContainHBox.getChildren().addAll(ifCommentContainCheckBox, ifCommentContainTextField);
 
         FlowPane removeCommentsPane = new FlowPane();
-        removeCommentsFileSettingsBox.getChildren().addAll(ifContainHBox, filePatternSelectorBox);
+        removeCommentsFileSettingsBox.getChildren().addAll(ifContainHBox, removeCommentsFilePatternSelectorBox);
         removeCommentsPane.getChildren().addAll(removeCommentsCheckBox, removeCommentsFileSettingsBox);
         removeCommentsPane.setAlignment(Pos.CENTER);
         removeCommentsPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(0, INSET, 0, INSET)));
@@ -141,28 +139,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     }
 
     public void loadConfigData() {
-        if (config.getRemoveComment().getRemoveCommentFilenameFilters() != null) {
-            filePatternSelectorBox.getExtensions().stream().forEach(extension -> {
-                extension.setSelected(config.getRemoveComment().getRemoveCommentFilenameFilters().stream()
-                        .anyMatch(config -> config.equalsIgnoreCase(extension.getText())) ? true : false);
-            });
-            operationStatus = Status.OK;
-        } else {
-            operationStatus = Status.FAIL;
-        }
-        getLog().info("...load file extensions: " + operationStatus.getStatus());
-
-        if (config.getRemoveComment().getRemoveCommentFilenameFilterRegexp() != null) {
-            filePatternSelectorBox.getFilePatternCheckBox().setSelected(true);
-            filePatternSelectorBox.getFilePatternTextField().setEditable(true);
-            filePatternSelectorBox.getFilePatternTextField()
-                    .setText(config.getRemoveComment().getRemoveCommentFilenameFilterRegexp());
-            operationStatus = Status.OK;
-        } else {
-            operationStatus = Status.FAIL;
-        }
-        getLog().info("...load custom file pattern: " + operationStatus.getStatus());
-
+        removeCommentsFilePatternSelectorBox.setFileMaskData(config.getRemoveComment().getFileMask());
         removeCommentsCheckBox.setSelected(config.getRemoveComment().isToRemove());
         removeCommentsFileSettingsBox.setDisable(!config.getRemoveComment().isToRemove());
         getLog().info("...load remove comments feature: " + Status.OK.getStatus());
@@ -209,10 +186,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         ifCommentContainTextField.setText("if contain");
         contentReplacementPane.clear();
         filesystemReplacementPane.clear();
-        filePatternSelectorBox.getExtensions().stream().forEach(extension -> extension.setSelected(
-                (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
-        filePatternSelectorBox.getFilePatternCheckBox().setSelected(false);
-        filePatternSelectorBox.getFilePatternTextField().setText("custom pattern");
+        removeCommentsFilePatternSelectorBox.setFileMaskData(null);
         removeCommentsFileSettingsBox.setDisable(true);
     }
 
@@ -226,7 +200,6 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         removeCommentsCheckBox.setText("Remove comments");
         contentReplacementPane.setText("Per-file replacements");
         filesystemReplacementPane.setText("Project structure replacements");
-        filePatternSelectorBox.getFilePatternTextField().setText("custom pattern");
         ifCommentContainTextField.setText("if contain");
         projectFoldersLabel
                 .setText("Original project folder: " + originalProject + " | output project folder: " + outputProject);
@@ -301,29 +274,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                             getLog().info("...save remove comments contain text feature: " + Status.FAIL.getStatus());
                         }
 
-                        // считать все расширения файлов для коментов
-                        List<String> patterns = new ArrayList<String>();
-                        filePatternSelectorBox.getExtensions().forEach(extension -> {
-                            if (extension.isSelected()) {
-                                patterns.add(extension.getText());
-                            }
-                        });
-                        config.getRemoveComment().setRemoveCommentFilenameFilters(patterns);
-                        getLog().info("...save file extensions for comments removal: " + Status.OK.getStatus());
-
-                        // добавляем regexp из поля для коментов
-                        if (filePatternSelectorBox.getFilePatternCheckBox().isSelected()
-                                && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(""))
-                                && (!filePatternSelectorBox.getFilePatternTextField().getText().equals(null))) {
-                            config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(
-                                    filePatternSelectorBox.getFilePatternTextField().getText());
-                            operationStatus = Status.OK;
-                        } else {
-                            config.getRemoveComment().setRemoveCommentFilenameFilterRegexp(null);
-                            operationStatus = Status.FAIL;
-                        }
-                        getLog().info(
-                                "...save custom file regexp for comments removal: " + operationStatus.getStatus());
+                        config.getRemoveComment().setFileMask(removeCommentsFilePatternSelectorBox.getFileMaskData());
                     } else {
                         getLog().info(
                                 "...save remove comments feature: " + Status.FAIL.getStatus() + ", nothing to do");

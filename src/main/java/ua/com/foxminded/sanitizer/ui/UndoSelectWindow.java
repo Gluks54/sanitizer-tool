@@ -38,7 +38,7 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
     public HBox getExtensionsHBox() {
         HBox extensionsBox = new HBox();
         extensionsBox.getChildren().add(new Label("files pattern: "));
-
+        /*
         if (config.getRemoveComment().getRemoveCommentFilenameFilters() != null) {
             for (String pattern : config.getRemoveComment().getRemoveCommentFilenameFilters()) {
                 CheckBox extensionCheckBox = new CheckBox(pattern);
@@ -59,6 +59,8 @@ public class UndoSelectWindow extends SharedTextAreaLog implements ISanitizerWin
         operationStatus = config.getRemoveComment().getRemoveCommentFilenameFilterRegexp() != null
                 && (!config.getRemoveComment().getRemoveCommentFilenameFilterRegexp().equalsIgnoreCase("")) ? Status.OK
                         : Status.FAIL;
+        */
+
         getLog().info("...load custom file pattern: " + operationStatus.getStatus());
         extensionsBox.getChildren().forEach(node -> HBox.setMargin(node, new Insets(ISanitizerWindow.INSET)));
         return extensionsBox;

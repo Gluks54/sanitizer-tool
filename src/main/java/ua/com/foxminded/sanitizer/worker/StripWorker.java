@@ -61,7 +61,9 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                     fileWorker = new FileWorker(copyOriginalProjectFile.toString(),
                             modifiedOriginalProjectFile.toString(), patchForOriginalProjectFile.toString());
                     // наш файл или нет
-                    if (fileWorker.isMatchFilePatterns(modifiedOriginalProjectFile.toFile(), config)) {
+                    if (true) {
+                        // if (fileWorker.isMatchFilePatterns(modifiedOriginalProjectFile.toFile(),
+                        // config)) {
                         // бэкапим оригинальный файл
                         Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
                                 StandardCopyOption.REPLACE_EXISTING);

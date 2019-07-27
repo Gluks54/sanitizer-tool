@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.tika.Tika;
 
 import com.github.difflib.DiffUtils;
@@ -40,7 +39,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
-import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
@@ -143,14 +141,6 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
 
     public boolean isContainProperStripFolder(File dir) {
         return Arrays.stream(dir.listFiles()).anyMatch(d -> (d.isDirectory() && d.getName().endsWith(STRIP_SUFFIX)));
-    }
-
-    public boolean isMatchFilePatterns(File file, Config config) {
-        boolean isMatchFileExtension = config.getRemoveComment().getRemoveCommentFilenameFilters().stream()
-                .anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        boolean isMatchPattern = new WildcardFileFilter(
-                config.getRemoveComment().getRemoveCommentFilenameFilterRegexp()).accept(file);
-        return isMatchFileExtension | isMatchPattern;
     }
 
     public String turnFileSizeToString(final long value) {
