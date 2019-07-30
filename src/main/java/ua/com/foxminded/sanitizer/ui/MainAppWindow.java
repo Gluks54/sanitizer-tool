@@ -472,7 +472,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     @Override
     public void show() {
         FlowPane stzCheckBoxPane = new FlowPane();
-        stzCheckBoxPane.setAlignment(Pos.BASELINE_LEFT);
+        stzCheckBoxPane.setAlignment(Pos.CENTER_LEFT);
         stzCheckBoxPane.getChildren().add(stzFileAssiciationCheckBox);
         stzCheckBoxPane.getChildren()
                 .forEach(element -> FlowPane.setMargin(element, new Insets(ISanitizerWindow.INSET)));
@@ -541,8 +541,9 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         FlowPane bottomPane = new FlowPane();
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
+        //TODO undoStrippedProjectFilesButton
         bottomPane.getChildren().addAll(exploreOriginalProjectFilesButton, prepareOutputFolderButton,
-                stripOriginalProjectFilesButton, undoStrippedProjectFilesButton, stripUnstripButton);
+                stripOriginalProjectFilesButton, stripUnstripButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
 
         BorderPane root = new BorderPane();

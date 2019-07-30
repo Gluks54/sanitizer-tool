@@ -57,7 +57,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
             cancelStripButton.setDisable(false);
             stripProgressBar.setProgress(0);
 
-            stripWorker = new StripWorker(originalFolder, outputFolder, config);
+            stripWorker = new StripWorker(originalFolder.toPath(), outputFolder.toPath(), config);
             stripProgressBar.progressProperty().unbind();
             stripProgressBar.progressProperty().bind(stripWorker.progressProperty());
             stage.titleProperty().unbind();

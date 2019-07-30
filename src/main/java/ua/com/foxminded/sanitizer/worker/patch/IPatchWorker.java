@@ -1,11 +1,11 @@
 package ua.com.foxminded.sanitizer.worker.patch;
 
-import java.io.File;
+import java.nio.file.Path;
 
 import ua.com.foxminded.sanitizer.patch.Template;
 
 public interface IPatchWorker {
-    public Template readPatchData(File file, Class<?> c);
+    public Template readPatchData(Path path, Class<?> c);
 
-    public void writePatchData(File file, Template patchData);
+    public void writePatchData(Path path, Template patchData);
 }

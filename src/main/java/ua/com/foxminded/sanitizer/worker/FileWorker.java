@@ -36,7 +36,6 @@ import com.github.difflib.patch.Patch;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.patch.Delta;
@@ -46,22 +45,21 @@ import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.patch.XMLPatchWorker;
 
 @NoArgsConstructor
-@RequiredArgsConstructor
 public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
     private final String tabReplacer = "    ";
     private final char tab = '\u0009';
     @NonNull
     @Getter
     @Setter
-    private String originalFilename;
+    private Path originalFile;
     @NonNull
     @Getter
     @Setter
-    private String modifiedFilename;
+    private Path modifiedFile;
     @NonNull
     @Getter
     @Setter
-    private String patchFilename;
+    private Path patchFile;
 
     public String getCurrentDateTimeString() {
         return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
@@ -193,16 +191,16 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         return code.replaceAll(original, target);
     }
 
-    private long getCheckSum(File file) {
+    private long getCheckSum(Path path) {
         long result = 0;
 
-        try (CheckedInputStream check = new CheckedInputStream(new FileInputStream(file), new CRC32());
+        try (CheckedInputStream check = new CheckedInputStream(new FileInputStream(path.toFile()), new CRC32());
                 BufferedInputStream in = new BufferedInputStream(check)) {
             while (in.read() != -1) {
             }
             result = check.getChecksum().getValue();
         } catch (IOException e) {
-            getLog().severe("error in get checksum method in " + file.getAbsolutePath());
+            getLog().severe("error in get checksum method in " + path);
             e.printStackTrace();
         }
         return result;
@@ -232,15 +230,13 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
 
     public Template getTotalPatchFromDiff(String currentPatchDescription) { // текущие изменения по сравнению с
         // оригиналом
-        File originalFile = new File(originalFilename);
-        File modifiedFile = new File(modifiedFilename);
         List<String> original;
         List<String> revised;
         Patch<String> diff;
 
         try {
-            original = Files.readAllLines(originalFile.toPath());
-            revised = Files.readAllLines(modifiedFile.toPath());
+            original = Files.readAllLines(originalFile);
+            revised = Files.readAllLines(modifiedFile);
             diff = DiffUtils.diff(original, revised);
         } catch (IOException | DiffException e) {
             e.printStackTrace();
@@ -269,13 +265,11 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
 
     public void updateTotalPatch(String currentPatchDescription) { // берем предыдущие изменения и добавляем текущий
                                                                    // snapshot
-        File modifiedFile = new File(modifiedFilename);
-        File patchFile = new File(patchFilename);
         Template totalFilePatch;
         long modifiedFileCRC32;
         Map<Long, Delta> newPatches;
 
-        if (patchFile.exists()) { // берем предыдущий патч целиком
+        if (Files.exists(patchFile, LinkOption.NOFOLLOW_LINKS)) { // берем предыдущий патч целиком
             totalFilePatch = new XMLPatchWorker().readPatchData(patchFile, Template.class);
             modifiedFileCRC32 = getCheckSum(modifiedFile);
 

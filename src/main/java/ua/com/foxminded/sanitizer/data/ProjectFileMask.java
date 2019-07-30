@@ -15,10 +15,12 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ProjectFileMask {
     @XmlAttribute(name = "mask")
