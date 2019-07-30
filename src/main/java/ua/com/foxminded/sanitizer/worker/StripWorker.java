@@ -42,64 +42,59 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
             FileWorker fileWorker = new FileWorker();
             ProjectFileMask projectFileMask = new ProjectFileMask();
 
-            for (Path pathInStripFolder : paths) {
-                if (Files.isDirectory(pathInStripFolder, LinkOption.NOFOLLOW_LINKS)) {
+            for (Path fileInOriginalFolder : paths) {
+                if (Files.isDirectory(fileInOriginalFolder, LinkOption.NOFOLLOW_LINKS)) {
                     try {
-                        Path targetDir = outputFolder.resolve(originalFolder.relativize(pathInStripFolder));
-                        Files.createDirectory(targetDir);
+                        Files.createDirectory(outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder)));
                     } catch (FileAlreadyExistsException e) {
                         // пропускаем
                     }
                 } else { // пофайловый перебор
                     String originalCode = null;
                     String modifiedCode = null;
-                    Path modifiedOriginalProjectFile = null;
-                    Path copyOriginalProjectFile = null;
-                    Path patchForOriginalProjectFile = null;
+
+                    Path fileInStripFolder = null;
+                    Path copyOfFileInStripFolder = null;
+                    Path patchInOriginalFolder = null;
                     boolean isOverwrite = false;
 
                     projectFileMask = config.getRemoveComment().getFileMask(); // вначале - нужно ли в файле удалять коменты
-
                     if (config.getRemoveComment().isToRemove()
-                            && projectFileMask.isMatchFilePatterns(pathInStripFolder.toFile())) {
+                            && projectFileMask.isMatchFilePatterns(fileInOriginalFolder.toFile())) {
 
-                        modifiedOriginalProjectFile = outputFolder
-                                .resolve(originalFolder.relativize(pathInStripFolder));
-                        Files.copy(pathInStripFolder, modifiedOriginalProjectFile, StandardCopyOption.REPLACE_EXISTING);
+                        fileInStripFolder = outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder));
+                        copyOfFileInStripFolder = Paths.get(fileInStripFolder.toString() + ORIGINAL_EXT);
+                        patchInOriginalFolder = Paths.get(fileInStripFolder.toString() + PATCH_EXT);
 
-                        copyOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + ORIGINAL_EXT);
-                        patchForOriginalProjectFile = Paths.get(modifiedOriginalProjectFile.toString() + PATCH_EXT);
-                        Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
-                                StandardCopyOption.REPLACE_EXISTING);
+                        Files.copy(fileInOriginalFolder, fileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
+                        Files.copy(fileInStripFolder, copyOfFileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
 
-                        fileWorker.setOriginalFile(copyOriginalProjectFile);
-                        //System.out.println("copy original " + copyOriginalProjectFile);
-                        fileWorker.setModifiedFile(modifiedOriginalProjectFile);
-                        //System.out.println("modified original" + modifiedOriginalProjectFile);
-                        fileWorker.setPatchFile(patchForOriginalProjectFile);
-                        //System.out.println("patch file" + patchForOriginalProjectFile + System.lineSeparator());
+                        fileWorker.setOriginalFile(copyOfFileInStripFolder);
+                        fileWorker.setModifiedFile(fileInStripFolder);
+                        fileWorker.setPatchFile(patchInOriginalFolder);
 
                         originalCode = fileWorker // исправляем табы
-                                .fixTabsInCodeString(fileWorker.fileToCodeString(modifiedOriginalProjectFile));
+                                .fixTabsInCodeString(fileWorker.fileToCodeString(fileInStripFolder));
                         modifiedCode = originalCode;
 
                         // вырезание коментов
-                        if (modifiedOriginalProjectFile.toString().toLowerCase().endsWith(".java")) {
+                        if (fileInStripFolder.toString().toLowerCase().endsWith(".java")) {
                             modifiedCode = fileWorker.removeCommentsFromJava(modifiedCode);
-                        } else if (modifiedOriginalProjectFile.toString().toLowerCase().endsWith(".xml")) {
+                        } else if (fileInStripFolder.toString().toLowerCase().endsWith(".xml")) {
                             modifiedCode = fileWorker.removeCommentsFromXml(modifiedCode);
                         }
                         isOverwrite = true;
                     }
 
                     if (isOverwrite) {
-                        logFeature.getLog().info("Process " + " " + modifiedOriginalProjectFile);
+                        //logFeature.getLog().info("Process " + " " + fileInStripFolder);
+                        System.out.println("Process " + " " + fileInStripFolder);
                         // перезаписываем исходный файл с изменениями
-                        fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
+                        fileWorker.codeStringToFile(modifiedCode, fileInStripFolder);
                         // записываем или перезаписываем патч
                         fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString());
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
-                        Files.delete(copyOriginalProjectFile);
+                        Files.delete(copyOfFileInStripFolder);
                     }
 
                     // наш файл или нет
