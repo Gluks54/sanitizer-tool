@@ -42,8 +42,6 @@ import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.patch.XMLPatchWorker;
 
 public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
-    private final String tabReplacer = "    ";
-    private final char tab = '\u0009';
     @Setter
     private Path originalFile;
     @Setter
@@ -178,6 +176,8 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
     }
 
     public String fixTabsInCodeString(String code) {
+        final String tabReplacer = "    ";
+        final char tab = '\u0009';
         return code.replaceAll(String.valueOf(tab), tabReplacer);
     }
 
@@ -222,20 +222,12 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         return code.replaceAll("//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1 ");
     }
 
-    public Template getTotalPatchFromDiff(String currentPatchDescription) { // текущие изменения по сравнению с
+    public Template getTotalPatchFromDiff(String currentPatchDescription, String originalCode, String modifiedCode)
+            throws DiffException { // текущие изменения по сравнению с
         // оригиналом
-        List<String> original;
-        List<String> revised;
-        Patch<String> diff;
-
-        try {
-            original = Files.readAllLines(originalFile);
-            revised = Files.readAllLines(modifiedFile);
-            diff = DiffUtils.diff(original, revised);
-        } catch (IOException | DiffException e) {
-            e.printStackTrace();
-            return null;
-        }
+        List<String> original = codeToStringsList(originalCode);
+        List<String> revised = codeToStringsList(modifiedCode);
+        Patch<String> diff = DiffUtils.diff(original, revised);
         Template totalFilePatch = new Template(); // весь патч со всеми изменениями за все время
         Map<Long, Delta> patches = new LinkedHashMap<Long, Delta>(); // мапа всех отдельных дельт (сеансов)
         Delta delta = new Delta(); // каждая дельта - список изменений в файле до сохранения
@@ -257,8 +249,9 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         return totalFilePatch;
     }
 
-    public void updateTotalPatch(String currentPatchDescription) { // берем предыдущие изменения и добавляем текущий
-                                                                   // snapshot
+    public void updateTotalPatch(String currentPatchDescription, String originalCode, String modifiedCode)
+            throws DiffException { // берем предыдущие изменения и добавляем текущий
+        // snapshot
         Template totalFilePatch;
         long modifiedFileCRC32;
         Map<Long, Delta> newPatches;
@@ -269,13 +262,13 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
 
             if ((totalFilePatch != null) && (totalFilePatch.getModifiedCRC32() != modifiedFileCRC32)) {
                 Template previousPatchData = totalFilePatch;
-                totalFilePatch = getTotalPatchFromDiff(currentPatchDescription);
+                totalFilePatch = getTotalPatchFromDiff(currentPatchDescription, originalCode, modifiedCode);
                 newPatches = totalFilePatch.getPatches();
                 newPatches.putAll(previousPatchData.getPatches()); // объединяем предыдущие патчи с текущим
                 totalFilePatch.setPatches(newPatches);
             }
         } else {
-            totalFilePatch = getTotalPatchFromDiff(currentPatchDescription);
+            totalFilePatch = getTotalPatchFromDiff(currentPatchDescription, originalCode, modifiedCode);
             newPatches = totalFilePatch.getPatches();
             totalFilePatch.setPatches(newPatches);
         }

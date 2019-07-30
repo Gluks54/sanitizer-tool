@@ -103,7 +103,8 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         // перезаписываем исходный файл с изменениями
                         fileWorker.codeStringToFile(modifiedCode, fileInStripFolder);
                         // записываем или перезаписываем патч
-                        fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString());
+                        fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString(),
+                                originalCode, modifiedCode);
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
                         Files.delete(copyOfFileInStripFolder);
                     }
