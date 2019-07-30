@@ -19,7 +19,7 @@ public interface ISanitizerEnvironment {
     public final String ORIG_SUFFIX = "orig";
     public final String STRIP_SUFFIX = "strip";
     public final String ORIGINAL_EXT = ".original";
-    public final String PATCH_EXT = ".patch.xml";
+    public final String PATCH_EXT = ".patch";
     public final String MASTER_EXT = ".stz";
     public final String MASTER_PATTERN = "*.stz";
     public final String MASTER_DIALOG_NAME = "Sanitizer files (*.stz)";

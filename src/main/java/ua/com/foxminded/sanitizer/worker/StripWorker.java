@@ -50,28 +50,22 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         // пропускаем
                     }
                 } else { // пофайловый перебор
+                    Path fileInStripFolder = outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder));
+                    Path copyOfFileInStripFolder = Paths.get(fileInStripFolder.toString() + ORIGINAL_EXT);
+                    Path patchInOriginalFolder = Paths.get(fileInOriginalFolder.toString() + PATCH_EXT);
+                    boolean isOverwrite = false;
                     String originalCode = null;
                     String modifiedCode = null;
-
-                    Path fileInStripFolder = null;
-                    Path copyOfFileInStripFolder = null;
-                    Path patchInOriginalFolder = null;
-                    boolean isOverwrite = false;
+                    Files.copy(fileInOriginalFolder, fileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
 
                     projectFileMask = config.getRemoveComment().getFileMask(); // вначале - нужно ли в файле удалять коменты
                     if (config.getRemoveComment().isToRemove()
                             && projectFileMask.isMatchFilePatterns(fileInOriginalFolder.toFile())) {
 
-                        fileInStripFolder = outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder));
-                        copyOfFileInStripFolder = Paths.get(fileInStripFolder.toString() + ORIGINAL_EXT);
-                        patchInOriginalFolder = Paths.get(fileInStripFolder.toString() + PATCH_EXT);
-
-                        Files.copy(fileInOriginalFolder, fileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
                         Files.copy(fileInStripFolder, copyOfFileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
-
-                        fileWorker.setOriginalFile(copyOfFileInStripFolder);
-                        fileWorker.setModifiedFile(fileInStripFolder);
-                        fileWorker.setPatchFile(patchInOriginalFolder);
+                        fileWorker.setOriginalFile(copyOfFileInStripFolder); // копия оригинала
+                        fileWorker.setModifiedFile(fileInStripFolder); // обработанный файл
+                        fileWorker.setPatchFile(patchInOriginalFolder); // патч в оригинальной папке
 
                         originalCode = fileWorker // исправляем табы
                                 .fixTabsInCodeString(fileWorker.fileToCodeString(fileInStripFolder));
