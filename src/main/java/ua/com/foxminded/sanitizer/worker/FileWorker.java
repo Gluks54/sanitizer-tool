@@ -33,9 +33,6 @@ import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.patch.Delta;
@@ -44,20 +41,13 @@ import ua.com.foxminded.sanitizer.patch.Template;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.patch.XMLPatchWorker;
 
-@NoArgsConstructor
 public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
     private final String tabReplacer = "    ";
     private final char tab = '\u0009';
-    @NonNull
-    @Getter
     @Setter
     private Path originalFile;
-    @NonNull
-    @Getter
     @Setter
     private Path modifiedFile;
-    @NonNull
-    @Getter
     @Setter
     private Path patchFile;
 
@@ -173,6 +163,10 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
             getLog().severe("!!! file read error at " + path.toString());
         }
         return code;
+    }
+
+    private List<String> codeToStringsList(String code) {
+        return Arrays.asList(code.split(System.lineSeparator()));
     }
 
     public void codeStringToFile(String code, Path path) { // fast file writer

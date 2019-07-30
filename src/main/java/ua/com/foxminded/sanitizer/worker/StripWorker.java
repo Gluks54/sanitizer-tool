@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.ProjectFileMask;
+import ua.com.foxminded.sanitizer.data.RefactorReplacement;
 import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
@@ -80,6 +82,21 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         isOverwrite = true;
                     }
 
+                    // проверяем на замены внутри кода по файловым маскам
+                    if (config.getReplacementInFileContent() != null
+                            && config.getReplacementInFileContent().size() > 0) {
+                        for (Map.Entry<String, RefactorReplacement> entry : config.getReplacementInFileContent()
+                                .entrySet()) {
+                            projectFileMask = entry.getValue().getFileMask();
+                            if (projectFileMask.isMatchFilePatterns(fileInOriginalFolder.toFile())) {
+
+                                System.out.println(fileInStripFolder + " " + entry.getKey() + " " + entry.getValue()
+                                        + " " + projectFileMask);
+
+                            }
+                        }
+                    }
+
                     if (isOverwrite) {
                         //logFeature.getLog().info("Process " + " " + fileInStripFolder);
                         System.out.println("Process " + " " + fileInStripFolder);
@@ -89,51 +106,6 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString());
                         // удаляем оригинальный файл проекта, вместо него модиф и патч
                         Files.delete(copyOfFileInStripFolder);
-                    }
-
-                    // наш файл или нет
-                    if (true) {
-                        // if (fileWorker.isMatchFilePatterns(modifiedOriginalProjectFile.toFile(),
-                        // config)) {
-                        // бэкапим оригинальный файл
-
-                        /*
-                        Files.copy(modifiedOriginalProjectFile, copyOriginalProjectFile,
-                                StandardCopyOption.REPLACE_EXISTING);
-                        // читаем в строку и фиксим табы
-                        String originalCode = fileWorker
-                                .fixTabsInCodeString(fileWorker.fileToCodeString(modifiedOriginalProjectFile));
-                        String modifiedCode = originalCode;
-                        */
-
-                        /*
-                        // убираем коменты
-                        if (config.getRemoveComment().isToRemove()) {
-                            if (modifiedOriginalProjectFile.toString().endsWith(".java")) {
-                                modifiedCode = fileWorker.removeCommentsFromJava(modifiedCode);
-                            } else if (modifiedOriginalProjectFile.toString().endsWith(".xml")) {
-                                modifiedCode = fileWorker.removeCommentsFromXml(modifiedCode);
-                            }
-                            // перезаписываем исходный файл с изменениями
-                            fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
-                            // записываем или перезаписываем патч
-                            fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString());
-                        }
-                        
-                        // замены в файле в соотв с конфигом
-                        if (config.getReplacementInFileContent() != null) {
-                            for (Map.Entry<String, RefactorReplacement> entry : config.getReplacementInFileContent()
-                                    .entrySet()) {
-                                modifiedCode = fileWorker.replaceInCodeString(modifiedCode,
-                                        entry.getValue().getSource(), entry.getValue().getTarget());
-                                // перезаписываем исходный файл с изменениями
-                                fileWorker.codeStringToFile(modifiedCode, modifiedOriginalProjectFile);
-                                // записываем или перезаписываем патч
-                                fileWorker.updateTotalPatch(
-                                        entry.getKey() + ": " + fileWorker.getCurrentDateTimeString());
-                            }
-                        }
-                        */
                     }
                 }
                 filesCounter++;
