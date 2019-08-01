@@ -33,10 +33,7 @@ public class TextAreaAppender extends AbstractAppender {
     @Override
     public void append(LogEvent event) {
         readLock.lock();
-
         final String message = new String(getLayout().toByteArray(event));
-
-        // append log string to TextArea
         try {
             Platform.runLater(() -> {
                 try {
@@ -52,9 +49,8 @@ public class TextAreaAppender extends AbstractAppender {
                     System.out.printf("%s%n", "Error while append to TextArea: " + t.getMessage());
                 }
             });
-        } catch (final IllegalStateException ex) {
-            ex.printStackTrace();
-
+        } catch (final IllegalStateException e) {
+            e.printStackTrace();
         } finally {
             readLock.unlock();
         }

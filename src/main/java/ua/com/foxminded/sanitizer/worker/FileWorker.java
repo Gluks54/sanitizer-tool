@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tika.Tika;
 
 import com.github.difflib.DiffUtils;
@@ -38,16 +40,16 @@ import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.patch.Delta;
 import ua.com.foxminded.sanitizer.patch.SanitizerFilePatch;
 import ua.com.foxminded.sanitizer.patch.Template;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.patch.XMLPatchWorker;
 
-public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironment {
+public class FileWorker implements ISanitizerEnvironment {
     @Setter
     private Path originalFile;
     @Setter
     private Path modifiedFile;
     @Setter
     private Path patchFile;
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     public String getCurrentDateTimeString() {
         return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
@@ -158,7 +160,7 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
                 code += line + System.lineSeparator();
             }
         } catch (IOException e) {
-            getLog().severe("!!! file read error at " + path.toString());
+            logger.error("!!! file read error at " + path.toString());
         }
         return code;
     }
@@ -171,7 +173,7 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toString(), false))) {
             writer.write(code);
         } catch (IOException e) {
-            getLog().severe("!!! file write error at " + path.toString());
+            logger.error("!!! file write error at " + path.toString());
         }
     }
 
@@ -194,7 +196,7 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
             }
             result = check.getChecksum().getValue();
         } catch (IOException e) {
-            getLog().severe("error in get checksum method in " + path);
+            logger.error("error in get checksum method in " + path);
             e.printStackTrace();
         }
         return result;

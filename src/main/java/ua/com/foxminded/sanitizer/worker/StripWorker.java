@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +22,6 @@ import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
 import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.ProjectFileMask;
 import ua.com.foxminded.sanitizer.data.RefactorReplacement;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
 public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironment {
@@ -29,11 +31,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
     private Path outputFolder;
     @NonNull
     private Config config;
-
-    private class LogFeature extends SharedTextAreaLog {
-    }
-
-    private LogFeature logFeature = new LogFeature();
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     @Override
     protected List<Path> call() throws Exception {
@@ -49,8 +47,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                 if (Files.isDirectory(fileInOriginalFolder, LinkOption.NOFOLLOW_LINKS)) {
                     try {
                         Files.createDirectory(outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder)));
-                    } catch (FileAlreadyExistsException e) {
-                        // пропускаем
+                    } catch (FileAlreadyExistsException e) { // пропускаем
                     }
                 } else { // пофайловый перебор
                     Path fileInStripFolder = outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder));
@@ -80,6 +77,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                             modifiedCode = fileWorker.removeCommentsFromXml(modifiedCode);
                         }
 
+                        logger.info("strip comments in " + fileInOriginalFolder);
                         // перезаписываем исходный файл с изменениями
                         fileWorker.stringToFile(modifiedCode, fileInStripFolder);
                         // записываем или перезаписываем патч
@@ -99,6 +97,8 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                                 originalCode = fileWorker.fileToString(fileInStripFolder);
                                 modifiedCode = fileWorker.replaceInCodeString(originalCode,
                                         entry.getValue().getSource(), entry.getValue().getTarget());
+
+                                logger.info("strip code replacements in " + fileInOriginalFolder);
                                 // перезаписываем исходный файл с изменениями
                                 fileWorker.stringToFile(modifiedCode, fileInStripFolder);
                                 // записываем или перезаписываем патч
@@ -120,7 +120,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
 
         IOException e) {
             e.printStackTrace();
-            logFeature.getLog().severe("!!! error during file strip process");
+            logger.error("!!! error during file strip process");
             return null;
         }
     }

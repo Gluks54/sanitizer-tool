@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
@@ -33,18 +35,18 @@ import javafx.stage.Stage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.FileWorker;
 import ua.com.foxminded.sanitizer.worker.OSWorker.OS;
 
 @RequiredArgsConstructor
-public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
+public class FileViewWindow implements ISanitizerWindow, ISanitizerEnvironment {
     @NonNull
     private String fileName;
     private String modifiedFileString;
     private String ownerFileString;
     private String permissionsFileString;
     private FileWorker fileWorker = new FileWorker();
+    private static final Logger logger = LogManager.getLogger("sanitizer");
     private static final String[] KEYWORD = new String[] { "abstract", "assert", "boolean", "break", "byte", "case",
             "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends",
             "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface",
@@ -110,14 +112,14 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
                 textArea.appendText(line + System.lineSeparator());
             }
         } catch (IOException e) {
-            getLog().severe("count content lines for " + file + ": " + Status.FAIL);
+            logger.error("count content lines for " + file + ": " + Status.FAIL);
         }
         root.setCenter(new StackPane(new VirtualizedScrollPane<CodeArea>(textArea)));
 
         try {
             bottomPane.getChildren().add(new Label(modifiedFileString + fileWorker.getFileTime(file.toFile())));
         } catch (IOException e) {
-            getLog().severe("read file modification time fail");
+            logger.error("read file modification time fail");
         }
 
         if ((ENV == OS.MAC) || (ENV == OS.UNIX) || (ENV == OS.SOLARIS)) {
@@ -127,7 +129,7 @@ public class FileViewWindow extends SharedTextAreaLog implements ISanitizerWindo
                 bottomPane.getChildren().add(new Label(permissionsFileString
                         + fileWorker.getPermissions(Files.getPosixFilePermissions(file, LinkOption.NOFOLLOW_LINKS))));
             } catch (IOException e) {
-                getLog().severe("read file owner and permissions info for " + file + ": " + Status.FAIL);
+                logger.error("read file owner and permissions info for " + file + ": " + Status.FAIL);
             }
         }
         bottomPane.getChildren().add(new Label("Size: " + file.toFile().length() + " bytes"));

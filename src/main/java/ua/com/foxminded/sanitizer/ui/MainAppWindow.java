@@ -605,7 +605,6 @@ public final class MainAppWindow implements ISanitizerWindow, ISanitizerEnvironm
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, MAIN_W, MAIN_H));
         stage.setTitle(title);
-        logger.info("started");
         stage.show();
     }
 

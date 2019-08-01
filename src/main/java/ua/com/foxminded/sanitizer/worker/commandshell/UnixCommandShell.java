@@ -23,10 +23,10 @@ public class UnixCommandShell extends AbstractCommandShell {
     public boolean isSTZFileAssociated() {
         String responce = runCommand("mimetype " + MASTER_EXT);
         if (responce.isEmpty()) {
-            getLog().info("STZ files not associated with application");
+            logger.info("STZ files not associated with application");
             return false;
         } else if (!responce.contains(STZ_MIME_DESCRIPTION)) {
-            getLog().info("STZ files not associated with application");
+            logger.info("STZ files not associated with application");
             return false;
         } else {
             // action

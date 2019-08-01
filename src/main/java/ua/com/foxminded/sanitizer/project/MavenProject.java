@@ -29,15 +29,15 @@ public class MavenProject extends AbstractProject {
                 // проверяем через JAXB
                 Validator validator = schema.newValidator();
                 validator.validate(new StreamSource(mavenPomFile));
-                getLog().info("validate " + mavenPomFile + " " + Status.OK.getStatus());
+                logger.info("validate " + mavenPomFile + " " + Status.OK.getStatus());
                 return true;
             }
         } catch (SAXException e) {
-            getLog().severe("SAX error in " + mavenPomFile);
+            logger.error("SAX error in " + mavenPomFile);
             e.printStackTrace();
         } catch (FileNotFoundException e) {
         } catch (IOException e) {
-            getLog().severe("IO error " + mavenPomFile);
+            logger.error("IO error " + mavenPomFile);
             e.printStackTrace();
         }
         return false;
@@ -47,7 +47,7 @@ public class MavenProject extends AbstractProject {
     public boolean isProperProject() {
         File mavenPomFile = new File(getDir().getAbsoluteFile() + "/pom.xml");
         boolean hasPomXml = mavenPomFile.exists();
-        getLog().info(
+        logger.info(
                 hasPomXml ? mavenPomFile + " " + Status.OK.getStatus() : mavenPomFile + " " + Status.FAIL.getStatus());
         boolean isProperPomXml = isValidPomXml(mavenPomFile);
         File srcFolder = new File(getDir().getAbsoluteFile() + "/src");
@@ -55,9 +55,9 @@ public class MavenProject extends AbstractProject {
 
         boolean resultOK = getDir().isDirectory() && hasSrcFolder && hasPomXml && isProperPomXml;
         if (resultOK) {
-            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
+            logger.info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
                     : "src folder: " + Status.FAIL.getStatus());
-            getLog().info("+++ maven project found at " + getDir());
+            logger.info("+++ maven project found at " + getDir());
         }
         return resultOK;
     }

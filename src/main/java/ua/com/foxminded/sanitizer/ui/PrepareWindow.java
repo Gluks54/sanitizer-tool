@@ -2,6 +2,9 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -16,11 +19,10 @@ import javafx.stage.Stage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.PreparationWorker;
 
 @RequiredArgsConstructor
-public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class PrepareWindow implements ISanitizerWindow {
     @NonNull
     private File originalFolder;
     @NonNull
@@ -35,6 +37,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
     private Button cancelPreparationButton = new Button();
     private Button startPreparationButton = new Button();
     private Button closePreparationWindowButton = new Button();
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     @Override
     public void setMessages() {
@@ -53,7 +56,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
             cancelPreparationButton.setDisable(false);
             preparationProgressBar.setProgress(0);
 
-            preparationWorker = new PreparationWorker(originalFolder.toPath(), outputFolder.toPath(), this.getLog());
+            preparationWorker = new PreparationWorker(originalFolder.toPath(), outputFolder.toPath());
             preparationProgressBar.progressProperty().unbind();
             preparationProgressBar.progressProperty().bind(preparationWorker.progressProperty());
             stage.titleProperty().unbind();
@@ -66,14 +69,14 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
                             closePreparationWindowButton.setDisable(false);
                             cancelPreparationButton.setDisable(true);
                             startPreparationButton.setDisable(true);
-                            getLog().info("*** complete peparation process");
+                            logger.info("*** complete peparation process");
                             stage.titleProperty().unbind();
                             stage.setTitle("Job successfully completed");
                             mainAppWindow.setOutputFolderPrepared(true);
                             mainAppWindow.checkAndToggleButtons();
                         }
                     });
-            getLog().info("*** start preparation process");
+            logger.info("*** start preparation process");
             new Thread(preparationWorker).start();
         });
         cancelPreparationButton.setOnAction(event -> {
@@ -81,7 +84,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
             closePreparationWindowButton.setDisable(false);
             cancelPreparationButton.setDisable(true);
             preparationWorker.cancel(true);
-            getLog().info("!!! user interrupt preparation process");
+            logger.info("!!! user interrupt preparation process");
             preparationProgressBar.progressProperty().unbind();
             stage.titleProperty().unbind();
             preparationProgressBar.setProgress(0);
@@ -114,7 +117,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
         stage.setOnCloseRequest(event -> {
             if (preparationWorker.isRunning()) {
                 preparationWorker.cancel(true);
-                getLog().info("!!! user interrupt preparation process");
+                logger.info("!!! user interrupt preparation process");
                 mainAppWindow.setOutputFolderPrepared(false);
                 mainAppWindow.checkAndToggleButtons();
             }

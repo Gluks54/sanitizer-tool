@@ -36,7 +36,7 @@ public class AngularProject extends AbstractProject {
     public boolean isProperProject() {
         File angularJsonFile = new File(getDir().getAbsoluteFile() + "/angular.json");
         boolean hasAngularJsonFile = angularJsonFile.exists();
-        getLog().info(hasAngularJsonFile ? angularJsonFile + " " + Status.OK.getStatus()
+        logger.info(hasAngularJsonFile ? angularJsonFile + " " + Status.OK.getStatus()
                 : angularJsonFile + " " + Status.FAIL.getStatus());
         boolean isProperAngularJson = isValidJson(angularJsonFile);
 
@@ -50,9 +50,9 @@ public class AngularProject extends AbstractProject {
         boolean resultOK = getDir().isDirectory() && hasSrcFolder && hasE2eFolder && hasNode_modulesFolder
                 && hasAngularJsonFile && isProperAngularJson;
         if (resultOK) {
-            getLog().info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
+            logger.info(hasSrcFolder ? "src folder: " + srcFolder + " " + Status.OK.getStatus()
                     : "src folder: " + Status.FAIL.getStatus());
-            getLog().info("+++ angular project found at " + getDir());
+            logger.info("+++ angular project found at " + getDir());
         }
         return resultOK;
 

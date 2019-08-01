@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="INFO">
+<Configuration
+ packages="ua.com.foxminded.sanitizer.ui.elements" status="INFO">
  <Appenders>
-  <LogAppender name="JavaFXLogger">
+  <TextAreaAppender name="JavaFXLogger">
    <PatternLayout
-    pattern="%d{yyyy-MM-dd HH:mm:ss} %c{1}:%L - %m%n" />
-  </LogAppender>
+    pattern="%d{dd-MM-yyyy HH:mm:ss} %-5level %msg%n" />
+  </TextAreaAppender>
  </Appenders>
  <Loggers>
   <Root level="debug">

@@ -2,6 +2,9 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -31,12 +34,11 @@ import ua.com.foxminded.sanitizer.data.Config;
 import ua.com.foxminded.sanitizer.data.RefactorReplacement;
 import ua.com.foxminded.sanitizer.ui.elements.FilesSelectorHBox;
 import ua.com.foxminded.sanitizer.ui.elements.RefactorReplacementPane;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.config.IConfigWorker;
 import ua.com.foxminded.sanitizer.worker.config.XMLConfigWorker;
 
 @RequiredArgsConstructor
-public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerWindow, ISanitizerEnvironment {
+public class ConfigEditorWindow implements ISanitizerWindow, ISanitizerEnvironment {
     @Getter
     @NonNull
     private Config config;
@@ -63,6 +65,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
     private FilesSelectorHBox removeCommentsFilePatternSelectorBox = new FilesSelectorHBox();
     @Setter
     private MainAppWindow mainAppWindow;
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     public ConfigEditorWindow(File originalProject, File outputProject) {
         super();
@@ -121,7 +124,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         Stage stage = new Stage();
         setButtonsActions(stage);
         stage.setOnCloseRequest(event -> {
-            getLog().info("cancel config");
+            logger.info("cancel config");
         });
 
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
@@ -131,10 +134,10 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         if (config != null && configFile != null) {
             loadConfigData();
             stage.setTitle("Edit config " + configFile.getAbsolutePath());
-            getLog().info("edit config " + configFile.getAbsolutePath());
+            logger.info("edit config " + configFile.getAbsolutePath());
         } else {
             stage.setTitle("New config file");
-            getLog().info("new config file started");
+            logger.info("new config file started");
         }
         stage.show();
     }
@@ -143,13 +146,13 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         removeCommentsFilePatternSelectorBox.setFileMaskData(config.getRemoveComment().getFileMask());
         removeCommentsCheckBox.setSelected(config.getRemoveComment().isToRemove());
         removeCommentsFileSettingsBox.setDisable(!config.getRemoveComment().isToRemove());
-        getLog().info("...load remove comments feature: " + Status.OK.getStatus());
+        logger.info("...load remove comments feature: " + Status.OK.getStatus());
 
         if (config.getRemoveComment().getContain() != null
                 && !config.getRemoveComment().getContain().equalsIgnoreCase("")) {
             ifCommentContainCheckBox.setSelected(true);
             ifCommentContainTextField.setText(config.getRemoveComment().getContain());
-            getLog().info("...load remove comments if contain feature: " + Status.OK.getStatus());
+            logger.info("...load remove comments if contain feature: " + Status.OK.getStatus());
         }
 
         if (config.getReplacementInFileContent() != null
@@ -166,7 +169,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         } else {
             operationStatus = Status.FAIL;
         }
-        getLog().info("...load per-file replacements: " + operationStatus.getStatus());
+        logger.info("...load per-file replacements: " + operationStatus.getStatus());
 
         if (config.getReplacementInProjectStructure() != null
                 && config.getReplacementInProjectStructure().entrySet().size() > 0) {
@@ -183,11 +186,11 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
         } else {
             operationStatus = Status.FAIL;
         }
-        getLog().info("...load project structure replacements: " + operationStatus.getStatus());
+        logger.info("...load project structure replacements: " + operationStatus.getStatus());
 
         operationStatus = (config.getOriginalProject() != null && config.getOutputProject() != null) ? Status.OK
                 : Status.FAIL;
-        getLog().info("...load original and output project folders: " + operationStatus.getStatus());
+        logger.info("...load original and output project folders: " + operationStatus.getStatus());
     }
 
     public void clearConfig() {
@@ -235,7 +238,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
             }
         });
         newConfigButton.setOnAction(event -> {
-            getLog().info("start new config");
+            logger.info("start new config");
             clearConfig();
         });
         saveConfigButton.setOnAction(event -> {
@@ -269,26 +272,25 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     if (config == null) {
                         config = new Config();
                     }
-                    getLog().info("save current config to " + configFile.getAbsolutePath());
+                    logger.info("save current config to " + configFile.getAbsolutePath());
 
                     // работаем с удалением каментов
                     if (removeCommentsCheckBox.isSelected()) {
                         config.getRemoveComment().setToRemove(true);
-                        getLog().info("...save remove comments feature: " + Status.OK.getStatus());
+                        logger.info("...save remove comments feature: " + Status.OK.getStatus());
 
                         // if contain
                         if (ifCommentContainCheckBox.isSelected() && !ifCommentContainTextField.getText().equals(null)
                                 && !ifCommentContainTextField.getText().equalsIgnoreCase("")) {
                             config.getRemoveComment().setContain(ifCommentContainTextField.getText());
-                            getLog().info("...save remove comments contain text feature: " + Status.OK.getStatus());
+                            logger.info("...save remove comments contain text feature: " + Status.OK.getStatus());
                         } else {
-                            getLog().info("...save remove comments contain text feature: " + Status.FAIL.getStatus());
+                            logger.info("...save remove comments contain text feature: " + Status.FAIL.getStatus());
                         }
 
                         config.getRemoveComment().setFileMask(removeCommentsFilePatternSelectorBox.getFileMaskData());
                     } else {
-                        getLog().info(
-                                "...save remove comments feature: " + Status.FAIL.getStatus() + ", nothing to do");
+                        logger.info("...save remove comments feature: " + Status.FAIL.getStatus() + ", nothing to do");
                     }
 
                     // работаем с рефактором внутри файлов
@@ -299,7 +301,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     } else {
                         operationStatus = Status.FAIL;
                     }
-                    getLog().info("...save per-file replacements: " + operationStatus.getStatus());
+                    logger.info("...save per-file replacements: " + operationStatus.getStatus());
 
                     // работаем с ребилдом структуры проекта
                     if (filesystemReplacementPane.getReplacementsMap() != null
@@ -309,7 +311,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     } else {
                         operationStatus = Status.FAIL;
                     }
-                    getLog().info("...save project structure replacements: " + operationStatus.getStatus());
+                    logger.info("...save project structure replacements: " + operationStatus.getStatus());
 
                     if (originalProject != null && outputProject != null) {
                         config.setOriginalProject(originalProject);
@@ -318,7 +320,7 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                     } else {
                         operationStatus = Status.FAIL;
                     }
-                    getLog().info("...save original and output folder: " + operationStatus.getStatus());
+                    logger.info("...save original and output folder: " + operationStatus.getStatus());
 
                     if (configWorker.writeConfigData(configFile, config)) { // записали, обновили
                         // статус, проверили кнопки снизу
@@ -335,13 +337,13 @@ public class ConfigEditorWindow extends SharedTextAreaLog implements ISanitizerW
                                 new ImageView(new Image(getClass().getResourceAsStream("/img/sign/disable.png"))));
                     }
                 } else {
-                    getLog().info("cancel config save");
+                    logger.info("cancel config save");
                 }
                 stage.close();
             }
         });
         cancelButton.setOnAction(event -> {
-            getLog().info("cancel config save");
+            logger.info("cancel config save");
             stage.close();
         });
         addContentReplacementButton.setOnAction(event -> {

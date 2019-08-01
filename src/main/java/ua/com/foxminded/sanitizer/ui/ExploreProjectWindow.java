@@ -2,6 +2,9 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -17,14 +20,14 @@ import javafx.util.Callback;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ui.elements.FileTreeItem;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
-public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class ExploreProjectWindow implements ISanitizerWindow {
     @NonNull
     private File selectedDirectory;
     private String title;
     private Button okButton = new Button();
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     @Override
     public void setMessages() {
@@ -36,13 +39,13 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitize
     public void setButtonsActions(Stage stage) {
         okButton.setOnAction(event -> {
             stage.close();
-            getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath());
+            logger.info("quit explore original project folder " + selectedDirectory.getAbsolutePath());
         });
     }
 
     @Override
     public void show() {
-        getLog().info("explore original project folder " + selectedDirectory.getAbsolutePath());
+        logger.info("explore original project folder " + selectedDirectory.getAbsolutePath());
         setMessages();
         FlowPane bottomPane = new FlowPane();
         SplitPane splitPane = new SplitPane();
@@ -69,7 +72,7 @@ public class ExploreProjectWindow extends SharedTextAreaLog implements ISanitize
         root.setBottom(bottomPane);
         Stage stage = new Stage();
         stage.setOnCloseRequest(
-                event -> getLog().info("quit explore original project folder " + selectedDirectory.getAbsolutePath()));
+                event -> logger.info("quit explore original project folder " + selectedDirectory.getAbsolutePath()));
         setButtonsActions(stage);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/img/code.png")));
         stage.setScene(new Scene(root, ISanitizerWindow.EXPLORE_W, ISanitizerWindow.EXPLORE_H));

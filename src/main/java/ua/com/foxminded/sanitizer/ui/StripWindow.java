@@ -2,6 +2,9 @@ package ua.com.foxminded.sanitizer.ui;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -16,11 +19,10 @@ import javafx.stage.Stage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.data.Config;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 import ua.com.foxminded.sanitizer.worker.StripWorker;
 
 @RequiredArgsConstructor
-public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
+public class StripWindow implements ISanitizerWindow {
     @NonNull
     private File originalFolder;
     @NonNull
@@ -34,6 +36,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
     private Button startStripButton = new Button();
     private Button closeStripWindowButton = new Button();
     private Button exploreStripFolderButton = new Button();
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     @Override
     public void setMessages() {
@@ -71,12 +74,12 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
                     closeStripWindowButton.setDisable(false);
                     cancelStripButton.setDisable(true);
                     startStripButton.setDisable(true);
-                    getLog().info("*** complete strip process");
+                    logger.info("*** complete strip process");
                     stage.titleProperty().unbind();
                     stage.setTitle("Job successfully completed");
                 }
             });
-            getLog().info("*** start file strip");
+            logger.info("*** start file strip");
             new Thread(stripWorker).start();
         });
         cancelStripButton.setOnAction(event -> {
@@ -84,7 +87,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
             closeStripWindowButton.setDisable(false);
             cancelStripButton.setDisable(true);
             stripWorker.cancel(true);
-            getLog().info("!!! user interrupt project files strip");
+            logger.info("!!! user interrupt project files strip");
             stripProgressBar.progressProperty().unbind();
             stage.titleProperty().unbind();
             stripProgressBar.setProgress(0);
@@ -118,7 +121,7 @@ public class StripWindow extends SharedTextAreaLog implements ISanitizerWindow {
         stage.setOnCloseRequest(event -> {
             if (stripWorker.isRunning()) {
                 stripWorker.cancel(true);
-                getLog().info("!!! user interrupt project files strip process");
+                logger.info("!!! user interrupt project files strip process");
             }
             stage.close();
         });

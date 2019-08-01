@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
@@ -15,15 +18,11 @@ import ua.com.foxminded.sanitizer.data.ProjectFileMask;
 import ua.com.foxminded.sanitizer.ui.ISanitizerWindow;
 
 public class FilesSelectorHBox extends HBox {
-    private class LogFeature extends SharedTextAreaLog {
-
-    }
-
-    private LogFeature logFeature = new LogFeature();
     private List<CheckBox> extensions = Arrays.asList(new CheckBox(".java"), new CheckBox(".xml"), new CheckBox(".ts"));
     private CheckBox filePatternCheckBox = new CheckBox();
     private TextField filePatternTextField = new TextField();
     private Status operationStatus;
+    private static final Logger logger = LogManager.getLogger("sanitizer");
 
     public FilesSelectorHBox() {
         setAlignment(Pos.BASELINE_CENTER);
@@ -59,7 +58,7 @@ public class FilesSelectorHBox extends HBox {
                 patterns.add(extension.getText());
             }
         });
-        logFeature.getLog().info("...save file extensions: " + Status.OK.getStatus());
+        logger.info("...save file extensions: " + Status.OK.getStatus());
         result.setFilenameFilters(patterns);
 
         if (filePatternCheckBox.isSelected() && (!filePatternTextField.getText().equals(""))
@@ -70,7 +69,7 @@ public class FilesSelectorHBox extends HBox {
             result.setFilenameFilterRegexp(null);
             operationStatus = Status.FAIL;
         }
-        logFeature.getLog().info("...save custom file regexp for comments removal: " + operationStatus.getStatus());
+        logger.info("...save custom file regexp for comments removal: " + operationStatus.getStatus());
         return result;
     }
 
@@ -85,7 +84,7 @@ public class FilesSelectorHBox extends HBox {
             } else {
                 operationStatus = Status.FAIL;
             }
-            logFeature.getLog().info("...load file extensions: " + operationStatus.getStatus());
+            logger.info("...load file extensions: " + operationStatus.getStatus());
             if (projectFileMask.getFilenameFilterRegexp() != null) {
                 filePatternCheckBox.setSelected(true);
                 filePatternTextField.setEditable(true);
@@ -94,7 +93,7 @@ public class FilesSelectorHBox extends HBox {
             } else {
                 operationStatus = Status.FAIL;
             }
-            logFeature.getLog().info("...load custom file pattern: " + operationStatus.getStatus());
+            logger.info("...load custom file pattern: " + operationStatus.getStatus());
         } else {
             extensions.stream().forEach(extension -> extension.setSelected(
                     (extension.getText().equalsIgnoreCase(".java")) || (extension.getText().equalsIgnoreCase(".xml"))));
