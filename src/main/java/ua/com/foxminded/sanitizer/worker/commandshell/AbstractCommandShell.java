@@ -47,7 +47,6 @@ public abstract class AbstractCommandShell extends SharedTextAreaLog implements 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "Cp1251"));
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(">> " + line);
                 getLog().info(">> " + line);
                 responce += line + System.lineSeparator();
             }
