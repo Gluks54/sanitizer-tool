@@ -99,7 +99,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
 
                     if (isOverwrite) {
                         //logFeature.getLog().info("Process " + " " + fileInStripFolder);
-                        System.out.println("Process " + " " + fileInStripFolder);
+                        // System.out.println("Process " + " " + fileInStripFolder);
                         // перезаписываем исходный файл с изменениями
                         fileWorker.codeStringToFile(modifiedCode, fileInStripFolder);
                         // записываем или перезаписываем патч
