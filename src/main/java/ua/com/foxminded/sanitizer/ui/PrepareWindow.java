@@ -53,7 +53,7 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
             cancelPreparationButton.setDisable(false);
             preparationProgressBar.setProgress(0);
 
-            preparationWorker = new PreparationWorker(originalFolder.toPath(), outputFolder.toPath());
+            preparationWorker = new PreparationWorker(originalFolder.toPath(), outputFolder.toPath(), this.getLog());
             preparationProgressBar.progressProperty().unbind();
             preparationProgressBar.progressProperty().bind(preparationWorker.progressProperty());
             stage.titleProperty().unbind();

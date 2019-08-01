@@ -43,6 +43,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
             int filesCounter = 0;
             FileWorker fileWorker = new FileWorker();
             ProjectFileMask projectFileMask = new ProjectFileMask();
+            String timeDumpString = fileWorker.getCurrentDateTimeString();
 
             for (Path fileInOriginalFolder : paths) {
                 if (Files.isDirectory(fileInOriginalFolder, LinkOption.NOFOLLOW_LINKS)) {
@@ -55,7 +56,6 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                     Path fileInStripFolder = outputFolder.resolve(originalFolder.relativize(fileInOriginalFolder));
                     Path copyOfFileInStripFolder = Paths.get(fileInStripFolder.toString() + ORIGINAL_EXT);
                     Path patchInOriginalFolder = Paths.get(fileInOriginalFolder.toString() + PATCH_EXT);
-                    boolean isOverwrite = false;
                     String originalCode = null;
                     String modifiedCode = null;
                     Files.copy(fileInOriginalFolder, fileInStripFolder, StandardCopyOption.REPLACE_EXISTING);
@@ -70,7 +70,7 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         fileWorker.setPatchFile(patchInOriginalFolder); // патч в оригинальной папке
 
                         originalCode = fileWorker // исправляем табы
-                                .fixTabsInCodeString(fileWorker.fileToCodeString(fileInStripFolder));
+                                .fixTabsInCodeString(fileWorker.fileToString(fileInStripFolder));
                         modifiedCode = originalCode;
 
                         // вырезание коментов
@@ -79,7 +79,11 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         } else if (fileInStripFolder.toString().toLowerCase().endsWith(".xml")) {
                             modifiedCode = fileWorker.removeCommentsFromXml(modifiedCode);
                         }
-                        isOverwrite = true;
+
+                        // перезаписываем исходный файл с изменениями
+                        fileWorker.stringToFile(modifiedCode, fileInStripFolder);
+                        // записываем или перезаписываем патч
+                        fileWorker.updateTotalPatch("remove comments: " + timeDumpString, originalCode, modifiedCode);
                     }
 
                     // проверяем на замены внутри кода по файловым маскам
@@ -88,26 +92,24 @@ public class StripWorker extends Task<List<Path>> implements ISanitizerEnvironme
                         for (Map.Entry<String, RefactorReplacement> entry : config.getReplacementInFileContent()
                                 .entrySet()) {
                             projectFileMask = entry.getValue().getFileMask();
+
                             if (projectFileMask.isMatchFilePatterns(fileInOriginalFolder.toFile())) {
-
-                                System.out.println(fileInStripFolder + " " + entry.getKey() + " " + entry.getValue()
-                                        + " " + projectFileMask);
-
+                                // System.out.println(fileInStripFolder + " " + entry.getKey() + " " + entry.getValue()
+                                //        + " " + projectFileMask);
+                                originalCode = fileWorker.fileToString(fileInStripFolder);
+                                modifiedCode = fileWorker.replaceInCodeString(originalCode,
+                                        entry.getValue().getSource(), entry.getValue().getTarget());
+                                // перезаписываем исходный файл с изменениями
+                                fileWorker.stringToFile(modifiedCode, fileInStripFolder);
+                                // записываем или перезаписываем патч
+                                fileWorker.updateTotalPatch(
+                                        "replace " + entry.getValue().getSource() + " with "
+                                                + entry.getValue().getTarget() + " " + timeDumpString,
+                                        originalCode, modifiedCode);
                             }
                         }
                     }
-
-                    if (isOverwrite) {
-                        //logFeature.getLog().info("Process " + " " + fileInStripFolder);
-                        // System.out.println("Process " + " " + fileInStripFolder);
-                        // перезаписываем исходный файл с изменениями
-                        fileWorker.codeStringToFile(modifiedCode, fileInStripFolder);
-                        // записываем или перезаписываем патч
-                        fileWorker.updateTotalPatch("remove comments: " + fileWorker.getCurrentDateTimeString(),
-                                originalCode, modifiedCode);
-                        // удаляем оригинальный файл проекта, вместо него модиф и патч
-                        Files.delete(copyOfFileInStripFolder);
-                    }
+                    Files.deleteIfExists(copyOfFileInStripFolder);
                 }
                 filesCounter++;
                 this.updateProgress(filesCounter, filesQuantity);

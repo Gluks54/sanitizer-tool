@@ -150,7 +150,7 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         return new DecimalFormat("#,##0.#").format(result) + " " + unit;
     }
 
-    public String fileToCodeString(Path path) { // fast file reader
+    public String fileToString(Path path) { // fast file reader
         String code = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             String line = "";
@@ -167,7 +167,7 @@ public class FileWorker extends SharedTextAreaLog implements ISanitizerEnvironme
         return Arrays.asList(code.split(System.lineSeparator()));
     }
 
-    public void codeStringToFile(String code, Path path) { // fast file writer
+    public void stringToFile(String code, Path path) { // fast file writer
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toString(), false))) {
             writer.write(code);
         } catch (IOException e) {

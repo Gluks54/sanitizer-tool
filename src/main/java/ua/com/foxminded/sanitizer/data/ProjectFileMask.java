@@ -31,7 +31,8 @@ public class ProjectFileMask {
 
     public boolean isMatchFilePatterns(File file) {
         boolean isMatchFileExtension = filenameFilters.stream().anyMatch(e -> file.getAbsolutePath().endsWith(e));
-        boolean isMatchPattern = new WildcardFileFilter(filenameFilterRegexp).accept(file);
+        boolean isMatchPattern = (filenameFilterRegexp == null) ? false
+                : new WildcardFileFilter(filenameFilterRegexp).accept(file);
         return isMatchFileExtension | isMatchPattern;
     }
 }

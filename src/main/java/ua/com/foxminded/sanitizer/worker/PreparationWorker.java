@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,21 +16,18 @@ import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ua.com.foxminded.sanitizer.ISanitizerEnvironment;
-import ua.com.foxminded.sanitizer.ui.elements.SharedTextAreaLog;
 
 @RequiredArgsConstructor
 public class PreparationWorker extends Task<List<Path>> {
-    private class LogFeature extends SharedTextAreaLog {
-    }
-
     @NonNull
     private Path originalFolder;
     @NonNull
     private Path outputFolder;
+    @NonNull
+    private Logger log;
 
     @Override
     protected List<Path> call() throws Exception {
-        LogFeature logFeature = new LogFeature();
         try (Stream<Path> walk = Files.walk(originalFolder)) {
             List<Path> paths = walk.collect(Collectors.toList());
             int filesQuantity = paths.size();
@@ -38,7 +36,7 @@ public class PreparationWorker extends Task<List<Path>> {
             String projectName = Paths.get(outputFolder.toString(), originalFolder.getFileName().toString()).toString();
             String projectNameWithSnapshot = projectName + "-v" + snapshotTimeString + "-";
 
-            logFeature.getLog().info("### current time snapshot: " + snapshotTimeString);
+            log.info("### current time snapshot: " + snapshotTimeString);
             for (Path path : paths) {
                 String basePathString = outputFolder.resolve(originalFolder.getParent().relativize(path)).toString();
                 Path origPath = Paths.get(basePathString.replaceFirst(projectName,
@@ -53,6 +51,7 @@ public class PreparationWorker extends Task<List<Path>> {
                 } else {
                     Files.copy(path, origPath, StandardCopyOption.REPLACE_EXISTING);
                 }
+                log.info("prepared " + path);
                 filesCounter++;
                 this.updateProgress(filesCounter, filesQuantity);
                 this.updateMessage("prepare: " + filesCounter + "/" + filesQuantity + " files");
@@ -60,7 +59,7 @@ public class PreparationWorker extends Task<List<Path>> {
             return paths;
         } catch (IOException e) {
             e.printStackTrace();
-            logFeature.getLog().severe("!!! error during file strip process");
+            log.severe("!!! error during file strip process");
             return null;
         }
     }

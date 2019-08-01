@@ -3,8 +3,8 @@ package ua.com.foxminded.sanitizer.ui;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,6 +74,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
     private File outputPreparedFolder;
     private File baseFolder;
     private File masterProjectFile;
+    private Button saveLogButton = new Button();
     private Button exploreOriginalProjectFilesButton = new Button();
     private Button prepareOutputFolderButton = new Button();
     private Button stripOriginalProjectFilesButton = new Button();
@@ -140,6 +141,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         originalFolderStatusLabel.setText("not selected");
         configFileStatusLabel.setText("not selected");
         outputFolderStatusLabel.setText("not selected");
+        saveLogButton.setText("Save log");
         exploreOriginalProjectFilesButton.setText("Explore original project");
         prepareOutputFolderButton.setText("Prepare output folder");
         stripOriginalProjectFilesButton.setText("Strip original project");
@@ -154,7 +156,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
                 : (new AngularProject(originalFolder).isProperProject() ? new AngularProject(originalFolder) : null);
 
         if (project != null) {
-            processDirectory(originalFolder);
+            processDirectory(originalFolder.toPath());
             originalInfoLabel.setText("Size: " + fileWorker.turnFileSizeToString(size) + " / Files: " + files);
             getLog().info("original project root folder: " + originalFolder.getAbsolutePath());
             originalFolderStatusLabel.setText("project at " + originalFolder.getName() + " " + Status.OK.getStatus());
@@ -275,6 +277,17 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             }
         });
 
+        saveLogButton.setOnAction(event -> {
+            fileChooser.setTitle("Select .log file to save log");
+            fileChooser.getExtensionFilters().clear();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(LOG_DIALOG_NAME, LOG_PATTERN));
+            fileChooser.setInitialFileName("sanitizer-" + fileWorker.getCurrentDateTimeString() + LOG_EXT);
+            File logFile = fileChooser.showSaveDialog(stage);
+            if (logFile != null) {
+                fileWorker.stringToFile(getLogTextArea().getText(), logFile.toPath());
+            }
+        });
+
         stripUnstripButton.setOnAction(event -> {
             System.out.println("click strip unstrip");
         });
@@ -294,7 +307,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
             fileChooser.getExtensionFilters().clear();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(MASTER_DIALOG_NAME, MASTER_PATTERN));
             fileChooser.setInitialFileName(
-                    originalFolder.getName() + "-" + fileWorker.getCurrentDateTimeString() + ".stz");
+                    originalFolder.getName() + "-" + fileWorker.getCurrentDateTimeString() + MASTER_EXT);
             masterProjectFile = fileChooser.showSaveDialog(stage);
             if (masterProjectFile != null) {
                 masterProject.setOriginalProjectFolder(originalFolder);
@@ -542,7 +555,7 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         bottomPane.setAlignment(Pos.CENTER);
         bottomPane.setId("bottomPane");
         //TODO undoStrippedProjectFilesButton
-        bottomPane.getChildren().addAll(exploreOriginalProjectFilesButton, prepareOutputFolderButton,
+        bottomPane.getChildren().addAll(saveLogButton, exploreOriginalProjectFilesButton, prepareOutputFolderButton,
                 stripOriginalProjectFilesButton, stripUnstripButton);
         bottomPane.getChildren().forEach(node -> FlowPane.setMargin(node, new Insets(INSET)));
 
@@ -590,14 +603,14 @@ public final class MainAppWindow extends SharedTextAreaLog implements ISanitizer
         stage.show();
     }
 
-    private void processDirectory(File dir) {
+    private void processDirectory(Path dir) {
         size = 0;
         files = 0;
 
-        try (Stream<Path> walk = Files.walk(Paths.get(dir.toURI()))) {
+        try (Stream<Path> walk = Files.walk(dir)) {
             List<Path> result = walk.collect(Collectors.toList());
             for (Path path : result) {
-                if (path.toFile().isFile()) {
+                if (!Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
                     files++;
                     size += path.toFile().length();
                 }
