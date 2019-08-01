@@ -88,7 +88,6 @@ public class PrepareWindow extends SharedTextAreaLog implements ISanitizerWindow
             mainAppWindow.setOutputFolderPrepared(false);
             mainAppWindow.checkAndToggleButtons();
         });
-
     }
 
     @Override

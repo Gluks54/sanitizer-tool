@@ -18,15 +18,17 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
-@Plugin(name = "LogAppender", category = "Core", elementType = "appender", printObject = true)
-public class LogAppender extends AbstractAppender {
-    protected LogAppender(String name, Filter filter, Layout<? extends Serializable> layout, boolean ignoreExceptions) {
-        super(name, filter, layout, ignoreExceptions);
-    }
-
+@Plugin(name = "TextAreaAppender", category = "Core", elementType = "appender", printObject = true)
+public class TextAreaAppender extends AbstractAppender {
     private static TextArea textArea;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final Lock readLock = rwLock.readLock();
+
+    @SuppressWarnings("deprecation")
+    public TextAreaAppender(String name, Filter filter, Layout<? extends Serializable> layout,
+            boolean ignoreExceptions) {
+        super(name, filter, layout, ignoreExceptions);
+    }
 
     @Override
     public void append(LogEvent event) {
@@ -47,7 +49,7 @@ public class LogAppender extends AbstractAppender {
                         }
                     }
                 } catch (final Throwable t) {
-                    System.out.println("Error while append to TextArea: " + t.getMessage());
+                    System.out.printf("%s%n", "Error while append to TextArea: " + t.getMessage());
                 }
             });
         } catch (final IllegalStateException ex) {
@@ -70,25 +72,20 @@ public class LogAppender extends AbstractAppender {
      * @return The TextAreaAppender
      */
     @PluginFactory
-    public static LogAppender createAppender(@PluginAttribute("name") String name,
+    public static TextAreaAppender createAppender(@PluginAttribute("name") String name,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter) {
         if (name == null) {
-            LOGGER.error("No name provided for LogAppender");
+            LOGGER.error("No name provided for TextAreaAppender");
             return null;
         }
         if (layout == null) {
             layout = PatternLayout.createDefaultLayout();
         }
-        return new LogAppender(name, filter, layout, true);
+        return new TextAreaAppender(name, filter, layout, true);
     }
 
-    /**
-     * Set TextArea to append
-     *
-     * @param textArea TextArea to append
-     */
     public static void setTextArea(TextArea textArea) {
-        LogAppender.textArea = textArea;
+        TextAreaAppender.textArea = textArea;
     }
 }
