@@ -3,6 +3,9 @@ index.html
 .metadata
 bin/
 tmp/
+*iml
+*.ipr
+*.iws
 *.tmp
 *.bak
 *.swp
@@ -63,6 +66,7 @@ local.properties
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/
 
 # Generated files
 .idea/**/contentModel.xml
